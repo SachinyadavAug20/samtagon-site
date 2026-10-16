@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+bun.lockb
+bun.lock
+
+# Editor & System
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Local env
+.env
+.env.local

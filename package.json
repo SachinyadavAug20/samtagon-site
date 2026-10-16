@@ -1,0 +1,32 @@
+{
+  "name": "samtagon-studio-website",
+  "version": "1.0.0",
+  "description": "Minimal showcase website for Samtagon Game Studio",
+  "scripts": {
+    "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && tsc",
+    "watch": "bun build src/ts/main.ts --outfile dist/js/bundle.js --watch",
+    "serve": "bunx serve . || npx serve ."
+  },
+  "keywords": [
+    "samtagon",
+    "game-dev",
+    "studio",
+    "threejs",
+    "gsap",
+    "raylib",
+    "godot",
+    "c++",
+    "itch-io"
+  ],
+  "author": "Samtagon Studios",
+  "license": "MIT",
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/gsap": "^3.0.0",
+    "@types/three": "^0.160.0",
+    "typescript": "^5.7.0"
+  }
+}
