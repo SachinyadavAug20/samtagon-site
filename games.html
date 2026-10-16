@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Games Catalog &bull; SAMTAGON STUDIOS</title>
+  <meta name="description" content="Explore the game portfolio of Samtagon: Metro Grid, Void Protocol, Alien Blaster, and custom engine prototypes.">
+  <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/infinite-loop.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-link" aria-label="Samtagon Home">
+        <img src="assets/logos/samtagon-logo-full.svg" alt="Samtagon Logo" class="brand-logo-img">
+      </a>
+
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-item-link">&larr; Home</a></li>
+          <li><a href="#metro-grid" class="nav-item-link">Metro Grid</a></li>
+          <li><a href="#space-shooter" class="nav-item-link">Void Protocol</a></li>
+          <li><a href="#alien-blaster" class="nav-item-link">Alien Blaster</a></li>
+          <li><a href="about.html" class="nav-item-link">Studio Manifesto</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          itch.io &nearr;
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Title Banner -->
+  <div style="padding-top: calc(var(--nav-height) + 60px); padding-bottom: 40px; background: radial-gradient(circle at 50% 0%, rgba(255, 107, 0, 0.12) 0%, transparent 60%);">
+    <div class="container">
+      <span class="section-tag amber">Interactive Showcase</span>
+      <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 16px;">THE SAMTAGON GAMES CATALOG</h1>
+      <p style="max-width: 700px; font-size: 1.15rem; color: var(--text-secondary);">
+        Technical breakdowns, mechanics overviews, gameplay manuals, and playable builds for every title created under the Samtagon umbrella.
+      </p>
+    </div>
+  </div>
+
+  <!-- Metro Grid Deep Dive -->
+  <section class="section" id="metro-grid" style="border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span class="badge badge-green">RELEASED</span>
+        <span class="badge badge-amber">C++17</span>
+        <span class="badge badge-cyan">RAYLIB 6.0</span>
+        <span class="badge">COGNITION GAMEJAM '26</span>
+      </div>
+
+      <h2 style="font-size: 2.8rem; margin-bottom: 12px;">Metro Grid</h2>
+      <p style="font-size: 1.2rem; color: var(--accent-cyan); font-family: var(--font-mono); margin-bottom: 32px;">
+        2.5D Isometric Urban Transit Simulator &bull; 100% Procedural Audio &bull; WebAssembly
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; margin-bottom: 48px;">
+        <div>
+          <div class="loop-proof-img-wrap" style="height: 380px; margin-bottom: 24px;">
+            <img src="assets/images/metro-grid/test_metro_infinite_loop_proof.png" alt="Metro Grid Infinite Loop Gameplay" class="loop-proof-img zoomable-img" />
+            <div class="loop-proof-caption">THE INFINITE TRANSIT LOOP &bull; SELF-BALANCING 3-ASPECT SIGNALS</div>
+          </div>
+          <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 20px;">
+            Metro Grid is a RollerCoaster Tycoon-style metro network builder. You lay tracks, stations, and concourse scenery across a 2.5D isometric city grid (64x32 dimetric tiles, 48x48 world). Commuters arrive at entrances, swipe through turnstiles, queue on platforms, and board your trains. They alight at the station matching their shape badge.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="glass-card" style="padding: 24px;">
+            <h4 style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-amber); text-transform: uppercase; margin-bottom: 12px;">
+              // Technical Specifications
+            </h4>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+              <li><strong>Language:</strong> C++17 (-Wall -Wextra strict)</li>
+              <li><strong>Rendering &amp; Sound:</strong> Raylib 6.0 statically linked</li>
+              <li><strong>Audio:</strong> 100% Procedural waveform synthesis (VVVF motor whine, chimes)</li>
+              <li><strong>Web Build:</strong> Emscripten / WebAssembly (1280x720 60 FPS)</li>
+              <li><strong>Map Geometry:</strong> 48x48 Grid, multi-level elevation viaducts &amp; tunnels</li>
+            </ul>
+          </div>
+
+          <div class="glass-card" style="padding: 24px;">
+            <h4 style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 12px;">
+              // Core Mechanics
+            </h4>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: var(--text-secondary);">
+              <li>&bull; <strong>3-Aspect Automatic Block Signalling:</strong> Green/Yellow/Red separation</li>
+              <li>&bull; <strong>Shape-Coded Riders:</strong> Square, Circle, Triangle, Cross archetypes</li>
+              <li>&bull; <strong>Platform Overcrowd Timers:</strong> Dynamic dispatch triage</li>
+              <li>&bull; <strong>Operating Modes:</strong> OPEN (Revenue), TEST RUN (Empty Loops), CLOSED</li>
+              <li>&bull; <strong>Endless Metropolis:</strong> Unlockable sandbox after 1,500 riders</li>
+            </ul>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener" class="btn btn-primary" style="flex: 1;">
+              Play on itch.io &nearr;
+            </a>
+            <a href="https://github.com/SachinyadavAug20/Raylib-boilerplate" target="_blank" rel="noopener" class="btn btn-secondary" style="flex: 1;">
+              C++ Source
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screenshot Gallery Grid -->
+      <h3 style="font-size: 1.4rem; margin-bottom: 20px;">Gameplay Gallery</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+        <div class="loop-proof-img-wrap" style="height: 180px;">
+          <img src="assets/images/metro-grid/test_autoloop_open.png" alt="Auto Loop Open" class="loop-proof-img zoomable-img" />
+          <div class="loop-proof-caption">OPEN OPERATING MODE</div>
+        </div>
+        <div class="loop-proof-img-wrap" style="height: 180px;">
+          <img src="assets/images/metro-grid/gameplay_station_boarding.png" alt="Station Boarding" class="loop-proof-img zoomable-img" />
+          <div class="loop-proof-caption">COMMUTER TURNSTILES &amp; PLATFORMS</div>
+        </div>
+        <div class="loop-proof-img-wrap" style="height: 180px;">
+          <img src="assets/images/metro-grid/test_night_lighting.png" alt="Night Lighting" class="loop-proof-img zoomable-img" />
+          <div class="loop-proof-caption">DYNAMIC NIGHT CYCLE</div>
+        </div>
+        <div class="loop-proof-img-wrap" style="height: 180px;">
+          <img src="assets/images/metro-grid/test_metro_ridecam_hud.png" alt="Cab Ride Cam" class="loop-proof-img zoomable-img" />
+          <div class="loop-proof-caption">CAB RIDE-ALONG CAMERA</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Void Protocol Deep Dive -->
+  <section class="section" id="space-shooter" style="background: rgba(14, 18, 26, 0.4); border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span class="badge badge-amber">PLAYABLE ALPHA</span>
+        <span class="badge badge-cyan">GODOT ENGINE</span>
+        <span class="badge">GDScript</span>
+        <span class="badge">VECTOR PHYSICS</span>
+      </div>
+
+      <h2 style="font-size: 2.8rem; margin-bottom: 12px;">Void Protocol: Space Shooter</h2>
+      <p style="font-size: 1.2rem; color: var(--accent-amber); font-family: var(--font-mono); margin-bottom: 32px;">
+        Kinetic 2D Space Combat &bull; Inertia Dampening Controllers &bull; Pixel Art Collision Loops
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px;">
+        <div>
+          <div class="loop-proof-img-wrap" style="height: 380px; margin-bottom: 24px;">
+            <img src="assets/images/space-shooter/background.jpg" alt="Space Shooter Backdrop" class="loop-proof-img zoomable-img" />
+            <div class="loop-proof-caption">HIGH-VELOCITY CELESTIAL DOGFIGHTS</div>
+          </div>
+          <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary);">
+            Void Protocol explores low-friction vector kinematics in Godot Engine. Maneuver through treacherous asteroid belts, engage alien raider fleets, activate directional warp gates, and master thrust-and-drift flight mechanics.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="glass-card" style="padding: 24px;">
+            <h4 style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 12px;">
+              // Technical Highlights
+            </h4>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+              <li><strong>Engine:</strong> Godot Engine (2D Physics &amp; Vector Mathematics)</li>
+              <li><strong>Controllers:</strong> Custom inertia dampening and momentum preservation</li>
+              <li><strong>Collision:</strong> Frame-accurate polygon hit detection</li>
+              <li><strong>Particles:</strong> Directional thruster exhausts and explosive debris</li>
+            </ul>
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener" class="btn btn-primary" style="flex: 1;">
+              Play on itch.io &nearr;
+            </a>
+            <a href="https://github.com/SachinyadavAug20" target="_blank" rel="noopener" class="btn btn-secondary" style="flex: 1;">
+              GitHub Organization
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alien Blaster Deep Dive -->
+  <section class="section" id="alien-blaster" style="border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span class="badge">PROTOTYPE</span>
+        <span class="badge badge-amber">UNITY</span>
+        <span class="badge badge-cyan">C#</span>
+      </div>
+
+      <h2 style="font-size: 2.5rem; margin-bottom: 12px;">Alien Blaster</h2>
+      <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 24px; max-width: 800px;">
+        Early foundation in 2D platforming and arcade physics. Focused on player velocity response curves, camera shake screen feedback, and modular state machines.
+      </p>
+
+      <a href="https://github.com/SachinyadavAug20/AlienBlaster" target="_blank" rel="noopener" class="btn btn-secondary">
+        View Alien Blaster on GitHub &nearr;
+      </a>
+    </div>
+  </section>
+
+  <!-- Global Lightbox Modal -->
+  <div id="global-modal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-container">
+      <button id="modal-close" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      <div id="modal-inner-content"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 SAMTAGON STUDIOS &bull; CRAFTED WITH TS &amp; CSS</div>
+      <div><a href="index.html" style="color: var(--accent-amber);">&larr; Back to Studio Home</a></div>
+    </div>
+  </footer>
+
+  <script type="module" src="dist/js/main.js"></script>
+</body>
+</html>

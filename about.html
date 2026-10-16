@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Manifesto &bull; SAMTAGON</title>
+  <meta name="description" content="The story, philosophy, and engineering behind Samtagon Game Studio.">
+  <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/infinite-loop.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-link" aria-label="Samtagon Home">
+        <img src="assets/logos/samtagon-logo-full.svg" alt="Samtagon Logo" class="brand-logo-img">
+      </a>
+
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-item-link">&larr; Home</a></li>
+          <li><a href="games.html" class="nav-item-link">Games Showroom</a></li>
+          <li><a href="#manifesto" class="nav-item-link">Manifesto</a></li>
+          <li><a href="#creator" class="nav-item-link">Creator</a></li>
+          <li><a href="#tooling" class="nav-item-link">Tooling</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          itch.io &nearr;
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner -->
+  <div style="padding-top: calc(var(--nav-height) + 60px); padding-bottom: 40px; background: radial-gradient(circle at 50% 0%, rgba(0, 210, 255, 0.1) 0%, transparent 60%);">
+    <div class="container">
+      <span class="section-tag cyan">Studio Philosophy</span>
+      <h1 style="font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 16px;">THE SAMTAGON MANIFESTO</h1>
+      <p style="max-width: 700px; font-size: 1.15rem; color: var(--text-secondary);">
+        Why we build games through low-level systems engineering, procedural audio, and autonomous loops.
+      </p>
+    </div>
+  </div>
+
+  <!-- Manifesto Content -->
+  <section class="section" id="manifesto">
+    <div class="container" style="max-width: 900px;">
+      <div class="glass-card" style="padding: 48px; margin-bottom: 48px;">
+        <h2 style="font-size: 2rem; margin-bottom: 24px; color: var(--text-highlight);">
+          1. The Supremacy of the Kinetic Loop
+        </h2>
+        <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 20px;">
+          At <strong>Samtagon</strong>, we believe the best games are not passive narratives, but living kinetic simulations. When you play <em>Metro Grid</em>, you don't merely look at static art — you trigger an emergent, self-balancing infinite transit loop. Commuters make decisions based on deterministic math; signals space out trains via block separation; and procedural VVVF audio whines directly from frequency oscillators.
+        </p>
+
+        <h2 style="font-size: 2rem; margin-bottom: 24px; color: var(--text-highlight); margin-top: 40px;">
+          2. Zero Engine Bloat &bull; Low-Level Respect
+        </h2>
+        <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 20px;">
+          Modern game development has become overloaded with massive gigabyte-heavy runtimes and opaque garbage collectors. Samtagon pushes in the opposite direction: <strong>C++17</strong>, statically linked <strong>Raylib</strong>, handcrafted data structures, and procedural generation. Every byte of memory has a purpose. The result is pure, instantaneous 60 FPS responsiveness on desktop and WebAssembly alike.
+        </p>
+
+        <h2 style="font-size: 2rem; margin-bottom: 24px; color: var(--text-highlight); margin-top: 40px;">
+          3. 100% Procedural Synthesis
+        </h2>
+        <p style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary);">
+          Why record static .wav files when sound is vibration and mathematics? In our flagship titles, audio is generated in real-time code — simulating the magnetic field resonance of three-phase electric traction motors (VVVF), pneumatic door releases, and harmonic chimes.
+        </p>
+      </div>
+
+      <!-- Creator Profile -->
+      <div id="creator" class="glass-card highlight-amber" style="padding: 40px; margin-bottom: 48px;">
+        <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+          <div style="width: 72px; height: 72px; border-radius: var(--radius-md); background: #111620; border: 2px solid var(--accent-amber); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+            &#x2699;
+          </div>
+          <div>
+            <h3 style="font-size: 1.6rem; margin-bottom: 4px;">Sachin Chandra Yadav</h3>
+            <p style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-amber);">
+              Founder &bull; Systems Programmer &bull; Game Engine Architect
+            </p>
+          </div>
+        </div>
+
+        <p style="font-size: 1rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 24px;">
+          Computer Science Engineering student at Lokmanya Tilak College of Engineering. Algorithmic problem solver with hundreds of DSA challenges conquered. Creator of Metro Grid (Cognition GameJam '26), Meow Mega Corp Bank backend, and the Samtagon universe.
+        </p>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="https://github.com/SachinyadavAug20" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">GitHub @SachinyadavAug20</a>
+          <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">itch.io @sachinapr20</a>
+          <a href="https://x.com/samtagon38824" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">X @samtagon38824</a>
+          <a href="mailto:samtagon777@gmail.com" class="btn btn-primary btn-sm">samtagon777@gmail.com</a>
+        </div>
+      </div>
+
+      <!-- Tooling & Rig -->
+      <div id="tooling" class="glass-card" style="padding: 40px;">
+        <h3 style="font-size: 1.4rem; margin-bottom: 16px;">// Studio Rig &amp; Development Environment</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-family: var(--font-mono); font-size: 0.88rem;">
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 6px;">
+            <div style="color: var(--accent-cyan); margin-bottom: 4px;">OPERATING SYSTEM</div>
+            <div style="color: #fff;">Arch Linux (Minimal)</div>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 6px;">
+            <div style="color: var(--accent-amber); margin-bottom: 4px;">PRIMARY EDITOR</div>
+            <div style="color: #fff;">Neovim (Keyboard-First)</div>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 6px;">
+            <div style="color: var(--signal-green); margin-bottom: 4px;">GRAPHICS / AUDIO</div>
+            <div style="color: #fff;">Raylib 6.0 &bull; C++17</div>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 6px;">
+            <div style="color: var(--accent-cyan); margin-bottom: 4px;">WEB RUNTIME</div>
+            <div style="color: #fff;">TypeScript &bull; WebAssembly</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 SAMTAGON STUDIOS &bull; SYSTEMS FIRST</div>
+      <div><a href="index.html" style="color: var(--accent-amber);">&larr; Return to Studio Home</a></div>
+    </div>
+  </footer>
+
+  <script type="module" src="dist/js/main.js"></script>
+</body>
+</html>
