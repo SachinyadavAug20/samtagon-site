@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +7,100 @@
   <title>SAMTAGON &bull; Handcrafted Indie Games</title>
   <meta name="title" content="SAMTAGON &bull; Handcrafted Indie Games">
   <meta name="description" content="Official game studio of Samtagon. Charming, handcrafted indie games in C++, Raylib, and Godot. Free to play in browser.">
-  <meta name="theme-color" content="#FAFAF9">
+  <meta name="keywords" content="indie games, game studio, webgl, threejs, c++, raylib, godot, metro grid, conway life, retro arcade, browser games">
+  <meta name="author" content="Samtagon Game Studios">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="theme-color" content="#0A0F1D">
+  <link rel="canonical" href="https://samtagon.com/">
+  <link rel="manifest" href="site.webmanifest">
   <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://samtagon.com/">
+  <meta property="og:title" content="SAMTAGON &bull; Handcrafted Indie Games">
+  <meta property="og:description" content="Official game studio of Samtagon. Charming, handcrafted indie games in C++, Raylib, and Godot. Interactive 3D transit diorama playable directly in your browser.">
+  <meta property="og:image" content="https://samtagon.com/assets/images/metro-grid/test_metro_start_menu.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Samtagon Game Studios handcrafted games and 3D kinetic diorama">
+  <meta property="og:site_name" content="Samtagon Game Studios">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@samtagon38824">
+  <meta name="twitter:creator" content="@samtagon38824">
+  <meta name="twitter:title" content="SAMTAGON &bull; Handcrafted Indie Games">
+  <meta name="twitter:description" content="Official game studio of Samtagon. Charming, handcrafted indie games in C++, Raylib, and Godot. Interactive 3D transit diorama playable directly in your browser.">
+  <meta name="twitter:image" content="https://samtagon.com/assets/images/metro-grid/test_metro_start_menu.png">
+
+  <!-- JSON-LD Structured Data for Search Engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://samtagon.com/#organization",
+        "name": "Samtagon Game Studios",
+        "url": "https://samtagon.com",
+        "logo": "https://samtagon.com/assets/logos/samtagon-logo-mark.svg",
+        "sameAs": [
+          "https://sachinapr20.itch.io/",
+          "https://github.com/SachinyadavAug20",
+          "https://x.com/samtagon38824"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://samtagon.com/#website",
+        "url": "https://samtagon.com",
+        "name": "Samtagon Game Studios",
+        "publisher": { "@id": "https://samtagon.com/#organization" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "ItemList",
+        "name": "Handcrafted Indie Games Catalog",
+        "itemListElement": [
+          {
+            "@type": "VideoGame",
+            "name": "Metro Grid",
+            "description": "2.5D urban transit tycoon and rail network builder in C++17 with WebAssembly export.",
+            "genre": ["Simulation", "Tycoon", "Transit"],
+            "gamePlatform": ["Web Browser", "PC"],
+            "url": "https://sachinapr20.itch.io/"
+          },
+          {
+            "@type": "VideoGame",
+            "name": "Conway's Game of Life",
+            "description": "Tactile mathematical cellular automata simulation engine.",
+            "genre": ["Simulation", "Cellular Automata"],
+            "gamePlatform": ["Web Browser", "PC"],
+            "url": "https://sachinapr20.itch.io/"
+          },
+          {
+            "@type": "VideoGame",
+            "name": "Alien Blaster",
+            "description": "2D retro arcade action platformer with fluid projectile physics.",
+            "genre": ["Arcade", "Action", "Shooter"],
+            "gamePlatform": ["Web Browser", "PC"],
+            "url": "https://sachinapr20.itch.io/"
+          },
+          {
+            "@type": "VideoGame",
+            "name": "Godot Quest",
+            "description": "Charming pixel adventure exploration RPG built with Godot Engine.",
+            "genre": ["Adventure", "Pixel Art", "RPG"],
+            "gamePlatform": ["Web Browser", "PC"],
+            "url": "https://sachinapr20.itch.io/"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +141,18 @@
           <span class="status-pulse-dot"></span>
           <span>crafting little worlds</span>
         </div>
-        <button id="theme-toggle-btn" class="zen-theme-toggle" aria-label="Toggle cozy night mode" title="Toggle cozy night mode">
+        <button id="audio-toggle-btn" class="zen-theme-toggle" aria-label="Toggle sound effects [M]" title="Toggle sound effects [M]">
+          <svg class="audio-on-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <svg class="audio-off-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+        </button>
+        <button id="theme-toggle-btn" class="zen-theme-toggle" aria-label="Toggle cozy night mode [T]" title="Toggle cozy night mode [T]">
           <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
@@ -70,26 +173,34 @@
       <div class="zen-diorama-ctrls">
         <div class="ctrl-group">
           <span class="ctrl-lbl">VIEW</span>
-          <button class="stage-pill active" data-view="isometric">Isometric</button>
-          <button class="stage-pill" data-view="top">Top-Down</button>
-          <button class="stage-pill" data-view="orbit">Orbit</button>
+          <button class="stage-pill active" data-view="isometric" title="Isometric Camera View [1]">Isometric <span class="kbd-hint">1</span></button>
+          <button class="stage-pill" data-view="top" title="Top-Down Plan View [2]">Top-Down <span class="kbd-hint">2</span></button>
+          <button class="stage-pill" data-view="orbit" title="Orbit Inspection View [3]">Orbit <span class="kbd-hint">3</span></button>
+          <button class="stage-pill" data-view="cinematic" title="Cinematic Cab / Chase View [4]">Cinematic <span class="kbd-hint">4</span></button>
         </div>
         <div class="ctrl-divider">&bull;</div>
         <div class="ctrl-group">
           <span class="ctrl-lbl">SPEED</span>
-          <button class="stage-pill active" data-speed="1">1x</button>
-          <button class="stage-pill" data-speed="2">2x</button>
-          <button class="stage-pill" data-speed="3.6">Wheee!</button>
+          <button class="stage-pill active" data-speed="1" title="Normal cruising speed">1x</button>
+          <button class="stage-pill" data-speed="2" title="Express commuter speed">2x</button>
+          <button class="stage-pill" data-speed="3.6" title="High speed rollercoaster [↑ / ↓]">Wheee! <span class="kbd-hint">&uarr;&darr;</span></button>
         </div>
         <div class="ctrl-divider">&bull;</div>
         <div class="ctrl-group">
           <span class="ctrl-lbl">WEATHER</span>
-          <button class="stage-pill active" data-weather="fair" title="Clear sunny weather">Fair ☀️</button>
-          <button class="stage-pill" data-weather="rain" title="Cozy gentle rain with water ripples">Rain 🌧️</button>
+          <button class="stage-pill active" data-weather="fair" title="Clear sunny weather">
+            <svg class="pill-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Fair
+          </button>
+          <button class="stage-pill" data-weather="rain" title="Cozy gentle rain with water ripples [R]">
+            <svg class="pill-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="16" y1="13" x2="16" y2="21"/><line x1="8" y1="13" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="23"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+            Rain <span class="kbd-hint">R</span>
+          </button>
         </div>
         <div class="ctrl-divider">&bull;</div>
-        <button id="whistle-btn" class="stage-pill stage-pill-accent" title="Blow toy train whistle!">
-          Toot Whistle! 🎈
+        <button id="whistle-btn" class="stage-pill stage-pill-accent" title="Blow steam train whistle [Space]">
+          <svg class="pill-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Toot Whistle! <span class="kbd-hint">Space</span>
         </button>
       </div>
     </div>
@@ -130,6 +241,31 @@
       </div>
     </div>
 
+    <!-- Semantic Accessible SEO Content for Screen Readers & Search Crawlers -->
+    <section class="sr-only" aria-label="About Samtagon Games Studio and Diorama">
+      <h2>Handcrafted Indie Games and Kinetic Dioramas</h2>
+      <p>
+        Samtagon is an independent boutique game studio founded by Sachin Yadav, dedicated to crafting intricate cellular systems, urban transit builders, and tactile arcade games.
+        All games are engineered with high performance in modern C++17, Raylib, WebAssembly, and Godot Engine.
+      </p>
+      <h3>Interactive 3D Diorama Features:</h3>
+      <ul>
+        <li>Double-level crossover infinite track with stone arch viaduct and timber trestle bridge.</li>
+        <li>Dual rolling-stock trains: classic emerald steam locomotive and aerodynamic sky-blue high-speed bullet train.</li>
+        <li>Volumetric night lighting with headlights, illuminated carriage passenger windows, and sparkling viaduct gas lanterns.</li>
+        <li>Cozy atmospheric weather simulation including gentle rain precipitation and interactive pond water wake ripples.</li>
+        <li>Synthesized Web Audio sound design with authentic dual-chime steam whistle, rail click-clack rhythms, and acoustic hops.</li>
+      </ul>
+      <h3>Catalog of Featured Browser Games:</h3>
+      <ul>
+        <li><strong>Metro Grid</strong>: 2.5D isometric urban transit tycoon and rail network builder.</li>
+        <li><strong>Conway's Game of Life</strong>: Tactile mathematical cellular automata simulation engine.</li>
+        <li><strong>Alien Blaster</strong>: 2D retro arcade action platformer with fluid projectile physics.</li>
+        <li><strong>Godot Quest</strong>: Charming pixel adventure exploration RPG.</li>
+        <li><strong>Snake &amp; PingPong</strong>: Classic responsive arcade games with kinetic physics.</li>
+      </ul>
+    </section>
+
     <!-- Discreet Footer -->
     <footer class="zen-footer">
       <span>&copy; 2026 SAMTAGON STUDIOS</span>
@@ -143,6 +279,6 @@
 
   </main>
 
-  <script type="module" src="dist/js/bundle.js?v=8.0"></script>
+  <script type="module" src="dist/js/bundle.js?v=9.1"></script>
 </body>
 </html>

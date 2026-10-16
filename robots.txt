@@ -1,0 +1,6 @@
+# robots.txt for Samtagon Game Studios (https://samtagon.com)
+User-agent: *
+Allow: /
+Disallow: /dist/*.map
+
+Sitemap: https://samtagon.com/sitemap.xml

@@ -1,0 +1,18 @@
+{
+  "name": "Samtagon Game Studios",
+  "short_name": "Samtagon",
+  "description": "Handcrafted indie games in C++, Raylib, and Godot. Free to play in browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0F1D",
+  "theme_color": "#0A0F1D",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/logos/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

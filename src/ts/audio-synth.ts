@@ -360,5 +360,424 @@ export class ProceduralAudio {
       // ignore
     }
   }
+
+  /**
+   * Gentle Water Slosh / Oar Plash for moored boat interaction
+   */
+  public playBoatSlosh(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(180, now + 0.18);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.18);
+
+      // Subsequent soft water ripple
+      setTimeout(() => this.playWaterDrop(), 60);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Cheerful Tiny Bell Hop for sheep meeples
+   */
+  public playSheepHop(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(659.25, now); // E5
+      osc.frequency.linearRampToValueAtTime(880, now + 0.08); // A5
+
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Resonant Crystal Lantern Ping for bridge gas lamps
+   */
+  public playLanternSpark(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1760, now); // A6
+      osc.frequency.exponentialRampToValueAtTime(2200, now + 0.22);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Continuous Rhythmic Rail Click-Clack over rail joints
+   */
+  public playRailClickClack(speedMultiplier: number = 1.0, isInsideTunnel: boolean = false): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const vol = isInsideTunnel ? 0.14 : 0.075;
+      const cutoff = isInsideTunnel ? 700 : 1500;
+
+      // Click 1 (Leading axle)
+      this.synthesizeAxleClick(now, 1080 + Math.random() * 80, vol, cutoff);
+      // Click 2 (Trailing axle 45ms later)
+      this.synthesizeAxleClick(now + 0.045, 920 + Math.random() * 80, vol * 0.8, cutoff);
+    } catch {
+      // ignore
+    }
+  }
+
+  private synthesizeAxleClick(time: number, freq: number, volume: number, filterCutoff: number): void {
+    if (!this.ctx || !this.masterGain) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(filterCutoff, time);
+    filter.Q.setValueAtTime(3.2, time);
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, time);
+    osc.frequency.exponentialRampToValueAtTime(140, time + 0.038);
+
+    gain.gain.setValueAtTime(volume, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.038);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.masterGain);
+
+    osc.start(time);
+    osc.stop(time + 0.04);
+  }
+
+  /**
+   * Steam Locomotive Chuff-Chuff Exhaust Puff
+   */
+  public playSteamChuff(isInsideTunnel: boolean = false): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const dur = 0.085;
+
+      const bufferSize = Math.floor(this.ctx.sampleRate * dur);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.32));
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(isInsideTunnel ? 380 : 680, now);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(isInsideTunnel ? 0.11 : 0.065, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      noise.start(now);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Railroad Crossing Warning Bell
+   */
+  public playCrossingBell(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1480, now);
+      osc.frequency.exponentialRampToValueAtTime(1470, now + 0.16);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.16);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Station Clocktower Chime
+   */
+  public playStationClock(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      [440, 554.37, 659.25].forEach((freq, idx) => {
+        if (!this.ctx || !this.masterGain) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+        gain.gain.setValueAtTime(0.12, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.55);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.6);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Telegraph Pole Acoustic Hum
+   */
+  public playTelegraphPing(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(440, now + 0.14);
+
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.14);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Speed Acceleration Whoosh
+   */
+  public playSpeedWhoosh(speedMultiplier: number): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(220 * speedMultiplier, now + 0.28);
+
+      gain.gain.setValueAtTime(0.11, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Breezy Wooden Creak and Flutter for spinning windmill sails
+   */
+  public playWindmillSpin(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      [180, 240, 360].forEach((freq, idx) => {
+        if (!this.ctx || !this.masterGain) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + idx * 0.05 + 0.22);
+
+        gain.gain.setValueAtTime(0.08, now + idx * 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.25);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(now + idx * 0.05);
+        osc.stop(now + idx * 0.05 + 0.28);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Rhythmic Waterwheel Splash Paddle
+   */
+  public playWaterwheel(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.15);
+
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.16);
+
+      setTimeout(() => this.playWaterDrop(), 50);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Mechanical Track Switch Lever Clank
+   */
+  public playSwitchClick(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.setValueAtTime(120, now + 0.04);
+
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Soothing Night Crickets Chirp (Procedural ambient night audio)
+   */
+  private cricketTimer: number | null = null;
+
+  public setNightAmbience(active: boolean): void {
+    if (this.cricketTimer) {
+      clearInterval(this.cricketTimer);
+      this.cricketTimer = null;
+    }
+
+    if (!active || this.isMuted || !this.ctx) return;
+
+    const chirp = () => {
+      if (this.isMuted || !this.ctx || !this.masterGain) return;
+      try {
+        const now = this.ctx.currentTime;
+        const count = 2 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < count; i++) {
+          const t = now + i * 0.06;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(4600 + Math.random() * 200, t);
+
+          gain.gain.setValueAtTime(0.018, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+
+          osc.connect(gain);
+          gain.connect(this.masterGain);
+
+          osc.start(t);
+          osc.stop(t + 0.04);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    chirp();
+    this.cricketTimer = window.setInterval(chirp, 3200);
+  }
 }
+
 

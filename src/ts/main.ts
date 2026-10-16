@@ -37,9 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio): void {
-  // 1. Cozy Night / Daylight Theme Toggle (Always start with light mode only)
-  document.documentElement.removeAttribute('data-theme');
-  let isDarkMode = false;
+  // 1. Cozy Night / Daylight Theme Toggle (Strictly loads in Dark Mode by default)
+  document.documentElement.setAttribute('data-theme', 'dark');
+  let isDarkMode = true;
+  stage?.setNightMode(true, true); // Immediate night mode on initial load
+
   const themeBtn = document.getElementById('theme-toggle-btn');
 
   themeBtn?.addEventListener('click', () => {
@@ -47,11 +49,35 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     if (isDarkMode) {
       document.documentElement.setAttribute('data-theme', 'dark');
       audio.playChime(523.25, 0.08); // C5
-      stage?.setNightMode(true);
+      stage?.setNightMode(true); // Smooth GSAP sunset animation!
     } else {
       document.documentElement.removeAttribute('data-theme');
       audio.playChime(783.99, 0.08); // G5
-      stage?.setNightMode(false);
+      stage?.setNightMode(false); // Smooth GSAP sunrise animation!
+    }
+  });
+
+  // Audio Mute / Unmute Toggle
+  const audioBtn = document.getElementById('audio-toggle-btn');
+  const audioOnIcon = audioBtn?.querySelector('.audio-on-icon') as HTMLElement | null;
+  const audioOffIcon = audioBtn?.querySelector('.audio-off-icon') as HTMLElement | null;
+
+  const updateAudioUI = (unmuted: boolean) => {
+    if (audioOnIcon && audioOffIcon) {
+      audioOnIcon.style.display = unmuted ? 'block' : 'none';
+      audioOffIcon.style.display = unmuted ? 'none' : 'block';
+    }
+  };
+
+  audioBtn?.addEventListener('click', () => {
+    const unmuted = audio.toggleMute();
+    updateAudioUI(unmuted);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyM') {
+      const unmuted = audio.toggleMute();
+      updateAudioUI(unmuted);
     }
   });
 
@@ -61,7 +87,7 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     btn.addEventListener('click', () => {
       viewBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      const view = btn.dataset.view as 'isometric' | 'top' | 'orbit';
+      const view = btn.dataset.view as 'isometric' | 'top' | 'orbit' | 'cinematic';
       stage?.setViewMode(view);
       audio.playButtonPress();
     });

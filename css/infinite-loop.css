@@ -72,7 +72,6 @@
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-lg), 0 0 50px rgba(0, 210, 255, 0.08);
 }
 
 /* Lab Header Bar (HUD look) */
@@ -96,7 +95,6 @@
   height: 10px;
   border-radius: 50%;
   background: var(--signal-green);
-  box-shadow: 0 0 10px var(--signal-green);
   animation: pulse-light 2s infinite ease-in-out;
 }
 
@@ -175,8 +173,7 @@
 }
 
 .hud-stat-box {
-  background: rgba(14, 18, 26, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(14, 18, 26, 0.95);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   padding: 8px 14px;
@@ -194,8 +191,7 @@
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.85);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-full);
   padding: 6px 18px;
@@ -250,17 +246,14 @@
 
 .signal-lamp.green {
   background: var(--signal-green);
-  box-shadow: 0 0 12px var(--signal-green);
 }
 
 .signal-lamp.yellow {
   background: var(--signal-yellow);
-  box-shadow: 0 0 12px var(--signal-yellow);
 }
 
 .signal-lamp.red {
   background: var(--signal-red);
-  box-shadow: 0 0 12px var(--signal-red);
 }
 
 .signal-lamp.active {
