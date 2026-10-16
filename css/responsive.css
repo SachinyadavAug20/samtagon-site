@@ -1,0 +1,45 @@
+/* Responsive Styles for Zen Minimal Layout */
+
+@media (max-width: 640px) {
+  .zen-page {
+    padding: 28px 18px 36px;
+  }
+
+  .zen-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .zen-title {
+    font-size: 2.15rem;
+  }
+
+  .zen-desc {
+    font-size: 0.98rem;
+  }
+
+  .zen-canvas-holder {
+    height: 300px;
+  }
+
+  .zen-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .zen-actions .btn {
+    width: 100%;
+  }
+
+  .games-pill-list {
+    gap: 6px;
+  }
+
+  .game-pill {
+    font-size: 0.76rem;
+    padding: 6px 12px;
+  }
+}
