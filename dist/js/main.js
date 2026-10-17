@@ -25,21 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Samtagon Studios online. Zen mode active.');
 });
 function setupZenInteractions(stage, audio) {
-    // 1. Cozy Night / Daylight Theme Toggle (Strictly loads in Dark Mode by default)
-    document.documentElement.setAttribute('data-theme', 'dark');
-    let isDarkMode = true;
-    stage?.setNightMode(true, true); // Immediate night mode on initial load
+    // 1. Cozy Night / Daylight Theme Toggle (Default warm alabaster Light Mode)
+    document.documentElement.removeAttribute('data-theme');
+    let isDarkMode = false;
+    stage?.setNightMode(false, true); // Immediate light mode on initial load
     const themeBtn = document.getElementById('theme-toggle-btn');
     themeBtn?.addEventListener('click', () => {
         isDarkMode = !isDarkMode;
         if (isDarkMode) {
             document.documentElement.setAttribute('data-theme', 'dark');
-            audio.playChime(523.25, 0.08); // C5
+            audio.playChime(523.25, 0.08); // C5 twilight chime
             stage?.setNightMode(true); // Smooth GSAP sunset animation!
         }
         else {
             document.documentElement.removeAttribute('data-theme');
-            audio.playChime(783.99, 0.08); // G5
+            audio.playMorningBirdSong(); // Joyful morning birdsong chirp on sunrise!
             stage?.setNightMode(false); // Smooth GSAP sunrise animation!
         }
     });
@@ -63,7 +63,7 @@ function setupZenInteractions(stage, audio) {
             updateAudioUI(unmuted);
         }
     });
-    // 2. Stage View Presets (Isometric, Top-Down, Orbit)
+    // 2. Stage View Presets (Isometric, Top-Down, Orbit, Cinematic, Director)
     const viewBtns = document.querySelectorAll('[data-view]');
     viewBtns.forEach((btn) => {
         btn.addEventListener('click', () => {

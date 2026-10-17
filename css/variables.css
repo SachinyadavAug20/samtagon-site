@@ -67,9 +67,9 @@
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.16);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 10px 24px -4px rgba(0, 0, 0, 0.5);
-  --shadow-button: 0 4px 14px rgba(16, 185, 129, 0.32);
-  --shadow-button-hover: 0 8px 22px rgba(16, 185, 129, 0.48);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-button: none;
+  --shadow-button-hover: none;
 }
 

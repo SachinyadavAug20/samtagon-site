@@ -778,6 +778,238 @@ export class ProceduralAudio {
     chirp();
     this.cricketTimer = window.setInterval(chirp, 3200);
   }
+
+  /**
+   * Cozy Campfire Crackle & Ember Pop
+   */
+  public playCampfirePop(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      // 3 subtle woody spark pops
+      for (let i = 0; i < 3; i++) {
+        const t = now + i * 0.05 + Math.random() * 0.03;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1400 + Math.random() * 800, t);
+        osc.frequency.exponentialRampToValueAtTime(120, t + 0.03);
+
+        gain.gain.setValueAtTime(0.06, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(t);
+        osc.stop(t + 0.04);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Railway Water Tower Spout Drop & Spray
+   */
+  public playWaterTowerSpray(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      // 1. Heavy wooden counterweight clang
+      const clang = this.ctx.createOscillator();
+      const clangGain = this.ctx.createGain();
+      clang.type = 'square';
+      clang.frequency.setValueAtTime(180, now);
+      clang.frequency.exponentialRampToValueAtTime(60, now + 0.12);
+      clangGain.gain.setValueAtTime(0.14, now);
+      clangGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      clang.connect(clangGain);
+      clangGain.connect(this.masterGain);
+      clang.start(now);
+      clang.stop(now + 0.15);
+
+      // 2. High-pressure water gush (filtered white noise)
+      const bufferSize = this.ctx.sampleRate * 0.35;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(900, now + 0.05);
+      filter.Q.value = 1.2;
+
+      const sprayGain = this.ctx.createGain();
+      sprayGain.gain.setValueAtTime(0.001, now + 0.05);
+      sprayGain.gain.linearRampToValueAtTime(0.12, now + 0.12);
+      sprayGain.gain.exponentialRampToValueAtTime(0.001, now + 0.40);
+
+      noise.connect(filter);
+      filter.connect(sprayGain);
+      sprayGain.connect(this.masterGain);
+
+      noise.start(now + 0.05);
+      noise.stop(now + 0.42);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Playful Toy Sheep Bleat ("Baaa!")
+   */
+  public playSheepBleat(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      // FM tremolo vibrato
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      lfo.frequency.value = 11; // 11Hz bleat flutter
+      lfoGain.gain.value = 24;
+      lfo.connect(osc.frequency);
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(290, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.28);
+
+      // Warm formant filter
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 850;
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.09, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      lfo.start(now);
+      osc.start(now);
+      lfo.stop(now + 0.33);
+      osc.stop(now + 0.33);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Hot Air Balloon Thermal Burner Roar
+   */
+  public playBalloonBurner(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const bufferSize = this.ctx.sampleRate * 0.45;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(320, now);
+      filter.frequency.linearRampToValueAtTime(650, now + 0.2);
+      filter.frequency.exponentialRampToValueAtTime(220, now + 0.45);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.01, now);
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+
+      noise.start(now);
+      noise.stop(now + 0.46);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Resonant Bronze Cathedral / Village Bell Chime
+   */
+  public playCathedralChime(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      // Bronze bell harmonics (fundamental + minor 3rd + fifth + octave)
+      const partials = [
+        { f: 440, a: 0.14, d: 1.4 },
+        { f: 523.25, a: 0.10, d: 1.1 },
+        { f: 659.25, a: 0.08, d: 0.8 },
+        { f: 880, a: 0.05, d: 0.5 },
+      ];
+
+      partials.forEach(({ f, a, d }) => {
+        if (!this.ctx || !this.masterGain) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now);
+
+        gain.gain.setValueAtTime(a, now);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + d);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(now);
+        osc.stop(now + d);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Joyful Morning Bird Chirps for Sunrise
+   */
+  public playMorningBirdSong(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const notes = [2800, 3400, 4200];
+      notes.forEach((freq, idx) => {
+        if (!this.ctx || !this.masterGain) return;
+        const t = now + idx * 0.11;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.3, t + 0.08);
+
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(t);
+        osc.stop(t + 0.10);
+      });
+    } catch {
+      // ignore
+    }
+  }
 }
 
 

@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 bun.lockb
-bun.lock
+.vercel
 
 # Editor & System
 .DS_Store

@@ -82,12 +82,36 @@ export class ThreeStage {
     semaphoreIsRaised = false;
     firefliesGroup = null;
     fireflies = [];
+    // Expanded World Map Scenery & Interactive Props
+    alpineRidgeGroup = new THREE.Group();
+    campsiteGroup = new THREE.Group();
+    campfireLight = null;
+    campfireFlame = null;
+    campfireParticles = null;
+    campfireParticlePos;
+    waterTowerGroup = new THREE.Group();
+    waterTowerSpout = null;
+    waterSprayPoints = null;
+    isWaterTowerSpraying = false;
+    hotAirBalloonGroup = new THREE.Group();
+    balloonBurnerLight = null;
+    balloonBurnerFlame = null;
+    belfryGroup = new THREE.Group();
+    belfryBell = null;
+    // Cinematic & Multi-Cut Director Camera System
     currentViewMode = 'isometric';
+    directorShotIndex = 0;
+    directorTimer = 0;
+    directorShotDuration = 6.8;
+    directorNeedsCut = true;
+    lastAnimTime = 0;
     // Day / Night & Celestial Systems
     ambientLight;
     hemiLight;
     sunLight;
     fillLight;
+    sunMesh;
+    sunCorona;
     moonMesh;
     moonLight;
     starsPoints;
@@ -181,12 +205,17 @@ export class ThreeStage {
         this.buildLevelCrossingAndTelegraph();
         this.buildLushNatureAndFlock();
         this.buildArticulatedTrain();
+        this.buildAlpineMountainRidge();
+        this.buildCampsiteAndCampfire();
+        this.buildRailwayWaterTower();
+        this.buildHotAirBalloon();
+        this.buildVillageBelfry();
         // 7. Weather Engine Setup
         this.setupWeatherSystem();
         // 8. Event Handlers & Micro-Interactions
         this.bindEvents();
-        // 9. Initial Load in Cozy Dark Mode (Immediate)
-        this.setNightMode(true, true);
+        // 9. Initial Load in Warm Alabaster Daylight Mode (Immediate)
+        this.setNightMode(false, true);
         // 10. Start Silky 60FPS Render Loop
         this.animate();
     }
@@ -405,6 +434,43 @@ export class ThreeStage {
         });
         this.starsPoints = new THREE.Points(starGeo, starMat);
         this.celestialGroup.add(this.starsPoints);
+        // 3. Radiant 3D Sun with Dynamic Corona Flare
+        const sunGroup = new THREE.Group();
+        const sunGeo = new THREE.SphereGeometry(0.24, 24, 24);
+        const sunMat = new THREE.MeshStandardMaterial({
+            color: 0xfffbeb,
+            emissive: 0xfbbf24,
+            emissiveIntensity: 1.4,
+            roughness: 0.2,
+            metalness: 0.1,
+        });
+        const sunSphere = new THREE.Mesh(sunGeo, sunMat);
+        sunGroup.add(sunSphere);
+        // Radiant Sun Flare Corona Sprite
+        const sunCanvas = document.createElement('canvas');
+        sunCanvas.width = 128;
+        sunCanvas.height = 128;
+        const sctx = sunCanvas.getContext('2d');
+        const sunGrad = sctx.createRadialGradient(64, 64, 10, 64, 64, 64);
+        sunGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        sunGrad.addColorStop(0.25, 'rgba(251, 191, 36, 0.7)');
+        sunGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.3)');
+        sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        sctx.fillStyle = sunGrad;
+        sctx.fillRect(0, 0, 128, 128);
+        const sunCoronaTex = new THREE.CanvasTexture(sunCanvas);
+        const sunCoronaMat = new THREE.SpriteMaterial({
+            map: sunCoronaTex,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.85,
+        });
+        this.sunCorona = new THREE.Sprite(sunCoronaMat);
+        this.sunCorona.scale.set(1.9, 1.9, 1);
+        sunGroup.add(this.sunCorona);
+        sunGroup.position.set(2.8, 2.3, -1.6);
+        this.sunMesh = sunGroup;
+        this.celestialGroup.add(this.sunMesh);
     }
     /* =========================================================================
        3. SCULPTED FLOATING ISLAND & SOFT CONTACT SHADOW
@@ -1704,6 +1770,27 @@ export class ThreeStage {
             this.interactiveSheep.push(sheep);
             this.sceneryGroup.add(sheep);
         });
+        // Highland Cow with rustic horns grazing peacefully in the meadow
+        const cow = new THREE.Group();
+        cow.position.set(-1.62, 0.04, -0.22);
+        const cowBodyMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.85 });
+        const cowHornMat = new THREE.MeshStandardMaterial({ color: 0xfef9c3, roughness: 0.35 });
+        const cowBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.07), cowBodyMat);
+        cowBody.position.y = 0.055;
+        cow.add(cowBody);
+        const cowHead = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), cowBodyMat);
+        cowHead.position.set(0.08, 0.075, 0);
+        cow.add(cowHead);
+        const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.05, 5), cowHornMat);
+        hornL.rotation.z = -Math.PI * 0.35;
+        hornL.position.set(0.08, 0.11, 0.035);
+        cow.add(hornL);
+        const hornR = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.05, 5), cowHornMat);
+        hornR.rotation.z = -Math.PI * 0.35;
+        hornR.position.set(0.08, 0.11, -0.035);
+        cow.add(hornR);
+        this.interactiveSheep.push(cow);
+        this.sceneryGroup.add(cow);
         // Cheerful Wildflower Dots (Filtered to ensure ZERO flowers near rails)
         const flowerColors = [0xef4444, 0xfacc15, 0xffffff, 0xa855f7];
         for (let f = 0; f < 48; f++) {
@@ -2115,6 +2202,372 @@ export class ThreeStage {
         });
     }
     /* =========================================================================
+       11b. EXPANDED SCENERY: ALPINE MOUNTAIN RIDGE BACKDROP
+       ========================================================================= */
+    buildAlpineMountainRidge() {
+        const alpineGroup = new THREE.Group();
+        const rockMat = new THREE.MeshStandardMaterial({
+            color: 0x475569,
+            roughness: 0.88,
+            flatShading: true,
+        });
+        const snowMat = new THREE.MeshStandardMaterial({
+            color: 0xf8fafc,
+            roughness: 0.35,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.08,
+            flatShading: true,
+        });
+        const spruceMat = new THREE.MeshStandardMaterial({
+            color: 0x14532d,
+            roughness: 0.65,
+        });
+        const trunkMat = new THREE.MeshStandardMaterial({
+            color: 0x451a03,
+            roughness: 0.8,
+        });
+        const peaks = [
+            { x: 0.15, z: -2.85, r: 1.45, h: 1.85, snowH: 0.65, segments: 7 },
+            { x: -1.95, z: -2.55, r: 1.25, h: 1.50, snowH: 0.52, segments: 6 },
+            { x: 2.15, z: -2.65, r: 1.35, h: 1.65, snowH: 0.58, segments: 6 },
+        ];
+        peaks.forEach(({ x, z, r, h, snowH, segments }) => {
+            const rockCone = new THREE.Mesh(new THREE.ConeGeometry(r, h, segments, 1), rockMat);
+            rockCone.position.set(x, h * 0.5 - 0.22, z);
+            rockCone.rotation.y = (x * 1.5) % Math.PI;
+            rockCone.receiveShadow = true;
+            rockCone.castShadow = true;
+            alpineGroup.add(rockCone);
+            const snowCone = new THREE.Mesh(new THREE.ConeGeometry(r * (snowH / h) * 1.05, snowH, segments, 1), snowMat);
+            snowCone.position.set(x, h - snowH * 0.5 - 0.21, z);
+            snowCone.rotation.y = rockCone.rotation.y;
+            snowCone.receiveShadow = true;
+            alpineGroup.add(snowCone);
+        });
+        const firOffsets = [
+            [-2.3, -2.1], [-1.8, -2.15], [-1.4, -2.3], [-0.8, -2.4],
+            [-0.3, -2.5], [0.5, -2.5], [1.1, -2.4], [1.6, -2.25], [2.2, -2.15]
+        ];
+        firOffsets.forEach(([fx, fz], idx) => {
+            const fir = new THREE.Group();
+            fir.position.set(fx, 0, fz);
+            const sc = 0.75 + (idx % 3) * 0.18;
+            fir.scale.setScalar(sc);
+            const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 5), trunkMat);
+            tr.position.y = 0.07;
+            fir.add(tr);
+            const cone1 = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.24, 6), spruceMat);
+            cone1.position.y = 0.22;
+            cone1.castShadow = true;
+            fir.add(cone1);
+            const cone2 = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.18, 6), spruceMat);
+            cone2.position.y = 0.33;
+            fir.add(cone2);
+            alpineGroup.add(fir);
+        });
+        this.alpineRidgeGroup = alpineGroup;
+        this.sceneryGroup.add(this.alpineRidgeGroup);
+    }
+    /* =========================================================================
+       11c. EXPANDED SCENERY: COZY CAMPSITE & INTERACTIVE EMBER CAMPFIRE
+       ========================================================================= */
+    buildCampsiteAndCampfire() {
+        const camp = new THREE.Group();
+        camp.position.set(-1.82, 0.04, 0.95);
+        const tent1 = new THREE.Group();
+        tent1.position.set(-0.25, 0, 0.15);
+        tent1.rotation.y = 0.42;
+        const tentMat1 = new THREE.MeshStandardMaterial({
+            color: 0xf59e0b,
+            roughness: 0.6,
+            side: THREE.DoubleSide,
+        });
+        const roof1Geo = new THREE.CylinderGeometry(0.18, 0.18, 0.38, 3, 1, false);
+        const roof1 = new THREE.Mesh(roof1Geo, tentMat1);
+        roof1.rotation.z = Math.PI * 0.5;
+        roof1.rotation.y = Math.PI * 0.5;
+        roof1.position.y = 0.11;
+        roof1.castShadow = true;
+        tent1.add(roof1);
+        const doorMat = new THREE.MeshBasicMaterial({ color: 0x451a03 });
+        const door = new THREE.Mesh(new THREE.CircleGeometry(0.08, 3), doorMat);
+        door.position.set(0, 0.08, 0.191);
+        tent1.add(door);
+        camp.add(tent1);
+        const tent2 = new THREE.Group();
+        tent2.position.set(0.24, 0, 0.22);
+        tent2.rotation.y = -0.65;
+        const tentMat2 = new THREE.MeshStandardMaterial({
+            color: 0x1e3a8a,
+            roughness: 0.6,
+            side: THREE.DoubleSide,
+        });
+        const roof2 = new THREE.Mesh(roof1Geo, tentMat2);
+        roof2.rotation.z = Math.PI * 0.5;
+        roof2.rotation.y = Math.PI * 0.5;
+        roof2.position.y = 0.11;
+        roof2.castShadow = true;
+        tent2.add(roof2);
+        camp.add(tent2);
+        const firePit = new THREE.Group();
+        firePit.position.set(0, 0, -0.15);
+        const stoneMat = new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.8 });
+        for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2;
+            const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.035, 1), stoneMat);
+            s.position.set(Math.cos(a) * 0.14, 0.02, Math.sin(a) * 0.14);
+            firePit.add(s);
+        }
+        const logMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 });
+        for (let i = 0; i < 3; i++) {
+            const log = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.022, 0.20, 6), logMat);
+            log.rotation.z = Math.PI * 0.5;
+            log.rotation.y = (i * Math.PI) / 3;
+            log.position.y = 0.025;
+            firePit.add(log);
+        }
+        const flameMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 7), flameMat);
+        flame.position.y = 0.10;
+        firePit.add(flame);
+        this.campfireFlame = flame;
+        const innerFlameMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const innerFlame = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.11, 7), innerFlameMat);
+        innerFlame.position.y = 0.08;
+        firePit.add(innerFlame);
+        this.campfireLight = new THREE.PointLight(0xf97316, 1.4, 1.8);
+        this.campfireLight.position.set(0, 0.18, 0);
+        firePit.add(this.campfireLight);
+        const sparkCount = 20;
+        const sparkGeo = new THREE.BufferGeometry();
+        this.campfireParticlePos = new Float32Array(sparkCount * 3);
+        for (let i = 0; i < sparkCount; i++) {
+            this.campfireParticlePos[i * 3] = (Math.random() - 0.5) * 0.12;
+            this.campfireParticlePos[i * 3 + 1] = 0.06 + Math.random() * 0.22;
+            this.campfireParticlePos[i * 3 + 2] = (Math.random() - 0.5) * 0.12;
+        }
+        sparkGeo.setAttribute('position', new THREE.BufferAttribute(this.campfireParticlePos, 3));
+        const sparkMat = new THREE.PointsMaterial({
+            color: 0xfbbf24,
+            size: 0.03,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            opacity: 0.85,
+        });
+        this.campfireParticles = new THREE.Points(sparkGeo, sparkMat);
+        firePit.add(this.campfireParticles);
+        camp.add(firePit);
+        this.campsiteGroup = camp;
+        this.sceneryGroup.add(this.campsiteGroup);
+    }
+    /* =========================================================================
+       11d. EXPANDED SCENERY: RAILWAY CEDAR WATER TOWER & DROP SPOUT
+       ========================================================================= */
+    buildRailwayWaterTower() {
+        const tower = new THREE.Group();
+        tower.position.set(0.85, 0.04, -1.35);
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
+        const staveMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 });
+        const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 });
+        const legH = 0.48;
+        const legW = 0.04;
+        const legSpread = 0.22;
+        [
+            [-legSpread, -legSpread],
+            [legSpread, -legSpread],
+            [-legSpread, legSpread],
+            [legSpread, legSpread],
+        ].forEach(([lx, lz]) => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(legW, legH, legW), woodMat);
+            leg.position.set(lx, legH * 0.5, lz);
+            leg.castShadow = true;
+            tower.add(leg);
+        });
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(legSpread * 2 + 0.12, 0.04, legSpread * 2 + 0.12), woodMat);
+        deck.position.y = legH;
+        deck.castShadow = true;
+        tower.add(deck);
+        const tankH = 0.42;
+        const tankR = 0.28;
+        const tank = new THREE.Mesh(new THREE.CylinderGeometry(tankR, tankR, tankH, 16), staveMat);
+        tank.position.y = legH + tankH * 0.5 + 0.02;
+        tank.castShadow = true;
+        tower.add(tank);
+        [-0.14, 0.0, 0.14].forEach((hoopY) => {
+            const hoop = new THREE.Mesh(new THREE.TorusGeometry(tankR + 0.006, 0.009, 6, 20), ironMat);
+            hoop.rotation.x = Math.PI * 0.5;
+            hoop.position.y = tank.position.y + hoopY;
+            tower.add(hoop);
+        });
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(tankR + 0.06, 0.22, 16), roofMat);
+        roof.position.y = tank.position.y + tankH * 0.5 + 0.11;
+        roof.castShadow = true;
+        tower.add(roof);
+        const finial = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), ironMat);
+        finial.position.y = roof.position.y + 0.13;
+        tower.add(finial);
+        const spoutGroup = new THREE.Group();
+        spoutGroup.position.set(0, legH + 0.24, tankR + 0.02);
+        spoutGroup.rotation.y = Math.PI * 0.5;
+        spoutGroup.rotation.x = 0.25;
+        const tubeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.4 });
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), tubeMat);
+        tube.rotation.x = Math.PI * 0.5;
+        tube.position.z = 0.16;
+        spoutGroup.add(tube);
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), ironMat);
+        ball.position.set(0, 0.12, 0.05);
+        spoutGroup.add(ball);
+        tower.add(spoutGroup);
+        this.waterTowerSpout = spoutGroup;
+        const sprayCount = 35;
+        const sprayGeo = new THREE.BufferGeometry();
+        const sprayPos = new Float32Array(sprayCount * 3);
+        for (let i = 0; i < sprayCount; i++) {
+            sprayPos[i * 3] = (Math.random() - 0.5) * 0.06;
+            sprayPos[i * 3 + 1] = -Math.random() * 0.35;
+            sprayPos[i * 3 + 2] = 0.30 + (Math.random() - 0.5) * 0.06;
+        }
+        sprayGeo.setAttribute('position', new THREE.BufferAttribute(sprayPos, 3));
+        const sprayMat = new THREE.PointsMaterial({
+            color: 0x38bdf8,
+            size: 0.035,
+            transparent: true,
+            opacity: 0.75,
+        });
+        this.waterSprayPoints = new THREE.Points(sprayGeo, sprayMat);
+        this.waterSprayPoints.position.copy(spoutGroup.position);
+        this.waterSprayPoints.visible = false;
+        tower.add(this.waterSprayPoints);
+        this.waterTowerGroup = tower;
+        this.sceneryGroup.add(this.waterTowerGroup);
+    }
+    /* =========================================================================
+       11e. EXPANDED SCENERY: FLOATING SKY HOT AIR BALLOON
+       ========================================================================= */
+    buildHotAirBalloon() {
+        const balloon = new THREE.Group();
+        balloon.position.set(1.9, 2.45, -1.1);
+        const envMatRed = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.45 });
+        const envMatGold = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.45 });
+        const envMatTeal = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.45 });
+        const upperGeo = new THREE.SphereGeometry(0.42, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.65);
+        const upperDome = new THREE.Mesh(upperGeo, envMatRed);
+        balloon.add(upperDome);
+        const bandGeo = new THREE.TorusGeometry(0.40, 0.03, 8, 24);
+        const band = new THREE.Mesh(bandGeo, envMatGold);
+        band.rotation.x = Math.PI * 0.5;
+        band.position.y = -0.05;
+        balloon.add(band);
+        const lowerGeo = new THREE.CylinderGeometry(0.39, 0.16, 0.34, 24, 1, true);
+        const lowerSkirt = new THREE.Mesh(lowerGeo, envMatTeal);
+        lowerSkirt.position.y = -0.22;
+        balloon.add(lowerSkirt);
+        const burnerMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.3 });
+        const burner = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.015, 6, 16), burnerMat);
+        burner.rotation.x = Math.PI * 0.5;
+        burner.position.y = -0.42;
+        balloon.add(burner);
+        const flameMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 8), flameMat);
+        flame.position.y = -0.40;
+        balloon.add(flame);
+        this.balloonBurnerFlame = flame;
+        this.balloonBurnerLight = new THREE.PointLight(0xf97316, 0.5, 2.2);
+        this.balloonBurnerLight.position.y = -0.40;
+        balloon.add(this.balloonBurnerLight);
+        const ropeMat = new THREE.LineBasicMaterial({ color: 0x78350f });
+        const ropePoints = [
+            new THREE.Vector3(-0.15, -0.38, -0.15), new THREE.Vector3(-0.08, -0.62, -0.08),
+            new THREE.Vector3(0.15, -0.38, -0.15), new THREE.Vector3(0.08, -0.62, -0.08),
+            new THREE.Vector3(-0.15, -0.38, 0.15), new THREE.Vector3(-0.08, -0.62, 0.08),
+            new THREE.Vector3(0.15, -0.38, 0.15), new THREE.Vector3(0.08, -0.62, 0.08),
+        ];
+        const ropeGeo = new THREE.BufferGeometry().setFromPoints(ropePoints);
+        const ropes = new THREE.LineSegments(ropeGeo, ropeMat);
+        balloon.add(ropes);
+        const basketMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.85 });
+        const basket = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.18), basketMat);
+        basket.position.y = -0.69;
+        basket.castShadow = true;
+        balloon.add(basket);
+        this.hotAirBalloonGroup = balloon;
+        this.celestialGroup.add(this.hotAirBalloonGroup);
+    }
+    /* =========================================================================
+       11f. EXPANDED SCENERY: VILLAGE BELFRY & BRONZE CHIME BELL
+       ========================================================================= */
+    buildVillageBelfry() {
+        const belfry = new THREE.Group();
+        // Positioned gracefully in village backdrop (x = 1.95, z = -0.65)
+        belfry.position.set(1.95, 0.04, -0.65);
+        const stoneTex = this.createStoneBrickTexture();
+        const stoneMat = new THREE.MeshStandardMaterial({
+            color: 0xe2e8f0,
+            map: stoneTex,
+            roughness: 0.7,
+        });
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+        const copperMat = new THREE.MeshStandardMaterial({
+            color: 0x0f766e,
+            roughness: 0.45,
+            metalness: 0.25,
+        });
+        const bronzeMat = new THREE.MeshStandardMaterial({
+            color: 0xd97706,
+            roughness: 0.25,
+            metalness: 0.85,
+        });
+        const baseH = 0.46;
+        const baseW = 0.26;
+        const baseTower = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseH, baseW), stoneMat);
+        baseTower.position.y = baseH * 0.5;
+        baseTower.castShadow = true;
+        baseTower.receiveShadow = true;
+        belfry.add(baseTower);
+        const pillarH = 0.22;
+        const pillarW = 0.05;
+        const pOff = baseW * 0.5 - pillarW * 0.5;
+        [
+            [-pOff, -pOff],
+            [pOff, -pOff],
+            [-pOff, pOff],
+            [pOff, pOff],
+        ].forEach(([px, pz]) => {
+            const pillar = new THREE.Mesh(new THREE.BoxGeometry(pillarW, pillarH, pillarW), stoneMat);
+            pillar.position.set(px, baseH + pillarH * 0.5, pz);
+            pillar.castShadow = true;
+            belfry.add(pillar);
+        });
+        const bellGroup = new THREE.Group();
+        bellGroup.position.set(0, baseH + pillarH * 0.75, 0);
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(baseW - 0.04, 0.025, 0.025), woodMat);
+        bellGroup.add(beam);
+        const bellMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.07, 0.09, 14), bronzeMat);
+        bellMesh.position.y = -0.05;
+        bellGroup.add(bellMesh);
+        const clapper = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), bronzeMat);
+        clapper.position.y = -0.10;
+        bellGroup.add(clapper);
+        belfry.add(bellGroup);
+        this.belfryBell = bellGroup;
+        const roofH = 0.36;
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(baseW * 0.75, roofH, 4), copperMat);
+        roof.rotation.y = Math.PI * 0.25;
+        roof.position.y = baseH + pillarH + roofH * 0.5;
+        roof.castShadow = true;
+        belfry.add(roof);
+        const cross = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.09, 0.016), bronzeMat);
+        cross.position.y = roof.position.y + roofH * 0.5 + 0.045;
+        belfry.add(cross);
+        const crossArm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.016, 0.016), bronzeMat);
+        crossArm.position.y = cross.position.y + 0.01;
+        belfry.add(crossArm);
+        this.belfryGroup = belfry;
+        this.sceneryGroup.add(this.belfryGroup);
+    }
+    /* =========================================================================
        12. DEDICATED WEATHER & RAIN ENGINE
        ========================================================================= */
     setupWeatherSystem() {
@@ -2301,6 +2754,38 @@ export class ThreeStage {
                     return;
                 }
             }
+            // Check Cozy Campsite & Campfire
+            if (this.campsiteGroup) {
+                const campHits = this.raycaster.intersectObject(this.campsiteGroup, true);
+                if (campHits.length > 0) {
+                    this.triggerCampfirePop();
+                    return;
+                }
+            }
+            // Check Railway Water Tower
+            if (this.waterTowerGroup) {
+                const towerHits = this.raycaster.intersectObject(this.waterTowerGroup, true);
+                if (towerHits.length > 0) {
+                    this.triggerWaterTowerSpray();
+                    return;
+                }
+            }
+            // Check Floating Hot Air Balloon
+            if (this.hotAirBalloonGroup) {
+                const balloonHits = this.raycaster.intersectObject(this.hotAirBalloonGroup, true);
+                if (balloonHits.length > 0) {
+                    this.triggerBalloonBurner();
+                    return;
+                }
+            }
+            // Check Village Belfry Bell
+            if (this.belfryGroup) {
+                const belfryHits = this.raycaster.intersectObject(this.belfryGroup, true);
+                if (belfryHits.length > 0) {
+                    this.triggerBelfryChime();
+                    return;
+                }
+            }
             // Check Water
             if (this.waterMesh) {
                 const waterHits = this.raycaster.intersectObject(this.waterMesh, true);
@@ -2313,7 +2798,7 @@ export class ThreeStage {
         });
         // OrbitControls listener to gracefully switch to Orbit view on manual drag
         this.controls.addEventListener('start', () => {
-            if (this.currentViewMode === 'cinematic') {
+            if (this.currentViewMode === 'cinematic' || this.currentViewMode === 'director') {
                 this.currentViewMode = 'orbit';
                 this.updateActiveViewPill('orbit');
             }
@@ -2338,6 +2823,10 @@ export class ThreeStage {
                 ...(this.watermillGroup ? [this.watermillGroup] : []),
                 ...(this.cottageGroup ? [this.cottageGroup] : []),
                 ...(this.semaphoreGroup ? [this.semaphoreGroup] : []),
+                ...(this.campsiteGroup ? [this.campsiteGroup] : []),
+                ...(this.waterTowerGroup ? [this.waterTowerGroup] : []),
+                ...(this.hotAirBalloonGroup ? [this.hotAirBalloonGroup] : []),
+                ...(this.belfryGroup ? [this.belfryGroup] : []),
             ];
             const hits = this.raycaster.intersectObjects(interactiveTargets, true);
             if (hits.length > 0) {
@@ -2360,7 +2849,7 @@ export class ThreeStage {
                 this.container.style.cursor = 'grab';
             }
         });
-        // Keyboard Shortcuts (Space: Toot, R: Rain, T: Theme, 1-4: Views)
+        // Keyboard Shortcuts (Space: Toot, R: Rain, T: Theme, 1-5: Views)
         window.addEventListener('keydown', (e) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
                 return;
@@ -2385,7 +2874,7 @@ export class ThreeStage {
                 }
                 else {
                     document.documentElement.removeAttribute('data-theme');
-                    this.audio.playChime(783.99, 0.08);
+                    this.audio.playMorningBirdSong();
                     this.setNightMode(false);
                 }
             }
@@ -2404,6 +2893,10 @@ export class ThreeStage {
             else if (e.code === 'Digit4') {
                 this.setViewMode('cinematic');
                 this.updateActiveViewPill('cinematic');
+            }
+            else if (e.code === 'Digit5') {
+                this.setViewMode('director');
+                this.updateActiveViewPill('director');
             }
             else if (e.code === 'ArrowUp') {
                 this.setSpeed(Math.min(3.6, this.speedMultiplier + 0.5));
@@ -2438,9 +2931,9 @@ export class ThreeStage {
         this.triggerSplash(bPos.x, 0.034, bPos.z);
     }
     triggerSheepHop(sheep) {
-        this.audio.playSheepHop();
+        this.audio.playSheepBleat();
         gsap.to(sheep.position, {
-            y: 0.12,
+            y: 0.14,
             duration: 0.18,
             yoyo: true,
             repeat: 1,
@@ -2456,6 +2949,111 @@ export class ThreeStage {
             repeat: 1,
             ease: 'sine.inOut',
         });
+    }
+    triggerCampfirePop() {
+        this.audio.playCampfirePop();
+        if (this.campfireLight) {
+            const orig = this.campfireLight.intensity;
+            gsap.to(this.campfireLight, {
+                intensity: 3.6,
+                duration: 0.12,
+                yoyo: true,
+                repeat: 3,
+                ease: 'power1.inOut',
+                onComplete: () => {
+                    if (this.campfireLight)
+                        this.campfireLight.intensity = orig;
+                },
+            });
+        }
+        if (this.campfireFlame) {
+            gsap.to(this.campfireFlame.scale, {
+                x: 1.5,
+                y: 1.8,
+                z: 1.5,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+                ease: 'power2.out',
+            });
+        }
+    }
+    triggerWaterTowerSpray() {
+        if (this.isWaterTowerSpraying || !this.waterTowerSpout)
+            return;
+        this.isWaterTowerSpraying = true;
+        this.audio.playWaterTowerSpray();
+        gsap.to(this.waterTowerSpout.rotation, {
+            x: 0.82,
+            duration: 0.35,
+            ease: 'back.out(1.4)',
+            onComplete: () => {
+                if (this.waterSprayPoints)
+                    this.waterSprayPoints.visible = true;
+                setTimeout(() => {
+                    if (this.waterSprayPoints)
+                        this.waterSprayPoints.visible = false;
+                    if (this.waterTowerSpout) {
+                        gsap.to(this.waterTowerSpout.rotation, {
+                            x: 0.25,
+                            duration: 0.45,
+                            ease: 'bounce.out',
+                            onComplete: () => {
+                                this.isWaterTowerSpraying = false;
+                            },
+                        });
+                    }
+                }, 500);
+            },
+        });
+    }
+    triggerBalloonBurner() {
+        this.audio.playBalloonBurner();
+        if (this.balloonBurnerLight) {
+            gsap.to(this.balloonBurnerLight, {
+                intensity: 3.2,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+            });
+        }
+        if (this.balloonBurnerFlame) {
+            gsap.to(this.balloonBurnerFlame.scale, {
+                x: 2.2,
+                y: 2.5,
+                z: 2.2,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+            });
+        }
+        if (this.hotAirBalloonGroup) {
+            gsap.to(this.hotAirBalloonGroup.position, {
+                y: '+=0.28',
+                duration: 0.45,
+                yoyo: true,
+                repeat: 1,
+                ease: 'power1.out',
+            });
+        }
+    }
+    triggerBelfryChime() {
+        this.audio.playCathedralChime();
+        if (this.belfryBell) {
+            gsap.killTweensOf(this.belfryBell.rotation);
+            this.belfryBell.rotation.z = 0;
+            gsap.to(this.belfryBell.rotation, {
+                z: 0.48,
+                duration: 0.22,
+                yoyo: true,
+                repeat: 5,
+                ease: 'sine.inOut',
+                onComplete: () => {
+                    if (this.belfryBell)
+                        this.belfryBell.rotation.z = 0;
+                },
+            });
+        }
     }
     triggerLanternSpark() {
         this.audio.playLanternSpark();
@@ -2580,9 +3178,16 @@ export class ThreeStage {
     }
     setViewMode(mode) {
         this.currentViewMode = mode;
-        this.controls.enabled = mode !== 'cinematic';
+        this.controls.enabled = mode !== 'cinematic' && mode !== 'director';
         if (mode === 'top') {
             this.controls.autoRotate = false;
+            gsap.to(this.controls.target, {
+                x: 0,
+                y: 0,
+                z: 0,
+                duration: 0.85,
+                ease: 'power2.inOut',
+            });
             gsap.to(this.camera.position, {
                 x: 0.01,
                 y: 6.2,
@@ -2590,13 +3195,19 @@ export class ThreeStage {
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onUpdate: () => {
-                    this.controls.target.set(0, 0, 0);
                     this.controls.update();
                 },
             });
         }
         else if (mode === 'isometric') {
             this.controls.autoRotate = false;
+            gsap.to(this.controls.target, {
+                x: 0,
+                y: 0.15,
+                z: 0,
+                duration: 0.85,
+                ease: 'power2.inOut',
+            });
             gsap.to(this.camera.position, {
                 x: 3.8,
                 y: 2.85,
@@ -2604,7 +3215,6 @@ export class ThreeStage {
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onUpdate: () => {
-                    this.controls.target.set(0, 0.15, 0);
                     this.controls.update();
                 },
             });
@@ -2612,9 +3222,21 @@ export class ThreeStage {
         else if (mode === 'orbit') {
             this.controls.autoRotate = true;
             this.controls.autoRotateSpeed = 1.2;
+            gsap.to(this.controls.target, {
+                x: 0,
+                y: 0.15,
+                z: 0,
+                duration: 0.6,
+            });
         }
         else if (mode === 'cinematic') {
             this.controls.autoRotate = false;
+        }
+        else if (mode === 'director') {
+            this.controls.autoRotate = false;
+            this.directorShotIndex = 0;
+            this.directorTimer = 0;
+            this.directorNeedsCut = true;
         }
     }
     setNightMode(isNight, immediate = false) {
@@ -2635,6 +3257,13 @@ export class ThreeStage {
                     this.sunLight.position.set(6.5, 0.25, 1.8);
                     this.sunLight.color.set(0x38bdf8);
                     this.sunLight.intensity = 0.15;
+                }
+                if (this.sunMesh) {
+                    this.sunMesh.position.set(4.5, -0.8, 2.0);
+                    this.sunMesh.scale.setScalar(0.001);
+                    if (this.sunCorona) {
+                        this.sunCorona.material.opacity = 0;
+                    }
                 }
                 if (this.moonLight) {
                     this.moonLight.intensity = 1.45;
@@ -2708,6 +3337,13 @@ export class ThreeStage {
                     this.sunLight.position.set(5.5, 7.5, 4.2);
                     this.sunLight.color.set(0xfffbeb);
                     this.sunLight.intensity = 2.6;
+                }
+                if (this.sunMesh) {
+                    this.sunMesh.position.set(2.8, 2.3, -1.6);
+                    this.sunMesh.scale.set(1, 1, 1);
+                    if (this.sunCorona) {
+                        this.sunCorona.material.opacity = 0.85;
+                    }
                 }
                 if (this.moonLight)
                     this.moonLight.intensity = 0;
@@ -2806,6 +3442,27 @@ export class ThreeStage {
                     },
                 }, dur * 0.5);
                 sunsetTL.to(this.sunLight, { intensity: 0.15, duration: dur, ease: 'power2.inOut' }, 0);
+            }
+            if (this.sunMesh) {
+                sunsetTL.to(this.sunMesh.position, {
+                    x: 4.5,
+                    y: -0.8,
+                    z: 2.0,
+                    duration: dur,
+                    ease: 'power2.in',
+                }, 0);
+                sunsetTL.to(this.sunMesh.scale, {
+                    x: 0.001,
+                    y: 0.001,
+                    z: 0.001,
+                    duration: dur * 0.8,
+                }, dur * 0.2);
+                if (this.sunCorona) {
+                    sunsetTL.to(this.sunCorona.material, {
+                        opacity: 0,
+                        duration: dur * 0.7,
+                    }, dur * 0.2);
+                }
             }
             // 2. Ambient light shifts from midday to warm sunset glow, then midnight indigo
             if (this.ambientLight) {
@@ -3049,6 +3706,29 @@ export class ThreeStage {
                 }, dur * 0.15);
                 sunriseTL.to(this.sunLight, { intensity: 2.6, duration: dur }, dur * 0.1);
             }
+            if (this.sunMesh) {
+                this.sunMesh.position.set(4.5, -0.8, 2.0);
+                sunriseTL.to(this.sunMesh.position, {
+                    x: 2.8,
+                    y: 2.3,
+                    z: -1.6,
+                    duration: dur,
+                    ease: 'power2.out',
+                }, dur * 0.15);
+                sunriseTL.to(this.sunMesh.scale, {
+                    x: 1,
+                    y: 1,
+                    z: 1,
+                    duration: dur,
+                    ease: 'back.out(1.2)',
+                }, dur * 0.2);
+                if (this.sunCorona) {
+                    sunriseTL.to(this.sunCorona.material, {
+                        opacity: 0.85,
+                        duration: dur * 0.8,
+                    }, dur * 0.25);
+                }
+            }
             // 4. Ambient light blooms into bright daylight
             if (this.ambientLight) {
                 const ambCol = { r: 0.12, g: 0.16, b: 0.23 };
@@ -3229,8 +3909,72 @@ export class ThreeStage {
                 }
             });
         }
-        // 9c. Cinematic Cab / Chase View Dynamic Tracking
-        if (this.currentViewMode === 'cinematic') {
+        // 9c. Campfire Ember Drift
+        if (this.campfireParticles && this.campfireParticlePos) {
+            for (let i = 0; i < 20; i++) {
+                this.campfireParticlePos[i * 3 + 1] += 0.0025;
+                if (this.campfireParticlePos[i * 3 + 1] > 0.32) {
+                    this.campfireParticlePos[i * 3 + 1] = 0.06;
+                    this.campfireParticlePos[i * 3] = (Math.random() - 0.5) * 0.12;
+                    this.campfireParticlePos[i * 3 + 2] = (Math.random() - 0.5) * 0.12;
+                }
+            }
+            this.campfireParticles.geometry.attributes.position.needsUpdate = true;
+        }
+        // 9d. Hot Air Balloon Thermal Bob
+        if (this.hotAirBalloonGroup) {
+            const bTime = Date.now() * 0.001;
+            this.hotAirBalloonGroup.position.y = 2.45 + Math.sin(bTime * 1.2) * 0.08;
+            this.hotAirBalloonGroup.rotation.z = Math.sin(bTime * 0.8) * 0.04;
+        }
+        // 9e. Dynamic Cinematic & Director Multi-Cut Camera System
+        if (this.currentViewMode === 'director') {
+            const now = performance.now();
+            const dt = this.lastAnimTime ? (now - this.lastAnimTime) * 0.001 : 0.016;
+            this.directorTimer += dt;
+            if (this.directorTimer >= this.directorShotDuration) {
+                this.directorTimer = 0;
+                this.directorShotIndex = (this.directorShotIndex + 1) % 4;
+                this.directorNeedsCut = true;
+            }
+            const locoPos = this.locoCar.position;
+            const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
+            let targetCamPos;
+            let targetLook;
+            if (this.directorShotIndex === 0) {
+                // Shot 0: Trackside Viaduct Arch Waypoint (Low-Angle Hero Shot)
+                targetCamPos = new THREE.Vector3(1.15, 0.40, 1.15);
+                targetLook = locoPos.clone().add(new THREE.Vector3(0, 0.08, 0));
+            }
+            else if (this.directorShotIndex === 1) {
+                // Shot 1: Locomotive Cab Chase / Action Cam
+                targetCamPos = locoPos.clone().sub(tangent.clone().multiplyScalar(0.72)).add(new THREE.Vector3(0, 0.38, 0));
+                targetLook = locoPos.clone().add(tangent.clone().multiplyScalar(0.75)).add(new THREE.Vector3(0, 0.12, 0));
+            }
+            else if (this.directorShotIndex === 2) {
+                // Shot 2: Station Platform Spectator Angle
+                targetCamPos = new THREE.Vector3(-1.42, 0.46, 1.25);
+                targetLook = locoPos.clone().add(new THREE.Vector3(0, 0.08, 0));
+            }
+            else {
+                // Shot 3: High Alpine Ridge Drone Panorama Sweep
+                const droneAngle = (Date.now() * 0.00028);
+                targetCamPos = new THREE.Vector3(Math.cos(droneAngle) * 3.4, 2.95, Math.sin(droneAngle) * 3.4);
+                targetLook = new THREE.Vector3(0, 0.25, 0);
+            }
+            if (this.directorNeedsCut) {
+                this.camera.position.copy(targetCamPos);
+                this.camera.lookAt(targetLook);
+                this.controls.target.copy(targetLook);
+                this.directorNeedsCut = false;
+            }
+            else {
+                this.camera.position.lerp(targetCamPos, 0.08);
+                this.camera.lookAt(targetLook);
+                this.controls.target.copy(targetLook);
+            }
+        }
+        else if (this.currentViewMode === 'cinematic') {
             const locoPos = this.locoCar.position;
             const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
             // Camera positioned smoothly behind and above the locomotive along the track tangent
@@ -3244,6 +3988,7 @@ export class ThreeStage {
         else {
             this.controls.update();
         }
+        this.lastAnimTime = performance.now();
         // 10. Subtle Diorama Floating Levitation
         this.rootGroup.position.y = Math.sin(Date.now() * 0.0012) * 0.025;
         // 11. Render Frame
