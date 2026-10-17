@@ -184,9 +184,9 @@ export class ThreeStage {
     const width = this.container.clientWidth || 920;
     const height = this.container.clientHeight || 520;
 
-    this.camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-    // Heroic isometric viewpoint looking gently down
-    this.camera.position.set(3.8, 2.85, 3.8);
+    this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+    // Heroic isometric viewpoint with comfortable framing and breathing room
+    this.camera.position.set(4.35, 3.25, 4.35);
     this.camera.lookAt(0, 0.15, 0);
 
     // 2. High-Fidelity WebGL Renderer with Soft Shadow Mapping
@@ -211,8 +211,8 @@ export class ThreeStage {
     this.controls.autoRotateSpeed = 0;
     this.controls.minPolarAngle = Math.PI * 0.18; // Don't look straight down
     this.controls.maxPolarAngle = Math.PI * 0.44; // Never look from below ground
-    this.controls.minDistance = 2.4;
-    this.controls.maxDistance = 7.0;
+    this.controls.minDistance = 1.6; // Deep close-up zoom
+    this.controls.maxDistance = 12.5; // Wide panoramic zoom-out
     this.controls.target.set(0, 0.15, 0);
 
     // 4. Assemble Group Hierarchies
@@ -3767,7 +3767,7 @@ export class ThreeStage {
       });
       gsap.to(this.camera.position, {
         x: 0.01,
-        y: 6.2,
+        y: 7.2,
         z: 0.01,
         duration: 0.85,
         ease: 'power2.inOut',
@@ -3786,9 +3786,9 @@ export class ThreeStage {
         ease: 'power2.inOut',
       });
       gsap.to(this.camera.position, {
-        x: 3.8,
-        y: 2.85,
-        z: 3.8,
+        x: 4.35,
+        y: 3.25,
+        z: 4.35,
         duration: 0.85,
         ease: 'power2.inOut',
         onComplete: () => {

@@ -160,7 +160,7 @@
 .zen-diorama-wrap {
   position: relative;
   width: 100%;
-  max-width: 980px;
+  max-width: 1040px;
   margin: 0 auto 8px;
   display: flex;
   flex-direction: column;
@@ -169,7 +169,7 @@
 
 .zen-canvas-holder {
   width: 100%;
-  height: clamp(440px, 48vh, 550px);
+  height: clamp(480px, 54vh, 620px);
   display: block;
   cursor: grab;
   outline: none;
