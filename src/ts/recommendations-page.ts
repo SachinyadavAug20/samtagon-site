@@ -37,8 +37,8 @@ class RecommendationsApp {
     this.setupEventListeners();
     this.setupPresetChips();
 
-    // Default: Start with flagship Metro Grid in the Rabbit Hole view
-    const flagship = this.catalog.find((g) => g.id === 'metro-grid') || this.catalog[0];
+    // Default: Start with Detroit: Become Human in the Rabbit Hole view
+    const flagship = this.catalog.find((g) => g.id === 'detroit-become-human') || this.catalog[0];
     this.selectGameForRabbitHole(flagship, false);
 
     // Initial search showcase
@@ -237,39 +237,39 @@ class RecommendationsApp {
       .join('');
 
     card.innerHTML = `
-      <div class="card-header">
-        <div class="card-meta">
-          ${rank > 0 ? `<span class="rank-tag">#${rank}</span>` : ''}
-          ${game.isSamtagonOriginal ? `<span class="badge-samtagon">Samtagon Original</span>` : ''}
+      <div class="card-cover-wrap">
+        <img src="${game.image}" alt="${game.title}" class="card-cover-img" loading="lazy" onerror="this.style.opacity='0.15'" />
+        <div class="card-cover-overlay"></div>
+        <div class="card-cover-pills">
+          <span class="card-sim-badge ${scoreColorClass}">
+            ${percentMatch}% Match
+          </span>
+          ${game.isSamtagonOriginal ? `<span class="badge-samtagon-float">Samtagon Original</span>` : ''}
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="card-header-line">
+          <h3 class="card-title">${game.title}</h3>
           <span class="release-year">${game.releaseYear}</span>
         </div>
-        <div class="similarity-pill ${scoreColorClass}" title="Cosine Similarity Score: ${similarity.toFixed(4)}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          <span class="sim-pct">${percentMatch}%</span>
-          <span class="sim-lbl">Cosine Match</span>
+        <div class="card-developer-line">${game.developer}</div>
+
+        <p class="card-desc">${game.description}</p>
+
+        <div class="genres-row">
+          ${genresHtml}
         </div>
-      </div>
 
-      <h3 class="card-title">${game.title}</h3>
-      <p class="card-subtitle">${game.subtitle}</p>
-      <p class="card-desc">${game.description}</p>
-
-      <div class="similarity-bar-wrap">
-        <div class="similarity-bar-fill" style="width: ${Math.max(5, percentMatch)}%;"></div>
-      </div>
-
-      <div class="genres-row">
-        ${genresHtml}
-      </div>
-
-      <div class="card-actions">
-        <div class="platforms-group">
-          ${platformBadgesHtml}
+        <div class="card-actions">
+          <div class="platforms-group">
+            ${platformBadgesHtml}
+          </div>
+          <button class="btn btn-secondary btn-sm rabbit-hole-btn" title="Explore Similar Games down the Rabbit Hole">
+            <span>Similar</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
-        <button class="btn btn-secondary btn-sm rabbit-hole-btn" title="Explore Similar Games down the Rabbit Hole">
-          <span>Similar Games</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
       </div>
     `;
 
@@ -371,19 +371,26 @@ class RecommendationsApp {
       .join('');
 
     this.rabbitHoleFocusCard.innerHTML = `
-      <div class="focus-badge-row">
-        <span class="badge-focus">CURRENT SELECTION</span>
-        ${game.isSamtagonOriginal ? `<span class="badge-samtagon">Samtagon Original</span>` : ''}
-        <span class="focus-developer">${game.developer} &bull; ${game.releaseYear}</span>
-      </div>
-      <h2 class="focus-title">${game.title}</h2>
-      <p class="focus-subtitle">${game.subtitle}</p>
-      <p class="focus-desc">${game.description}</p>
-      <div class="focus-genres">
-        ${game.genres.map((g) => `<span class="genre-pill">${g}</span>`).join('')}
-      </div>
-      <div class="focus-platforms">
-        ${platformBadgesHtml}
+      <div class="focus-layout">
+        <div class="focus-media">
+          <img src="${game.image}" alt="${game.title}" class="focus-img" onerror="this.style.opacity='0.2'" />
+        </div>
+        <div class="focus-details">
+          <div class="focus-badge-row">
+            <span class="badge-focus">CURRENT SELECTION</span>
+            ${game.isSamtagonOriginal ? `<span class="badge-samtagon">Samtagon Original</span>` : ''}
+            <span class="focus-developer">${game.developer} &bull; ${game.releaseYear}</span>
+          </div>
+          <h2 class="focus-title">${game.title}</h2>
+          <p class="focus-subtitle">${game.subtitle}</p>
+          <p class="focus-desc">${game.description}</p>
+          <div class="focus-genres">
+            ${game.genres.map((g) => `<span class="genre-pill">${g}</span>`).join('')}
+          </div>
+          <div class="focus-platforms">
+            ${platformBadgesHtml}
+          </div>
+        </div>
       </div>
     `;
   }

@@ -99,7 +99,7 @@ export class ThreeStage {
     villageWellGroup = new THREE.Group();
     villageWellBucket = null;
     butterflies = [];
-    // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Cab, Cinematic, Director, Trackside)
+    // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Cinematic, Director, Trackside)
     currentViewMode = 'isometric';
     directorShotIndex = 0;
     directorTimer = 0;
@@ -2934,18 +2934,14 @@ export class ThreeStage {
                 this.updateActiveViewPill('top');
             }
             else if (e.code === 'Digit3') {
-                this.setViewMode('cab');
-                this.updateActiveViewPill('cab');
-            }
-            else if (e.code === 'Digit4') {
                 this.setViewMode('cinematic');
                 this.updateActiveViewPill('cinematic');
             }
-            else if (e.code === 'Digit5') {
+            else if (e.code === 'Digit4') {
                 this.setViewMode('director');
                 this.updateActiveViewPill('director');
             }
-            else if (e.code === 'Digit6') {
+            else if (e.code === 'Digit5') {
                 this.setViewMode('trackside');
                 this.updateActiveViewPill('trackside');
             }
@@ -4038,16 +4034,6 @@ export class ThreeStage {
                 this.camera.lookAt(targetLook);
                 this.controls.target.copy(targetLook);
             }
-        }
-        else if (this.currentViewMode === 'cab') {
-            // First-person locomotive cab driver view
-            const locoPos = this.locoCar.position;
-            const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
-            const targetCamPos = locoPos.clone().add(new THREE.Vector3(0, 0.22, 0)).sub(tangent.clone().multiplyScalar(0.04));
-            const targetLook = locoPos.clone().add(tangent.clone().multiplyScalar(1.2)).add(new THREE.Vector3(0, 0.16, 0));
-            this.camera.position.lerp(targetCamPos, 0.14);
-            this.camera.lookAt(targetLook);
-            this.controls.target.copy(targetLook);
         }
         else if (this.currentViewMode === 'cinematic') {
             const locoPos = this.locoCar.position;

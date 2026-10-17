@@ -108,7 +108,7 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     btn.addEventListener('click', () => {
       viewBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      const view = btn.dataset.view as 'isometric' | 'top' | 'cab' | 'cinematic' | 'director' | 'trackside';
+      const view = btn.dataset.view as 'isometric' | 'top' | 'cinematic' | 'director' | 'trackside';
       stage?.setViewMode(view);
       audio.playButtonPress();
     });
