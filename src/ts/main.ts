@@ -37,10 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio): void {
-  // 1. Cozy Night / Daylight Theme Toggle (Default warm alabaster Light Mode)
-  document.documentElement.removeAttribute('data-theme');
-  let isDarkMode = false;
-  stage?.setNightMode(false, true); // Immediate light mode on initial load
+  // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode)
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  let isDarkMode = prefersDark;
+
+  if (isDarkMode) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    stage?.setNightMode(true, true); // Immediate dark mode for system dark preference
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    stage?.setNightMode(false, true); // Immediate light mode for system light preference
+  }
+
+  // Listen to OS system color scheme changes
+  window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener('change', (e) => {
+    isDarkMode = e.matches;
+    if (isDarkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      audio.playChime(523.25, 0.08); // C5 twilight chime
+      stage?.setNightMode(true);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      audio.playMorningBirdSong();
+      stage?.setNightMode(false);
+    }
+  });
 
   const themeBtn = document.getElementById('theme-toggle-btn');
 
@@ -81,13 +102,13 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     }
   });
 
-  // 2. Stage View Presets (Isometric, Top-Down, Orbit, Cinematic, Director)
+  // 2. Stage View Presets (Isometric, Top-Down, Cab, Cinematic, Director, Trackside)
   const viewBtns = document.querySelectorAll<HTMLButtonElement>('[data-view]');
   viewBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       viewBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      const view = btn.dataset.view as 'isometric' | 'top' | 'orbit' | 'cinematic' | 'director';
+      const view = btn.dataset.view as 'isometric' | 'top' | 'cab' | 'cinematic' | 'director' | 'trackside';
       stage?.setViewMode(view);
       audio.playButtonPress();
     });

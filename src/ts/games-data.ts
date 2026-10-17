@@ -1,290 +1,522 @@
-/**
- * Samtagon Studio - Games & GitHub Repositories Data
- * Direct scraping from itch.io (sachinapr20) and GitHub (SachinyadavAug20).
- */
+import { GameItem, VectorEngine } from './vector-engine.js';
 
 export interface ItchGame {
   id: string;
   title: string;
-  genre: 'Simulation' | 'Adventure' | 'Puzzle' | 'Casual';
+  genre: string;
+  engine: string;
   description: string;
   screenshot: string;
-  itchUrl: string;
-  githubUrl?: string;
-  engine: string;
-  playInBrowser: boolean;
-  featured?: boolean;
   controls: string;
   techHighlights: string[];
+  itchUrl: string;
+  githubUrl?: string;
 }
 
-export interface MetroScreenshot {
+/**
+ * Raw Game Definitions before vector pre-computation
+ */
+interface RawGame {
   id: string;
-  label: string;
-  src: string;
-  caption: string;
-}
-
-export interface GitHubRepo {
-  name: string;
-  url: string;
+  title: string;
+  subtitle: string;
   description: string;
-  language: string;
-  stars: number;
-  tag: 'Game' | 'System' | 'FullStack' | 'Tool';
+  genres: string[];
+  tags: string[];
+  rating: number;
+  releaseYear: number;
+  platforms: { name: string; url: string; badge: 'steam' | 'itch' | 'gog' | 'web' }[];
+  developer: string;
+  isSamtagonOriginal?: boolean;
 }
 
-export const METRO_SCREENSHOTS: MetroScreenshot[] = [
-  {
-    id: 'loop',
-    label: 'Headway Loop',
-    src: 'assets/images/metro-grid/test_metro_infinite_loop_proof.png',
-    caption: '2.5D Isometric Headway Loop with Dual Turnarounds & Express Dispatching',
-  },
-  {
-    id: 'boarding',
-    label: 'Station Turnstiles',
-    src: 'assets/images/metro-grid/gameplay_station_boarding.png',
-    caption: 'Turnstile Queue & Commuter Station Boarding Mechanics',
-  },
-  {
-    id: 'night',
-    label: 'Night Lighting',
-    src: 'assets/images/metro-grid/test_night_lighting.png',
-    caption: 'Dynamic 2.5D Dimetric Night Ambient Lighting & Train Headlights',
-  },
-  {
-    id: 'hud',
-    label: 'RideCam HUD',
-    src: 'assets/images/metro-grid/test_metro_ridecam_hud.png',
-    caption: 'Train RideCam Interior POV with Real-time Block Signal Telemetry',
-  },
-];
-
-export const ITCH_GAMES: ItchGame[] = [
+const RAW_GAMES: RawGame[] = [
+  // --- SAMTAGON ORIGINALS ---
   {
     id: 'metro-grid',
     title: 'Metro Grid',
-    genre: 'Simulation',
-    description:
-      'Lay tracks, dispatch express trains, and watch little commuters navigate your colorful 2.5D city transit network.',
-    screenshot: 'assets/images/metro-grid/test_metro_infinite_loop_proof.png',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    githubUrl: 'https://github.com/SachinyadavAug20/metro-game',
-    engine: 'C++17 / Raylib 6.0',
-    playInBrowser: true,
-    featured: true,
-    controls: 'Left Click: Place Track/Station | Right Click: Demolish | Space: Dispatch Train | WASD: Pan City',
-    techHighlights: [
-      'Modern C++17 Custom Engine',
-      'Raylib 6.0 Hardware Rendering',
-      'Automatic 3-Aspect Block Signals',
-      'Autonomous Commuter Headway AI',
-      'Procedural Real-Time Audio Synthesis',
+    subtitle: '2.5D Isometric Urban Transit Simulator & Rail Tycoon',
+    description: 'Lay tracks, build stations, and manage automated 3-aspect block signalling across a living 2.5D isometric metropolis. Shape-coded commuters arrive, board trains, and transfer across multi-level viaducts and tunnels with 100% procedural audio.',
+    genres: ['Simulation', 'Tycoon', 'Strategy', 'Transit'],
+    tags: ['trains', 'transit', 'railway', 'isometric', 'automation', 'signals', 'city', 'urban', 'c++', 'raylib', 'webassembly'],
+    rating: 4.9,
+    releaseYear: 2026,
+    developer: 'Samtagon Game Studios',
+    isSamtagonOriginal: true,
+    platforms: [
+      { name: 'itch.io', url: 'https://sachinapr20.itch.io/', badge: 'itch' },
+      { name: 'Web Browser', url: 'games.html#metro-grid', badge: 'web' },
     ],
   },
   {
-    id: 'conway',
-    title: "Conway's Game of Life",
-    genre: 'Simulation',
-    description:
-      'Watch living cellular patterns form gliders, pulsars, and mesmerizing mathematical loops in real time.',
-    screenshot: 'assets/images/games/conway.svg',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    githubUrl: 'https://github.com/SachinyadavAug20/conway-game-of-life',
-    engine: 'C++ / Raylib',
-    playInBrowser: true,
-    controls: 'Left Click: Draw Cells | Space: Play / Pause | C: Clear Canvas | R: Random Seed',
-    techHighlights: [
-      'Toroidal Boundary Conditions',
-      'Deterministic State Machine',
-      'Classic Oscillator Configurations',
-      'Fast 60 FPS Canvas Evaluation',
+    id: 'void-protocol',
+    title: 'Void Protocol',
+    subtitle: 'Retro Sci-Fi Space Combat & Asteroid Survival',
+    description: 'Command an agile starfighter navigating hostile planetary orbits and procedural asteroid belts. Defeat rogue robotic alien fleets, collect plasma energy cores, and upgrade ship shields and laser cannons in fast-paced arcade dogfights.',
+    genres: ['Action', 'Arcade', 'Shooter', 'Sci-Fi'],
+    tags: ['space', 'spaceship', 'arcade', 'retro', 'asteroid', 'shooter', 'combat', 'godot', 'scifi'],
+    rating: 4.7,
+    releaseYear: 2026,
+    developer: 'Samtagon Game Studios',
+    isSamtagonOriginal: true,
+    platforms: [
+      { name: 'itch.io', url: 'https://sachinapr20.itch.io/', badge: 'itch' },
+      { name: 'Web Browser', url: 'games.html#space-shooter', badge: 'web' },
     ],
   },
   {
     id: 'alien-blaster',
     title: 'Alien Blaster',
-    genre: 'Adventure',
-    description:
-      'Fast-paced 2D platformer with multi-stage boss battles and energetic plasma blaster physics.',
-    screenshot: 'assets/images/games/alien-blaster.svg',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    githubUrl: 'https://github.com/SachinyadavAug20/AlienBlaster',
-    engine: 'Unity / C#',
-    playInBrowser: true,
-    controls: 'A/D or Arrows: Run | Space / W: Jump | J or Left Click: Fire Blaster | R: Restart',
-    techHighlights: [
-      'Kinematic Movement Physics',
-      'Multi-Stage Boss State Machine',
-      'Dynamic Screen-Shake Feedback',
-      '3 Progressive Challenge Levels',
+    subtitle: '2D Precision Retro Action Platformer',
+    description: 'Tight 2D run-and-gun retro platformer with fluid kinetic jumping, bullet reflection physics, multi-phase extraterrestrial boss encounters, and authentic 16-bit chiptune sound synthesis.',
+    genres: ['Action', 'Platformer', 'Arcade'],
+    tags: ['platformer', 'retro', 'pixel', 'shooter', 'arcade', 'precision', 'boss', 'combat', 'action'],
+    rating: 4.8,
+    releaseYear: 2025,
+    developer: 'Samtagon Game Studios',
+    isSamtagonOriginal: true,
+    platforms: [
+      { name: 'itch.io', url: 'https://sachinapr20.itch.io/', badge: 'itch' },
+      { name: 'Web Browser', url: 'games.html#alien-blaster', badge: 'web' },
     ],
   },
   {
-    id: 'first-game',
-    title: 'My First Game',
-    genre: 'Adventure',
-    description:
-      'Charming pixel-art platformer prototype built with responsive jump mechanics and collectible gems.',
-    screenshot: 'assets/images/games/my-first-game.svg',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    githubUrl: 'https://github.com/SachinyadavAug20/First-game',
-    engine: 'Godot / GDScript',
-    playInBrowser: true,
-    controls: 'Arrow Keys: Move & Jump | Space: Interact | Esc: Pause',
-    techHighlights: [
-      'Godot Kinematic 2D Physics',
-      'Custom Tilemap Construction',
-      'Collectible Gems & Score System',
-      'Handcrafted Pixel Art World',
+    id: 'conway-life',
+    title: "Conway's Game of Life",
+    subtitle: 'Tactile Mathematical Cellular Automata Toy',
+    description: 'An interactive mathematical simulation of John Conway’s cellular universe. Paint living cells on an infinite canvas, discover gliders, pulsars, and spaceship guns, and watch complex self-replicating order emerge from four elegant rules.',
+    genres: ['Simulation', 'Puzzle', 'Mathematical'],
+    tags: ['cellular', 'automata', 'conway', 'mathematics', 'math', 'grid', 'simulation', 'meditative', 'procedural'],
+    rating: 4.9,
+    releaseYear: 2025,
+    developer: 'Samtagon Game Studios',
+    isSamtagonOriginal: true,
+    platforms: [
+      { name: 'itch.io', url: 'https://sachinapr20.itch.io/', badge: 'itch' },
+      { name: 'Web Browser', url: 'games.html#conway-life', badge: 'web' },
     ],
   },
   {
-    id: 'snake',
-    title: 'Snake',
-    genre: 'Puzzle',
-    description:
-      'Classic responsive arcade grid snake with velocity progression and nostalgic retro feel.',
-    screenshot: 'assets/images/games/snake.svg',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    engine: 'HTML5 Canvas',
-    playInBrowser: true,
-    controls: 'Arrow Keys / WASD: Turn Direction | Space: Pause | Enter: Restart',
-    techHighlights: [
-      'Zero-Latency Grid Traversal',
-      'Adaptive Velocity Progression',
-      'Local Storage High Scores',
-      'Zero Dependencies',
+    id: 'godot-quest',
+    title: 'Godot Quest',
+    subtitle: 'Charming Pixel Adventure RPG & Dungeon Crawler',
+    description: 'A cozy top-down pixel adventure through enchanted pine forests, ancient forgotten ruins, and sleepy hamlets. Solve mechanical puzzles, converse with quirky villagers, and explore hidden underground dungeons.',
+    genres: ['RPG', 'Adventure', 'Puzzle'],
+    tags: ['rpg', 'adventure', 'pixel', 'pixelart', 'cozy', 'story', 'dungeon', 'dialogue', 'godot'],
+    rating: 4.6,
+    releaseYear: 2026,
+    developer: 'Samtagon Game Studios',
+    isSamtagonOriginal: true,
+    platforms: [
+      { name: 'itch.io', url: 'https://sachinapr20.itch.io/', badge: 'itch' },
+      { name: 'Web Browser', url: 'games.html#godot-quest', badge: 'web' },
+    ],
+  },
+
+  // --- TRANSIT & FACTORY SIMULATION ---
+  {
+    id: 'mini-metro',
+    title: 'Mini Metro',
+    subtitle: 'Minimalist Subway Transit Network Designer',
+    description: 'Draw and re-route subway tracks for a rapidly expanding city with limited trains and tunnels. Balance congested station platforms, prevent overcrowding disasters, and enjoy soothing generative audio with minimalist transit aesthetics.',
+    genres: ['Simulation', 'Strategy', 'Puzzle', 'Transit'],
+    tags: ['trains', 'transit', 'subway', 'metro', 'minimalist', 'city', 'simulation', 'relaxing', 'railway'],
+    rating: 4.9,
+    releaseYear: 2015,
+    developer: 'Dinosaur Polo Club',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/287980/Mini_Metro/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/mini_metro', badge: 'gog' },
     ],
   },
   {
-    id: 'ping-pong',
-    title: 'PingPong',
-    genre: 'Casual',
-    description:
-      'Minimalist retro paddle ping-pong with responsive trajectory deflection and AI rally mode.',
-    screenshot: 'assets/images/games/pingpong.svg',
-    itchUrl: 'https://sachinapr20.itch.io/',
-    engine: 'HTML5 / JS',
-    playInBrowser: true,
-    controls: 'W/S or Up/Down: Slide Paddle | Space: Serve Ball | P: Pause',
-    techHighlights: [
-      'Angle-Deflection Physics',
-      'Adaptive AI Rally Curve',
-      'Smooth 60 FPS Canvas Loop',
-      'Nostalgic CRT Scanline Style',
+    id: 'factorio',
+    title: 'Factorio',
+    subtitle: 'Industrial Automation & Logistics Train Networks',
+    description: 'Mine resources, research automated technologies, build sprawling factories, and design intricate logistics train networks with signals, switches, and inserters while defending against hostile alien swarms.',
+    genres: ['Simulation', 'Strategy', 'Automation'],
+    tags: ['automation', 'factory', 'logistics', 'trains', 'conveyor', 'management', 'survival', 'engineering', 'complex'],
+    rating: 4.95,
+    releaseYear: 2020,
+    developer: 'Wube Software',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/427520/Factorio/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/factorio', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'openttd',
+    title: 'OpenTTD',
+    subtitle: 'Open-Source Transport Tycoon & Railway Simulation',
+    description: 'Build complex passenger and cargo rail networks, bus routes, ships, and airports. Master electric train lines, track signalling, freight timetables, and economic business competition in an open-source sandbox.',
+    genres: ['Simulation', 'Tycoon', 'Strategy', 'Transit'],
+    tags: ['trains', 'railway', 'tycoon', 'transit', 'signals', 'logistics', 'simulation', 'open-source', 'retro'],
+    rating: 4.9,
+    releaseYear: 2004,
+    developer: 'OpenTTD Team',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/1536610/OpenTTD/', badge: 'steam' },
+      { name: 'Official Web', url: 'https://www.openttd.org/', badge: 'web' },
+    ],
+  },
+  {
+    id: 'cities-skylines',
+    title: 'Cities: Skylines',
+    subtitle: 'Modern City Planning & Transit Infrastructure',
+    description: 'Design, build, and manage a realistic modern metropolis. Balance traffic flow, highway interchanges, high-speed rail corridors, metro systems, taxation, and public services.',
+    genres: ['Simulation', 'Management', 'City Builder'],
+    tags: ['city', 'urban', 'transit', 'simulation', 'traffic', 'building', 'management', 'tycoon'],
+    rating: 4.8,
+    releaseYear: 2015,
+    developer: 'Colossal Order',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/255710/Cities_Skylines/', badge: 'steam' },
+    ],
+  },
+
+  // --- COZY, RELAXING & NATURE SIMULATION ---
+  {
+    id: 'stardew-valley',
+    title: 'Stardew Valley',
+    subtitle: 'Cozy Countryside Farming & Village Life Simulator',
+    description: 'Inherit your grandfather’s old farm plot in Pelican Town. Clear weeds, grow seasonal crops, raise cheerful farm animals, fish along gentle rivers, explore mining caverns, and build lifelong friendships.',
+    genres: ['RPG', 'Simulation', 'Cozy'],
+    tags: ['cozy', 'farming', 'relaxing', 'nature', 'fishing', 'pixel', 'pixelart', 'story', 'farm', 'peaceful'],
+    rating: 4.98,
+    releaseYear: 2016,
+    developer: 'ConcernedApe',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/413150/Stardew_Valley/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/stardew_valley', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'a-short-hike',
+    title: 'A Short Hike',
+    subtitle: 'Peaceful Mountain Park Exploration & Gliding',
+    description: 'Hike, climb, and glide through the tranquil provincial park landscapes of Hawk Peak. Meet charming animal campers, fish in mountain ponds, collect golden feathers, and soar on gentle updrafts.',
+    genres: ['Adventure', 'Cozy', 'Exploration'],
+    tags: ['cozy', 'hiking', 'relaxing', 'nature', 'peaceful', 'island', 'gentle', 'exploration', 'whimsical'],
+    rating: 4.92,
+    releaseYear: 2019,
+    developer: 'adamgryu',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/1055540/A_Short_Hike/', badge: 'steam' },
+      { name: 'itch.io', url: 'https://adamgryu.itch.io/a-short-hike', badge: 'itch' },
+    ],
+  },
+  {
+    id: 'dredge',
+    title: 'Dredge',
+    subtitle: 'Cosmic Ocean Fishing Adventure with Hidden Depths',
+    description: 'Captain a small fishing trawler to explore a remote archipelago and dredge the seafloor for lost relics. Sell catches to odd locals, upgrade your boat engine and lights, and survive mysterious midnight sea fogs.',
+    genres: ['Adventure', 'RPG', 'Atmospheric'],
+    tags: ['fishing', 'ocean', 'sea', 'mystery', 'underwater', 'deep', 'cozy', 'atmospheric', 'crafting'],
+    rating: 4.88,
+    releaseYear: 2023,
+    developer: 'Black Salt Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/1562430/DREDGE/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/dredge', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'dave-the-diver',
+    title: 'Dave the Diver',
+    subtitle: 'Deep-Sea Harpoon Exploration & Sushi Bar Management',
+    description: 'Dive into the ever-changing Blue Hole by day to harpoon exotic ocean fish, and manage a bustling nighttime seaside sushi restaurant with unique recipes, quirky staff, and ancient undersea secrets.',
+    genres: ['Adventure', 'Simulation', 'RPG'],
+    tags: ['ocean', 'underwater', 'deep', 'sea', 'fishing', 'pixelart', 'management', 'cozy', 'relaxing'],
+    rating: 4.9,
+    releaseYear: 2023,
+    developer: 'MINTROCKET',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/1868140/DAVE_THE_DIVER/', badge: 'steam' },
+    ],
+  },
+
+  // --- ROGUELIKE & TACTICAL DECKBUILDERS ---
+  {
+    id: 'balatro',
+    title: 'Balatro',
+    subtitle: 'Hypnotic Poker Roguelike Deckbuilder',
+    description: 'Play illegal poker hands, discover game-altering Jokers, trigger insane score multipliers, and find wild tarot card synergies in an addictive tactile roguelike deckbuilder with retro CRT visuals.',
+    genres: ['Roguelike', 'Strategy', 'Card Game'],
+    tags: ['poker', 'deckbuilder', 'cards', 'card', 'roguelike', 'procedural', 'tactical', 'retro', 'addictive'],
+    rating: 4.97,
+    releaseYear: 2024,
+    developer: 'LocalThunk',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/2379780/Balatro/', badge: 'steam' },
+    ],
+  },
+  {
+    id: 'slay-the-spire',
+    title: 'Slay the Spire',
+    subtitle: 'Genre-Defining Roguelike Card Battler',
+    description: 'Craft a unique card deck, encounter bizarre fantasy creatures, discover powerful relics, and conquer the ever-shifting Spire in this masterclass of tactical deckbuilding and turn-based combat.',
+    genres: ['Roguelike', 'Strategy', 'Card Game'],
+    tags: ['deckbuilder', 'cards', 'card', 'roguelike', 'turnbased', 'tactical', 'strategy', 'dungeon', 'permadeath'],
+    rating: 4.93,
+    releaseYear: 2019,
+    developer: 'Mega Crit Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/646570/Slay_the_Spire/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/slay_the_spire', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'into-the-breach',
+    title: 'Into the Breach',
+    subtitle: 'Turn-Based Tactical Mech Combat on an 8x8 Grid',
+    description: 'Control futuristic combat mechs across an 8x8 puzzle grid to defend civilian cities from subterranean alien Vek attacks. Every enemy attack is telegraphed in advance in a turn-based tactical duel.',
+    genres: ['Strategy', 'Tactics', 'Turn-Based', 'Sci-Fi'],
+    tags: ['tactical', 'turnbased', 'puzzle', 'strategy', 'grid', 'scifi', 'combat', 'roguelike'],
+    rating: 4.91,
+    releaseYear: 2018,
+    developer: 'Subset Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/590380/Into_the_Breach/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/into_the_breach', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'ftl-faster-than-light',
+    title: 'FTL: Faster Than Light',
+    subtitle: 'Spaceship Crew Command & Tactical Permadeath Simulation',
+    description: 'Command a lone Federation starship and its crew fleeing across a procedurally generated galaxy. Manage ship power, weapons, shields, oxygen, fires, and hull repairs in intense pausable real-time space battles.',
+    genres: ['Strategy', 'Roguelike', 'Sci-Fi'],
+    tags: ['space', 'spaceship', 'scifi', 'roguelike', 'permadeath', 'strategy', 'tactical', 'combat', 'simulation'],
+    rating: 4.94,
+    releaseYear: 2012,
+    developer: 'Subset Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/212680/FTL_Faster_Than_Light/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/faster_than_light', badge: 'gog' },
+    ],
+  },
+
+  // --- PUZZLE, TIME LOOPS & MYSTERIES ---
+  {
+    id: 'outer-wilds',
+    title: 'Outer Wilds',
+    subtitle: 'Solar System Exploration in an Endless 22-Minute Time Loop',
+    description: 'Blast off in a rickety wooden spaceship to explore a miniature hand-crafted solar system trapped in an infinite 22-minute time loop. Translate ancient alien Nomai ruins, decipher planetary mysteries, and unravel the universe before the sun goes supernova.',
+    genres: ['Adventure', 'Mystery', 'Sci-Fi', 'Puzzle'],
+    tags: ['space', 'timeloop', 'loop', 'mystery', 'scifi', 'exploration', 'puzzle', 'story', 'investigation'],
+    rating: 4.98,
+    releaseYear: 2019,
+    developer: 'Mobius Digital',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/753640/Outer_Wilds/', badge: 'steam' },
+    ],
+  },
+  {
+    id: 'subnautica',
+    title: 'Subnautica',
+    subtitle: 'Underwater Alien Planet Survival & Submarine Exploration',
+    description: 'Crash-land on an uncharted alien ocean world where the only way is down. Craft diving gear, build underwater sea bases, pilot deep-diving submarines, and unravel the planet’s bio-mysteries while avoiding leviathan predators.',
+    genres: ['Survival', 'Adventure', 'Sci-Fi'],
+    tags: ['ocean', 'underwater', 'submarine', 'deep', 'survival', 'crafting', 'scifi', 'exploration', 'sea'],
+    rating: 4.96,
+    releaseYear: 2018,
+    developer: 'Unknown Worlds',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/264710/Subnautica/', badge: 'steam' },
+    ],
+  },
+  {
+    id: 'portal-2',
+    title: 'Portal 2',
+    subtitle: 'First-Person Spatial Physics & Portal Puzzle Adventure',
+    description: 'Use the handheld Aperture Science Portal Device to bend spatial physics across mind-bending test chambers. Outwit the hilarious and sarcastic artificial intelligence GLaDOS in a legendary physics adventure.',
+    genres: ['Puzzle', 'Action', 'Sci-Fi'],
+    tags: ['portal', 'puzzle', 'physics', 'puzzles', 'scifi', 'story', 'comedy', 'firstperson'],
+    rating: 4.99,
+    releaseYear: 2011,
+    developer: 'Valve',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/620/Portal_2/', badge: 'steam' },
+    ],
+  },
+  {
+    id: 'return-of-the-obra-dinn',
+    title: 'Return of the Obra Dinn',
+    subtitle: 'First-Person Deductive Mystery on a Ghost Merchant Ship',
+    description: 'An insurance investigator boards an East India Company ghost ship that drifted into port with all 60 souls dead or missing. Use a magical pocket watch that rewinds time to the moment of death to deduce the fate of every passenger.',
+    genres: ['Puzzle', 'Mystery', 'Detective'],
+    tags: ['mystery', 'detective', 'investigation', 'puzzle', 'narrative', 'story', 'retro', 'deduction'],
+    rating: 4.94,
+    releaseYear: 2018,
+    developer: 'Lucas Pope',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/653530/Return_of_the_Obra_Dinn/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/return_of_the_obra_dinn', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'papers-please',
+    title: 'Papers, Please',
+    subtitle: 'Dystopian Document Inspection Thriller',
+    description: 'Serve as the immigration inspector at a border checkpoint of the communist state of Arstotzka. Inspect passports, entry permits, and fingerprint scans to decide who enters, who gets rejected, and who gets arrested.',
+    genres: ['Simulation', 'Puzzle', 'Narrative'],
+    tags: ['dystopian', 'simulation', 'puzzle', 'story', 'management', 'pixel', 'pixelart', 'detective'],
+    rating: 4.92,
+    releaseYear: 2013,
+    developer: 'Lucas Pope',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/239030/Papers_Please/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/papers_please', badge: 'gog' },
+    ],
+  },
+
+  // --- PRECISION PLATFORMERS & METROIDVANIAS ---
+  {
+    id: 'hollow-knight',
+    title: 'Hollow Knight',
+    subtitle: 'Masterpiece 2D Action Metroidvania & Insect Kingdom',
+    description: 'Forge your own path through the expansive interconnected ruins of Hallownest. Battle tainted insect beasts, unlock dash and double-jump abilities, discover forgotten charms, and uncover tragic lore.',
+    genres: ['Metroidvania', 'Action', 'Platformer'],
+    tags: ['metroidvania', 'platformer', 'action', 'combat', 'boss', 'dark', 'precision', 'exploration'],
+    rating: 4.97,
+    releaseYear: 2017,
+    developer: 'Team Cherry',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/367520/Hollow_Knight/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/hollow_knight', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'celeste',
+    title: 'Celeste',
+    subtitle: 'Precision Platformer about Bravery and Self-Discovery',
+    description: 'Help Madeline survive her inner demons on her journey to the summit of Celeste Mountain. Tight responsive dash mechanics, 700+ hand-crafted precision platforming screens, and a deeply moving emotional narrative.',
+    genres: ['Platformer', 'Action', 'Precision'],
+    tags: ['platformer', 'precision', 'jump', 'story', 'pixel', 'pixelart', 'arcade', 'speedrun'],
+    rating: 4.96,
+    releaseYear: 2018,
+    developer: 'Maddy Makes Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/504230/Celeste/', badge: 'steam' },
+      { name: 'itch.io', url: 'https://maddymakesgames.itch.io/celeste', badge: 'itch' },
+    ],
+  },
+  {
+    id: 'dead-cells',
+    title: 'Dead Cells',
+    subtitle: 'Fluid Roguevania Fast-Paced Action Platformer',
+    description: 'A rogue-lite, metroidvania inspired action-platformer. Explore an ever-changing castle with souls-like combat, dodge rolls, shields, whips, and 100+ lethal weapons with zero checkpoints.',
+    genres: ['Roguelite', 'Action', 'Metroidvania'],
+    tags: ['action', 'combat', 'roguelike', 'metroidvania', 'platformer', 'pixelart', 'fast-paced', 'permadeath'],
+    rating: 4.9,
+    releaseYear: 2018,
+    developer: 'Motion Twin',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/588650/Dead_Cells/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/dead_cells', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'hades',
+    title: 'Hades',
+    subtitle: 'Mythological Isometric Roguelike Hack-and-Slash',
+    description: 'Defy the god of the dead as Zagreus, the immortal prince of the Underworld. Wield mythical Olympian boons from Zeus, Athena, and Poseidon in blisteringly fast hack-and-slash isometric combat.',
+    genres: ['Roguelike', 'Action', 'RPG'],
+    tags: ['action', 'combat', 'roguelike', 'isometric', 'story', 'rpg', 'mythology', 'boss', 'fast-paced'],
+    rating: 4.98,
+    releaseYear: 2020,
+    developer: 'Supergiant Games',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/1145360/Hades/', badge: 'steam' },
+    ],
+  },
+
+  // --- HARDCORE COLONY & ASTROPHYSICS ---
+  {
+    id: 'rimworld',
+    title: 'RimWorld',
+    subtitle: 'Sci-Fi Colony Simulator Driven by an AI Storyteller',
+    description: 'A sci-fi colony sim driven by an intelligent AI storyteller. Build a thriving frontier colony, manage colonist psychological breakdowns, farm crops, craft bionic limbs, and survive pirate sieges.',
+    genres: ['Simulation', 'Strategy', 'Survival', 'Sci-Fi'],
+    tags: ['colony', 'survival', 'crafting', 'simulation', 'management', 'scifi', 'strategy', 'complex'],
+    rating: 4.94,
+    releaseYear: 2018,
+    developer: 'Ludeon Studios',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/294100/RimWorld/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/rimworld', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'kerbal-space-program',
+    title: 'Kerbal Space Program',
+    subtitle: 'Orbital Astrophysics & Rocket Engineering Simulator',
+    description: 'Build space-worthy rockets, landers, and rovers for the comical green alien Kerbals based on realistic orbital physics and aerodynamics. Launch missions to the Mun, Duna, and Jool.',
+    genres: ['Simulation', 'Physics', 'Sci-Fi'],
+    tags: ['space', 'spaceship', 'physics', 'orbit', 'simulation', 'engineering', 'scifi', 'crafting'],
+    rating: 4.91,
+    releaseYear: 2015,
+    developer: 'Squad',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/220200/Kerbal_Space_Program/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/kerbal_space_program', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'terraria',
+    title: 'Terraria',
+    subtitle: '2D Sandbox Mining, Crafting, and Boss Battles',
+    description: 'Dig, fight, explore, and build! An expansive 2D sandbox adventure with thousands of crafting recipes, subterranean cavern biomes, weapon progression, and epic multiplayer boss encounters.',
+    genres: ['Sandbox', 'Action', 'Adventure', 'RPG'],
+    tags: ['crafting', 'survival', 'pixel', 'pixelart', 'sandbox', 'boss', 'combat', 'exploration'],
+    rating: 4.97,
+    releaseYear: 2011,
+    developer: 'Re-Logic',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/105600/Terraria/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/terraria', badge: 'gog' },
+    ],
+  },
+  {
+    id: 'disco-elysium',
+    title: 'Disco Elysium',
+    subtitle: 'Groundbreaking Detective RPG & Psychological Drama',
+    description: 'A revolutionary detective role-playing game. Interrogate unforgettable characters, solve a grisly murder case, or take bribes. An unprecedented skill system where your own subconscious thoughts converse with you.',
+    genres: ['RPG', 'Detective', 'Narrative'],
+    tags: ['detective', 'rpg', 'story', 'narrative', 'dialogue', 'mystery', 'dystopian', 'investigation'],
+    rating: 4.93,
+    releaseYear: 2019,
+    developer: 'ZA/UM',
+    platforms: [
+      { name: 'Steam Store', url: 'https://store.steampowered.com/app/632470/Disco_Elysium__The_Final_Cut/', badge: 'steam' },
+      { name: 'GOG', url: 'https://www.gog.com/en/game/disco_elysium', badge: 'gog' },
     ],
   },
 ];
 
-export const GITHUB_REPOS: GitHubRepo[] = [
-  {
-    name: 'metro-game',
-    url: 'https://github.com/SachinyadavAug20/metro-game',
-    description:
-      '2.5D Isometric urban train tycoon & signal simulator written in C++17 with Raylib 6.0. Autonomous commuter routing, timetable headways, and 3-aspect block signals.',
-    language: 'C++',
-    stars: 5,
-    tag: 'Game',
-  },
-  {
-    name: 'conway-game-of-life',
-    url: 'https://github.com/SachinyadavAug20/conway-game-of-life',
-    description:
-      'Mathematical cellular automaton built in C++ with Raylib. Toroidal boundary conditions, custom seed import, and 60 FPS state updates.',
-    language: 'C++',
-    stars: 3,
-    tag: 'Game',
-  },
-  {
-    name: 'AlienBlaster',
-    url: 'https://github.com/SachinyadavAug20/AlienBlaster',
-    description:
-      'Full 2D side-scrolling platformer with 3 handcrafted levels, projectile weapons, enemy AI waves, and boss fight.',
-    language: 'C#',
-    stars: 2,
-    tag: 'Game',
-  },
-  {
-    name: 'First-game',
-    url: 'https://github.com/SachinyadavAug20/First-game',
-    description:
-      'Platformer prototype developed in Godot Engine using GDScript. Tilemap physics, coin collection, and death respawn triggers.',
-    language: 'GDScript',
-    stars: 2,
-    tag: 'Game',
-  },
-  {
-    name: 'topdown-2d-shooter',
-    url: 'https://github.com/SachinyadavAug20/topdown-2d-shooter',
-    description:
-      'Top-down 2D arena shooter with raycast directional aiming, bullet collision algorithms, and waves of hostile drones.',
-    language: 'GDScript',
-    stars: 2,
-    tag: 'Game',
-  },
-  {
-    name: '3D-Isometric-controller',
-    url: 'https://github.com/SachinyadavAug20/3D-Isometric-controller',
-    description:
-      'Isometric camera controller and character navigation framework with dimetric projection math and click-to-move vectors.',
-    language: 'GDScript',
-    stars: 3,
-    tag: 'Tool',
-  },
-  {
-    name: 'dsa_questions',
-    url: 'https://github.com/SachinyadavAug20/dsa_questions',
-    description:
-      'Data Structures & Algorithms problem solutions in C++ & Java. Graph traversals, dynamic programming, and binary tree optimizations.',
-    language: 'C++',
-    stars: 4,
-    tag: 'Tool',
-  },
-  {
-    name: 'samtagon-game-engine',
-    url: 'https://github.com/SachinyadavAug20',
-    description:
-      'Deterministic 2.5D game loop framework with fixed timestep physics, tilemap projection, and spatial entity grids.',
-    language: 'C++',
-    stars: 6,
-    tag: 'System',
-  },
-  {
-    name: 'Job_portal',
-    url: 'https://github.com/SachinyadavAug20/Job_portal',
-    description:
-      'Full-stack job recruitment portal with applicant tracking, employer dashboard, and REST API backend.',
-    language: 'TypeScript',
-    stars: 3,
-    tag: 'FullStack',
-  },
-  {
-    name: 'LeetCode-Solutions',
-    url: 'https://github.com/SachinyadavAug20',
-    description:
-      'Over 200+ LeetCode problems solved with optimal time & space complexity in C++17.',
-    language: 'C++',
-    stars: 4,
-    tag: 'System',
-  },
-  {
-    name: 'raylib-cpp-template',
-    url: 'https://github.com/SachinyadavAug20',
-    description:
-      'Lightweight boilerplate setup for compiling Raylib with C++17 on Linux and WebAssembly (emscripten).',
-    language: 'C++',
-    stars: 5,
-    tag: 'System',
-  },
-  {
-    name: 'procedural-audio-synth',
-    url: 'https://github.com/SachinyadavAug20',
-    description:
-      'Pure mathematical sound waveform generator simulating electric traction motors (VVVF) and chime frequencies.',
-    language: 'TypeScript',
-    stars: 3,
-    tag: 'System',
-  },
-];
+/**
+ * Pre-computes 128-dimensional semantic embedding vectors for every game in the catalog.
+ * This runs at build/initialization time once and caches in application memory,
+ * matching the user's Spring AI architecture.
+ */
+export function initializeGameCatalog(): GameItem[] {
+  return RAW_GAMES.map((raw) => {
+    // Construct comprehensive semantic text representation
+    const semanticText = [
+      raw.title,
+      raw.subtitle,
+      raw.description,
+      raw.genres.join(' '),
+      raw.tags.join(' '),
+    ].join(' ');
+
+    const embedding = VectorEngine.embedText(semanticText);
+
+    return {
+      ...raw,
+      embedding,
+    };
+  });
+}
+
+export const GAMES_CATALOG: GameItem[] = initializeGameCatalog();

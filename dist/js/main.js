@@ -25,10 +25,31 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Samtagon Studios online. Zen mode active.');
 });
 function setupZenInteractions(stage, audio) {
-    // 1. Cozy Night / Daylight Theme Toggle (Default warm alabaster Light Mode)
-    document.documentElement.removeAttribute('data-theme');
-    let isDarkMode = false;
-    stage?.setNightMode(false, true); // Immediate light mode on initial load
+    // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode)
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let isDarkMode = prefersDark;
+    if (isDarkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        stage?.setNightMode(true, true); // Immediate dark mode for system dark preference
+    }
+    else {
+        document.documentElement.removeAttribute('data-theme');
+        stage?.setNightMode(false, true); // Immediate light mode for system light preference
+    }
+    // Listen to OS system color scheme changes
+    window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener('change', (e) => {
+        isDarkMode = e.matches;
+        if (isDarkMode) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            audio.playChime(523.25, 0.08); // C5 twilight chime
+            stage?.setNightMode(true);
+        }
+        else {
+            document.documentElement.removeAttribute('data-theme');
+            audio.playMorningBirdSong();
+            stage?.setNightMode(false);
+        }
+    });
     const themeBtn = document.getElementById('theme-toggle-btn');
     themeBtn?.addEventListener('click', () => {
         isDarkMode = !isDarkMode;
@@ -63,7 +84,7 @@ function setupZenInteractions(stage, audio) {
             updateAudioUI(unmuted);
         }
     });
-    // 2. Stage View Presets (Isometric, Top-Down, Orbit, Cinematic, Director)
+    // 2. Stage View Presets (Isometric, Top-Down, Cab, Cinematic, Director, Trackside)
     const viewBtns = document.querySelectorAll('[data-view]');
     viewBtns.forEach((btn) => {
         btn.addEventListener('click', () => {

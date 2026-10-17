@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Minimal showcase website for Samtagon Game Studio",
   "scripts": {
-    "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && tsc",
+    "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && bun build src/ts/recommendations-page.ts --outfile dist/js/recommendations.bundle.js --minify && tsc",
     "watch": "bun build src/ts/main.ts --outfile dist/js/bundle.js --watch",
     "serve": "bunx serve . || npx serve ."
   },

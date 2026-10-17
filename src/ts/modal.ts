@@ -58,7 +58,7 @@ export class ModalController {
     if (!this.overlay || !this.contentContainer) return;
 
     const highlightsList = game.techHighlights
-      .map((h) => `<li style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;"><span style="color: #059669; font-size: 1.1rem;">&bull;</span> ${h}</li>`)
+      .map((h: string) => `<li style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;"><span style="color: #059669; font-size: 1.1rem;">&bull;</span> ${h}</li>`)
       .join('');
 
     this.contentContainer.innerHTML = `
