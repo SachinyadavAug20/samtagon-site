@@ -84,6 +84,32 @@ const ARCHETYPES: Record<ArchetypeId, {
   },
 };
 
+const ARCHETYPE_ICONS: Record<ArchetypeId, string> = {
+  architect: `<svg class="archetype-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+  speedster: `<svg class="archetype-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  explorer: `<svg class="archetype-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
+  tactician: `<svg class="archetype-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>`,
+};
+
+const ARCHETYPE_MINIMAL_META: Record<ArchetypeId, { trait: string; superpower: string }> = {
+  architect: {
+    trait: 'Systems & Automation',
+    superpower: 'Macro-Engineering',
+  },
+  speedster: {
+    trait: 'Kinetic Reflexes',
+    superpower: 'Flow State Speed',
+  },
+  explorer: {
+    trait: 'Atmosphere & Lore',
+    superpower: 'World Discovery',
+  },
+  tactician: {
+    trait: 'Precision Tactics',
+    superpower: 'Calculated Mastery',
+  },
+};
+
 const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,
@@ -675,6 +701,7 @@ class RecommendationsApp {
     if (!this.quizActiveBox || !this.quizBody) return;
     this.quizActiveBox.style.display = 'block';
     if (this.quizProfileBox) this.quizProfileBox.style.display = 'none';
+    document.querySelector('.quiz-screen-container')?.classList.remove('has-profile');
 
     this.currentQuestionIndex = index;
     const q = QUIZ_QUESTIONS[index];
@@ -808,6 +835,7 @@ class RecommendationsApp {
 
     if (this.quizActiveBox) this.quizActiveBox.style.display = 'none';
     this.quizProfileBox.style.display = 'block';
+    document.querySelector('.quiz-screen-container')?.classList.add('has-profile');
 
     if (this.tabQuizLabel) {
       this.tabQuizLabel.textContent = 'Gamer Profile';
@@ -815,8 +843,7 @@ class RecommendationsApp {
 
     const p = this.currentProfile;
     const archInfo = ARCHETYPES[p.archetypeId];
-
-    // Curated recommendations from the 12,000+ database based on archetype alignment
+    const meta = ARCHETYPE_MINIMAL_META[p.archetypeId] || { trait: 'Gamer Instinct', superpower: 'Core Alignment' };
     const recList = ARCHETYPE_DATABASE_MATCHES[p.archetypeId] || [];
 
     const gamesGridHtml = recList.map((rec, idx) => {
@@ -833,8 +860,8 @@ class RecommendationsApp {
           <div class="card-scrim"></div>
           <div class="card-top-bar">
             <div class="card-badge-left">
-              ${isTop ? '<span class="soulmate-flag-tag">#1 SOULMATE</span>' : ''}
-              <span class="card-sim-badge score-excellent">${rec.matchScore}% MATCH</span>
+              ${isTop ? '<span class="soulmate-flag-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1</span>' : ''}
+              <span class="card-sim-badge score-excellent">${rec.matchScore}%</span>
             </div>
           </div>
           <div class="card-overlay-content">
@@ -844,12 +871,12 @@ class RecommendationsApp {
             </div>
             <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
             <div class="card-action-bar">
-              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()">
-                <span>${storeName}</span>
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
+                <span>Store</span>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
               </a>
-              <button class="card-btn-action secondary arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()">
-                <span>Details</span>
+              <button class="card-btn-action secondary icon-only arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               </button>
             </div>
           </div>
@@ -858,42 +885,59 @@ class RecommendationsApp {
     }).join('');
 
     this.quizProfileBox.innerHTML = `
-      <div class="profile-hero-card">
-        <div class="profile-top-tags">
-          <span class="archetype-emblem-pill">${p.badge} &bull; ${p.alignment}% ALIGNMENT</span>
-          <span class="cookie-status-badge" title="Stored safely in browser cookies for 365 days. Zero login or account needed.">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/></svg>
-            Saved in Cookies (No Sign-in)
-          </span>
-        </div>
+      <div class="profile-hero-minimal">
+        <div class="profile-meta-row">
+          <div class="profile-identity">
+            <div class="profile-emblem-badge" aria-hidden="true">
+              ${ARCHETYPE_ICONS[p.archetypeId]}
+            </div>
+            <div>
+              <div class="profile-name-row">
+                <h2 class="profile-title">${p.archetypeName}</h2>
+                <span class="profile-match-pill">${p.alignment}%</span>
+              </div>
+              <div class="profile-trait-tag">${meta.trait} &bull; ${meta.superpower}</div>
+            </div>
+          </div>
 
-        <h2 class="profile-heading">${p.archetypeName}</h2>
-        <p class="profile-bio">${p.desc}</p>
+          <div class="profile-actions-row">
+            <button id="retake-quiz-btn" class="profile-ctrl-btn" title="Retake Quiz" aria-label="Retake Quiz">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Retake</span>
+            </button>
 
-        <div class="superpower-card">
-          <div class="superpower-tag">Gamer Superpower</div>
-          <div class="superpower-desc">${p.superpower}</div>
-        </div>
+            <button id="unlock-explore-btn" class="profile-ctrl-btn primary" title="Explore ${archInfo.catalogSearch}" aria-label="Explore ${archInfo.catalogSearch}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Explore (${archInfo.catalogSearch})</span>
+            </button>
 
-        <div class="profile-action-bar">
-          <button id="retake-quiz-btn" class="profile-cta-btn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            <span>Retake 10 Questions</span>
-          </button>
-          <button id="unlock-explore-btn" class="profile-cta-btn accent-cta">
-            <span>Explore 12,000+ Games (${archInfo.catalogSearch})</span> &rarr;
-          </button>
+            <div class="profile-saved-indicator" title="Profile saved in cookies" aria-label="Profile saved in cookies">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Tailored Database Recommendations Section -->
-      <div class="studio-lineup-header">
-        <div>
-          <h3 class="studio-lineup-title">Top Database Matches for ${p.archetypeName}</h3>
-          <p class="studio-lineup-subtitle">Curated from the 12,000+ title database based on your psychological quiz instincts &amp; superpower</p>
+      <div class="matches-header-minimal">
+        <div class="matches-heading-wrap">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <h3 class="matches-title">Curated Matches</h3>
         </div>
-        <button id="profile-explore-all-btn" class="itch-browse-link" style="background: transparent; border: none; cursor: pointer;">
-          <span>Explore All 12,000+ Games</span> &rarr;
+
+        <button id="profile-explore-all-btn" class="matches-all-btn" title="Explore all 12,000+ games" aria-label="Explore all games">
+          <span>All 12,000+</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"></path>
+          </svg>
         </button>
       </div>
 
@@ -951,6 +995,7 @@ class RecommendationsApp {
     this.clearGamerProfileCookie();
     this.currentProfile = null;
     this.userAnswers = [];
+    document.querySelector('.quiz-screen-container')?.classList.remove('has-profile');
     if (this.tabQuizLabel) {
       this.tabQuizLabel.textContent = 'Question 1 of 10';
     }
@@ -1194,12 +1239,12 @@ class RecommendationsApp {
         </div>
         <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
         <div class="card-action-bar">
-          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()">
-            <span>${storeName}</span>
+          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
+            <span>Store</span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
           </a>
-          <button class="card-btn-action secondary card-details-trigger" onclick="event.stopPropagation()">
-            <span>Details</span>
+          <button class="card-btn-action secondary icon-only card-details-trigger" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
           </button>
         </div>
       </div>

@@ -39,23 +39,32 @@
   <!-- Minimalist Top Navigation with Mode Tabs -->
   <div class="rec-top-bar">
     <div class="container top-nav-container">
-      <a href="index.html" class="rec-back-btn" aria-label="Back to home">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <a href="index.html" class="rec-back-btn" aria-label="Home" title="Home">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Back to Home</span>
+        <span>Home</span>
       </a>
 
       <!-- Central Mode Switcher Tabs -->
       <nav class="rec-nav-tabs" role="tablist" aria-label="Recommendation modes">
         <button id="tab-quiz-btn" class="rec-tab-btn active" role="tab" aria-selected="true" aria-controls="view-quiz">
-          <span class="tab-btn-icon">🎮</span>
+          <svg class="tab-btn-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="12" x2="10" y2="12"></line>
+            <line x1="8" y1="10" x2="8" y2="14"></line>
+            <circle cx="15" cy="13" r="1" fill="currentColor"></circle>
+            <circle cx="18" cy="11" r="1" fill="currentColor"></circle>
+            <rect x="2" y="6" width="20" height="12" rx="6"></rect>
+          </svg>
           <span id="tab-quiz-label">Gamer Quest</span>
         </button>
         <button id="tab-explore-btn" class="rec-tab-btn" role="tab" aria-selected="false" aria-controls="view-explore">
-          <span class="tab-btn-icon">🔍</span>
-          <span>Explore Catalog</span>
+          <svg class="tab-btn-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Fuzzy Find</span>
           <span class="tab-badge-pill">12,000+</span>
         </button>
       </nav>
@@ -127,7 +136,7 @@
       <section class="rec-hero-clean">
         <div class="container">
           <div class="rec-hero-intro">
-            <h1 class="rec-title">Explore 12,000+ Games</h1>
+            <h1 class="rec-title">Fuzzy Find 12,000+ Games</h1>
           </div>
 
           <!-- Modern SVG Search Control Bar -->
@@ -141,7 +150,7 @@
               type="text"
               id="search-input"
               class="search-input-field"
-              placeholder="Search 12,000+ games..."
+              placeholder="Fuzzy find 12,000+ games..."
               autocomplete="off"
               spellcheck="false"
             />

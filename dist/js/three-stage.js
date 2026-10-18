@@ -143,7 +143,7 @@ export class ThreeStage {
     // Track Curve & Physics
     trackCurve;
     progress = 0.62; // Starts prominently on scenic foreground meadow
-    trainSpeed = 0.0016;
+    trainSpeed = 0.00085;
     speedMultiplier = 1.0;
     // Interactive Props
     clockHand = null;
@@ -166,8 +166,8 @@ export class ThreeStage {
         const height = this.container.clientHeight || 520;
         this.camera = new THREE.PerspectiveCamera(38, width / height, 0.02, 100);
         // Heroic isometric viewpoint with comfortable framing, generous breathing room and zero edge clipping
-        this.camera.position.set(5.8, 5.4, 6.0);
-        this.camera.lookAt(0, 0.40, -0.75);
+        this.camera.position.set(6.4, 5.8, 6.6);
+        this.camera.lookAt(0, 0.35, -0.40);
         // 2. High-Fidelity WebGL Renderer with Soft Shadow Mapping
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
@@ -190,8 +190,8 @@ export class ThreeStage {
         this.controls.minPolarAngle = Math.PI * 0.18; // Don't look straight down
         this.controls.maxPolarAngle = Math.PI * 0.42; // Elevated diorama isometric angle
         this.controls.minDistance = 1.6; // Deep close-up zoom
-        this.controls.maxDistance = 12.5; // Wide panoramic zoom-out
-        this.controls.target.set(0, 0.40, -0.75);
+        this.controls.maxDistance = 14.5; // Wide panoramic zoom-out
+        this.controls.target.set(0, 0.35, -0.40);
         // 4. Assemble Group Hierarchies
         this.scene.add(this.rootGroup);
         this.scene.add(this.celestialGroup);
@@ -201,7 +201,7 @@ export class ThreeStage {
         this.rootGroup.add(this.trackGroup);
         this.rootGroup.add(this.trainGroup);
         // Subtle diorama presence scale with natural breathing room
-        this.rootGroup.scale.setScalar(0.96);
+        this.rootGroup.scale.setScalar(0.85);
         // 5. Rich Studio Lighting & Celestial Elements
         this.setupLighting();
         this.buildCelestialElements();
@@ -227,6 +227,7 @@ export class ThreeStage {
         this.buildRailwayServiceDepot();
         this.buildHotAirBalloon();
         this.buildMiniatureVillageLife();
+        this.buildExpandedLandscapeScenery();
         // 7. Weather Engine Setup
         this.setupWeatherSystem();
         // 8. Event Handlers & Micro-Interactions
@@ -492,21 +493,21 @@ export class ThreeStage {
         // Star-convex radial sample around diorama center of mass
         const center = { x: 0, z: -0.30 };
         const lobes = [
-            { x: -1.75, z: 0.00, r: 2.30 },
-            { x: 1.75, z: 0.00, r: 2.30 },
-            { x: -2.35, z: 1.55, r: 1.65 },
-            { x: -2.35, z: -1.55, r: 1.65 },
-            { x: 2.35, z: 1.55, r: 1.65 },
-            { x: 2.35, z: -1.55, r: 1.65 },
-            { x: -1.25, z: 1.55, r: 1.45 },
-            { x: 1.25, z: 1.55, r: 1.45 },
-            { x: -3.40, z: 0.00, r: 1.45 },
-            { x: 3.40, z: 0.00, r: 1.45 },
-            { x: -1.20, z: -2.60, r: 2.45 },
-            { x: -1.35, z: -3.00, r: 1.95 },
-            { x: 1.60, z: -2.15, r: 2.05 },
-            { x: 0.00, z: 1.55, r: 1.45 },
-            { x: 0.00, z: -0.30, r: 2.00 },
+            { x: -2.20, z: 0.00, r: 2.80 },
+            { x: 2.20, z: 0.00, r: 2.80 },
+            { x: -3.00, z: 1.85, r: 2.20 },
+            { x: -3.00, z: -1.85, r: 2.20 },
+            { x: 3.00, z: 1.85, r: 2.20 },
+            { x: 3.00, z: -1.85, r: 2.20 },
+            { x: -1.60, z: 2.30, r: 2.00 },
+            { x: 1.60, z: 2.30, r: 2.00 },
+            { x: 0.00, z: 2.50, r: 1.90 },
+            { x: -4.30, z: 0.00, r: 2.00 },
+            { x: 4.30, z: 0.00, r: 2.00 },
+            { x: -1.40, z: -3.10, r: 2.80 },
+            { x: -1.60, z: -3.50, r: 2.30 },
+            { x: 2.00, z: -2.60, r: 2.50 },
+            { x: 0.00, z: -0.30, r: 2.60 },
         ];
         const isInside = (x, z) => {
             for (let i = 0; i < lobes.length; i++) {
@@ -525,7 +526,7 @@ export class ThreeStage {
             const dirX = Math.cos(theta);
             const dirZ = Math.sin(theta);
             let maxR = 0;
-            for (let r = 0.1; r <= 7.0; r += 0.01) {
+            for (let r = 0.1; r <= 8.5; r += 0.02) {
                 const px = center.x + dirX * r;
                 const pz = center.z + dirZ * r;
                 if (isInside(px, pz)) {
@@ -565,7 +566,7 @@ export class ThreeStage {
        ========================================================================= */
     buildSculptedIsland() {
         // 1. Soft Diffused Contact Shadow on Ground Floor (Organic circular falloff, ZERO corners)
-        const shadowGeo = new THREE.CircleGeometry(7.2, 64);
+        const shadowGeo = new THREE.CircleGeometry(8.8, 64);
         const shadowCanvas = document.createElement('canvas');
         shadowCanvas.width = 256;
         shadowCanvas.height = 256;
@@ -929,27 +930,36 @@ export class ThreeStage {
        5. 3D FIGURE-8 INFINITE LOOP CURVE (LEMNISCATE + SMOOTH VIADUCT ELEVATION)
        ========================================================================= */
     buildInfiniteTrackCurve() {
-        const pts = [];
-        const N = 260;
-        const bridgeSpan = 0.95; // Angle span around t=0 where track climbs over viaduct
-        const baseHeight = 0.055; // Ground rail elevation
-        const viaductElevation = 0.38; // Viaduct clearance elevation
-        for (let i = 0; i < N; i++) {
-            const t = (i / N) * Math.PI * 2;
-            // Lemniscate of Gerono (Grand expanded longer path): x = A sin(t), z = B sin(2t)
-            const x = Math.sin(t) * 3.30;
-            const z = Math.sin(2 * t) * 1.60;
-            // Elevation Profile:
-            // At t = pi: Overpass summit on top of stone viaduct (y = 0.435)
-            // At t = 0: Underpass ground level through stone arch tunnel (y = 0.055)
-            const dt = Math.abs(t - Math.PI);
-            let y = baseHeight;
-            if (dt < bridgeSpan) {
-                const ramp = Math.cos((dt / bridgeSpan) * (Math.PI * 0.5));
-                y = baseHeight + viaductElevation * Math.pow(ramp, 2);
-            }
-            pts.push(new THREE.Vector3(x, y, z));
-        }
+        const pts = [
+            new THREE.Vector3(0.00, 0.055, 0.00),
+            new THREE.Vector3(0.49, 0.055, 0.51),
+            new THREE.Vector3(1.15, 0.055, 1.18),
+            new THREE.Vector3(2.10, 0.055, 1.95),
+            new THREE.Vector3(3.10, 0.055, 2.25),
+            new THREE.Vector3(4.00, 0.055, 1.80),
+            new THREE.Vector3(4.45, 0.055, 0.90),
+            new THREE.Vector3(4.50, 0.055, -0.20),
+            new THREE.Vector3(4.10, 0.055, -1.35),
+            new THREE.Vector3(3.40, 0.055, -2.15),
+            new THREE.Vector3(2.65, 0.075, -2.50),
+            new THREE.Vector3(1.80, 0.150, -2.10),
+            new THREE.Vector3(1.10, 0.250, -1.45),
+            new THREE.Vector3(0.52, 0.360, -0.50),
+            new THREE.Vector3(0.00, 0.435, 0.00),
+            new THREE.Vector3(-0.52, 0.360, 0.50),
+            new THREE.Vector3(-1.10, 0.250, 1.45),
+            new THREE.Vector3(-1.80, 0.150, 2.10),
+            new THREE.Vector3(-2.65, 0.075, 2.50),
+            new THREE.Vector3(-3.40, 0.055, 2.15),
+            new THREE.Vector3(-4.10, 0.055, 1.35),
+            new THREE.Vector3(-4.50, 0.055, 0.20),
+            new THREE.Vector3(-4.45, 0.055, -0.90),
+            new THREE.Vector3(-4.00, 0.055, -1.80),
+            new THREE.Vector3(-3.10, 0.055, -2.25),
+            new THREE.Vector3(-2.10, 0.055, -1.75),
+            new THREE.Vector3(-1.15, 0.055, -1.18),
+            new THREE.Vector3(-0.49, 0.055, -0.51),
+        ];
         this.trackCurve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
     }
     /* =========================================================================
@@ -964,7 +974,11 @@ export class ThreeStage {
             roughness: 0.7,
             metalness: 0.1,
         });
-        const tieCount = 160;
+        const tieCount = 350;
+        const tieMesh = new THREE.InstancedMesh(tieGeo, tieMat, tieCount);
+        tieMesh.castShadow = true;
+        tieMesh.receiveShadow = true;
+        const dummy = new THREE.Object3D();
         const up = new THREE.Vector3(0, 1, 0);
         for (let i = 0; i < tieCount; i++) {
             const u = i / tieCount;
@@ -973,15 +987,15 @@ export class ThreeStage {
             let normal = new THREE.Vector3().crossVectors(tangent, up).normalize();
             if (normal.lengthSq() < 0.001)
                 normal.set(1, 0, 0);
-            const tie = new THREE.Mesh(tieGeo, tieMat);
-            tie.position.set(pt.x, pt.y - 0.012, pt.z);
-            tie.lookAt(pt.clone().add(normal));
-            tie.castShadow = true;
-            tie.receiveShadow = true;
-            this.trackGroup.add(tie);
+            dummy.position.set(pt.x, pt.y - 0.012, pt.z);
+            dummy.lookAt(pt.clone().add(normal));
+            dummy.updateMatrix();
+            tieMesh.setMatrixAt(i, dummy.matrix);
         }
+        tieMesh.instanceMatrix.needsUpdate = true;
+        this.trackGroup.add(tieMesh);
         // Extrude Dual Continuous Polished Steel Rails
-        const samples = 280;
+        const samples = 400;
         const railOffset = 0.066;
         const leftPts = [];
         const rightPts = [];
@@ -997,8 +1011,8 @@ export class ThreeStage {
         }
         const leftRailCurve = new THREE.CatmullRomCurve3(leftPts, true);
         const rightRailCurve = new THREE.CatmullRomCurve3(rightPts, true);
-        const railGeoLeft = new THREE.TubeGeometry(leftRailCurve, 280, 0.013, 8, true);
-        const railGeoRight = new THREE.TubeGeometry(rightRailCurve, 280, 0.013, 8, true);
+        const railGeoLeft = new THREE.TubeGeometry(leftRailCurve, 400, 0.013, 8, true);
+        const railGeoRight = new THREE.TubeGeometry(rightRailCurve, 400, 0.013, 8, true);
         const railMat = new THREE.MeshStandardMaterial({
             color: 0xd4d4d8,
             metalness: 0.92,
@@ -1017,8 +1031,8 @@ export class ThreeStage {
        7. ARCHITECTURAL ASHLAR STONE VIADUCT WITH VOUSSOIR ARCHES & LANTERNS
        ========================================================================= */
     buildStoneViaductAndTunnel() {
-        // Rotate viaduct group by +0.7702 rad (+44.13 deg) so deck aligns with overpass at t=pi (local X) and arch tunnel directly faces viewer at t=0 (local Z)
-        this.viaductGroup.rotation.y = 0.7702;
+        // Rotate viaduct group by +0.7654 rad (+43.85 deg) so deck aligns with overpass at u=0.5 (local X) and arch tunnel directly faces viewer at u=0 (local Z)
+        this.viaductGroup.rotation.y = 0.7654;
         const stoneTex = this.createStoneBrickTexture();
         const stoneMat = new THREE.MeshStandardMaterial({
             color: 0xded5c5,
@@ -2810,9 +2824,9 @@ export class ThreeStage {
             flatShading: true,
         });
         // 1. Single Majestic Low-Poly Mountain Peak (Organic backdrop, clearance >= 0.55 from rails)
-        // Mountain base is centered on the northern alpine bedrock lobe at (-1.35, -2.95)
+        // Mountain base is centered on the northern alpine bedrock lobe at (-1.35, -3.25)
         const mtnX = -1.35;
-        const mtnZ = -2.95;
+        const mtnZ = -3.25;
         const mtnR = 1.60;
         const mtnH = 2.75;
         const snowH = 0.96;
@@ -2833,11 +2847,11 @@ export class ThreeStage {
         alpineGroup.add(snowCone);
         // 2. Low-Poly Granite Boulders at Mountain Foothills
         const boulders = [
-            { x: -2.8, z: -2.3, s: 0.18 },
-            { x: -2.3, z: -2.0, s: 0.22 },
-            { x: -1.1, z: -2.1, s: 0.16 },
-            { x: 0.4, z: -2.4, s: 0.20 },
-            { x: -0.1, z: -2.5, s: 0.15 },
+            { x: -3.0, z: -2.8, s: 0.18 },
+            { x: -2.5, z: -2.6, s: 0.22 },
+            { x: -1.1, z: -2.4, s: 0.16 },
+            { x: 0.4, z: -2.6, s: 0.20 },
+            { x: -0.1, z: -2.7, s: 0.15 },
         ];
         boulders.forEach((b) => {
             const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(b.s, 0), boulderMat);
@@ -2848,9 +2862,9 @@ export class ThreeStage {
             alpineGroup.add(boulder);
         });
         const firOffsets = [
-            [-2.9, -2.4], [-2.5, -2.2], [-2.1, -2.1], [-1.4, -2.3],
-            [-0.8, -2.2], [-0.2, -2.4], [0.3, -2.6], [-3.1, -3.0],
-            [-2.6, -3.4], [-1.0, -3.3], [0.6, -3.2]
+            [-2.9, -2.7], [-2.4, -2.5], [-2.1, -2.4], [-1.4, -2.5],
+            [-0.8, -2.5], [-0.2, -2.6], [0.3, -2.8], [-3.1, -3.1],
+            [-2.6, -3.4], [-1.0, -3.4], [0.6, -3.3]
         ];
         firOffsets.forEach(([fx, fz], idx) => {
             const fir = new THREE.Group();
@@ -2970,8 +2984,8 @@ export class ThreeStage {
        ========================================================================= */
     buildRailwayWaterTower() {
         const tower = new THREE.Group();
-        // Positioned safely on the northeast railway depot lobe (track distance > 0.90)
-        tower.position.set(1.65, 0.04, -2.35);
+        // Positioned safely on the northeast railway depot lobe (track distance > 0.60)
+        tower.position.set(1.45, 0.04, -2.60);
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
         const staveMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 });
         const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
@@ -3302,6 +3316,236 @@ export class ThreeStage {
         this.sceneryGroup.add(lifeGroup);
     }
     /* =========================================================================
+       11g. EXPANDED SCENERY: SOUTHWEST PASTURE, PICNIC MEADOW & PINE FORESTS
+       ========================================================================= */
+    buildExpandedLandscapeScenery() {
+        const expandedGroup = new THREE.Group();
+        // 1. SOUTHWEST FARM PASTURE: Fencing, Hay Bales, Trough & Farm Sheep
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
+        const hayMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.85 });
+        const twineMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.6 });
+        // Rustic Post & Rail Fence in SW Meadow (around x = -3.4, z = 0.5)
+        const fencePosts = [
+            [-3.1, 0.2], [-3.1, 0.6], [-3.1, 1.0],
+            [-3.5, 1.0], [-3.8, 1.0], [-3.8, 0.6], [-3.8, 0.2],
+        ];
+        fencePosts.forEach(([fx, fz]) => {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.16, 6), postMat);
+            post.position.set(fx, 0.04 + 0.08, fz);
+            post.castShadow = true;
+            expandedGroup.add(post);
+        });
+        // Connecting horizontal fence rails
+        const fenceRails = [
+            { start: [-3.1, 0.2], end: [-3.1, 0.6] },
+            { start: [-3.1, 0.6], end: [-3.1, 1.0] },
+            { start: [-3.1, 1.0], end: [-3.5, 1.0] },
+            { start: [-3.5, 1.0], end: [-3.8, 1.0] },
+            { start: [-3.8, 1.0], end: [-3.8, 0.6] },
+            { start: [-3.8, 0.6], end: [-3.8, 0.2] },
+        ];
+        fenceRails.forEach(({ start, end }) => {
+            const dx = end[0] - start[0];
+            const dz = end[1] - start[1];
+            const len = Math.hypot(dx, dz);
+            const angle = Math.atan2(dx, dz);
+            const mx = (start[0] + end[0]) * 0.5;
+            const mz = (start[1] + end[1]) * 0.5;
+            [0.08, 0.14].forEach((ry) => {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.018, len), woodMat);
+                rail.position.set(mx, 0.04 + ry, mz);
+                rail.rotation.y = angle;
+                rail.castShadow = true;
+                expandedGroup.add(rail);
+            });
+        });
+        // 3 Golden Round Hay Bales with Twin Twine Bands
+        const hayBaleCoords = [
+            { x: -3.35, z: 0.45, rotY: 0.3 },
+            { x: -3.55, z: 0.55, rotY: -0.4 },
+            { x: -3.45, z: 0.75, rotY: 1.1 },
+        ];
+        const baleGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.15, 14);
+        const hoopGeo = new THREE.TorusGeometry(0.091, 0.005, 4, 16);
+        hayBaleCoords.forEach(({ x, z, rotY }) => {
+            const baleGroup = new THREE.Group();
+            baleGroup.position.set(x, 0.04 + 0.075, z);
+            baleGroup.rotation.y = rotY;
+            const bale = new THREE.Mesh(baleGeo, hayMat);
+            bale.castShadow = true;
+            bale.receiveShadow = true;
+            baleGroup.add(bale);
+            [-0.045, 0.045].forEach((hy) => {
+                const hoop = new THREE.Mesh(hoopGeo, twineMat);
+                hoop.rotation.x = Math.PI * 0.5;
+                hoop.position.y = hy;
+                baleGroup.add(hoop);
+            });
+            expandedGroup.add(baleGroup);
+        });
+        // Wooden Livestock Water Trough
+        const troughGroup = new THREE.Group();
+        troughGroup.position.set(-3.25, 0.04 + 0.03, 0.85);
+        const troughGeo = new THREE.BoxGeometry(0.22, 0.06, 0.10);
+        const trough = new THREE.Mesh(troughGeo, woodMat);
+        trough.castShadow = true;
+        troughGroup.add(trough);
+        const waterMat = new THREE.MeshStandardMaterial({
+            color: 0x0284c7,
+            roughness: 0.1,
+            metalness: 0.1,
+        });
+        const troughWater = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 0.07), waterMat);
+        troughWater.position.y = 0.025;
+        troughGroup.add(troughWater);
+        expandedGroup.add(troughGroup);
+        // 2. SOUTHEAST MEADOW: Picnic Table, Benches & Basket
+        const picnicGroup = new THREE.Group();
+        picnicGroup.position.set(2.70, 0.04, 1.10);
+        picnicGroup.rotation.y = -0.45;
+        // Picnic Tabletop
+        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.022, 0.16), woodMat);
+        tableTop.position.y = 0.09;
+        tableTop.castShadow = true;
+        picnicGroup.add(tableTop);
+        // Table Legs
+        [-0.10, 0.10].forEach((tx) => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.09, 0.12), postMat);
+            leg.position.set(tx, 0.045, 0);
+            leg.castShadow = true;
+            picnicGroup.add(leg);
+        });
+        // Twin Benches flanking table
+        [-0.14, 0.14].forEach((bz) => {
+            const bench = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.016, 0.06), woodMat);
+            bench.position.set(0, 0.05, bz);
+            bench.castShadow = true;
+            picnicGroup.add(bench);
+            [-0.09, 0.09].forEach((bx) => {
+                const bleg = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.05, 0.04), postMat);
+                bleg.position.set(bx, 0.025, bz);
+                picnicGroup.add(bleg);
+            });
+        });
+        // Low-poly Picnic Basket on the Table
+        const basketMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7 });
+        const basket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.045), basketMat);
+        basket.position.set(0.04, 0.115, 0);
+        basket.castShadow = true;
+        picnicGroup.add(basket);
+        expandedGroup.add(picnicGroup);
+        // 3. NORTHWEST ALPINE PINE & BIRCH FOREST
+        const pineMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.65, flatShading: true });
+        const birchLeafMat = new THREE.MeshStandardMaterial({ color: 0x65a30d, roughness: 0.6, flatShading: true });
+        const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.5 });
+        const outerPines = [
+            { x: -3.85, z: -1.35, s: 1.15 },
+            { x: -3.55, z: -1.75, s: 1.30 },
+            { x: -3.20, z: -2.35, s: 1.05 },
+            { x: -2.85, z: -2.80, s: 1.25 },
+            // Eastern Pines
+            { x: 3.55, z: -0.85, s: 1.10 },
+            { x: 3.75, z: -1.35, s: 1.25 },
+            { x: 3.35, z: -1.75, s: 1.00 },
+        ];
+        outerPines.forEach(({ x, z, s }) => {
+            const tree = new THREE.Group();
+            tree.position.set(x, 0.04, z);
+            tree.scale.setScalar(s);
+            // Trunk
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.038, 0.22, 6), postMat);
+            trunk.position.y = 0.11;
+            trunk.castShadow = true;
+            tree.add(trunk);
+            // 3 Tiers of Conical Foliage
+            const tiers = [
+                { r: 0.24, h: 0.28, y: 0.26 },
+                { r: 0.18, h: 0.24, y: 0.42 },
+                { r: 0.12, h: 0.20, y: 0.56 },
+            ];
+            tiers.forEach((tier) => {
+                const cone = new THREE.Mesh(new THREE.ConeGeometry(tier.r, tier.h, 7), pineMat);
+                cone.position.y = tier.y;
+                cone.castShadow = true;
+                cone.receiveShadow = true;
+                tree.add(cone);
+            });
+            this.interactiveTrees.push(tree);
+            expandedGroup.add(tree);
+        });
+        // Stately Birch Trees
+        const birches = [
+            { x: -3.35, z: -1.05, s: 1.05 },
+            { x: 3.40, z: 0.35, s: 0.95 },
+        ];
+        birches.forEach(({ x, z, s }) => {
+            const birch = new THREE.Group();
+            birch.position.set(x, 0.04, z);
+            birch.scale.setScalar(s);
+            const bTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.32, 6), birchTrunkMat);
+            bTrunk.position.y = 0.16;
+            bTrunk.castShadow = true;
+            birch.add(bTrunk);
+            const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.18, 1), birchLeafMat);
+            foliage.position.set(0, 0.34, 0);
+            foliage.scale.set(1.0, 1.3, 1.0);
+            foliage.castShadow = true;
+            birch.add(foliage);
+            this.interactiveTrees.push(birch);
+            expandedGroup.add(birch);
+        });
+        // 4. INSTANCED WILDFLOWER MEADOWS (High Density, 0 Performance Impact!)
+        const flowerGeo = new THREE.ConeGeometry(0.022, 0.035, 5);
+        const buttercupMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, emissive: 0xfacc15, emissiveIntensity: 0.08 });
+        const poppyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4, emissive: 0xef4444, emissiveIntensity: 0.06 });
+        const lupineMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.4, emissive: 0x8b5cf6, emissiveIntensity: 0.08 });
+        const flowerClusters = [
+            { cx: 2.6, cz: 1.2, count: 40, r: 0.7 },
+            { cx: 3.2, cz: 0.2, count: 35, r: 0.6 },
+            { cx: -2.8, cz: 0.8, count: 35, r: 0.6 },
+            { cx: 0.0, cz: 2.1, count: 45, r: 0.8 },
+            { cx: -0.6, cz: -1.9, count: 30, r: 0.5 },
+            { cx: 1.8, cz: -1.8, count: 30, r: 0.5 },
+        ];
+        const allFlowerPositions = [];
+        flowerClusters.forEach((cl) => {
+            for (let i = 0; i < cl.count; i++) {
+                const rad = Math.sqrt(Math.random()) * cl.r;
+                const ang = Math.random() * Math.PI * 2;
+                const fx = cl.cx + Math.cos(ang) * rad;
+                const fz = cl.cz + Math.sin(ang) * rad;
+                const colorIdx = (i + Math.floor(cl.cx * 10)) % 3;
+                const scale = 0.75 + Math.random() * 0.5;
+                allFlowerPositions.push({ x: fx, z: fz, colorIdx, scale });
+            }
+        });
+        const buttercups = allFlowerPositions.filter((f) => f.colorIdx === 0);
+        const poppies = allFlowerPositions.filter((f) => f.colorIdx === 1);
+        const lupines = allFlowerPositions.filter((f) => f.colorIdx === 2);
+        const setupInstancedFlowers = (list, mat) => {
+            const count = list.length;
+            if (count === 0)
+                return;
+            const mesh = new THREE.InstancedMesh(flowerGeo, mat, count);
+            mesh.castShadow = true;
+            const dummy = new THREE.Object3D();
+            list.forEach((f, idx) => {
+                dummy.position.set(f.x, 0.04 + 0.02 * f.scale, f.z);
+                dummy.rotation.set((Math.random() - 0.5) * 0.2, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.2);
+                dummy.scale.setScalar(f.scale);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(idx, dummy.matrix);
+            });
+            mesh.instanceMatrix.needsUpdate = true;
+            expandedGroup.add(mesh);
+        };
+        setupInstancedFlowers(buttercups, buttercupMat);
+        setupInstancedFlowers(poppies, poppyMat);
+        setupInstancedFlowers(lupines, lupineMat);
+        this.sceneryGroup.add(expandedGroup);
+    }
+    /* =========================================================================
        12. DEDICATED WEATHER & RAIN ENGINE
        ========================================================================= */
     setupWeatherSystem() {
@@ -3310,9 +3554,9 @@ export class ThreeStage {
         this.rainGeo = new THREE.BufferGeometry();
         const streakLen = 0.18;
         for (let i = 0; i < this.rainCount; i++) {
-            const rx = (Math.random() - 0.5) * 5.5;
+            const rx = (Math.random() - 0.5) * 11.8;
             const ry = Math.random() * 3.5;
-            const rz = (Math.random() - 0.5) * 4.5;
+            const rz = (Math.random() - 0.5) * 9.6;
             // Start of streak
             this.rainPositions[i * 6] = rx;
             this.rainPositions[i * 6 + 1] = ry;
@@ -3957,7 +4201,7 @@ export class ThreeStage {
     }
     isTrainInTunnel() {
         const u = (this.progress + 1.0) % 1.0;
-        return u < 0.045 || u > 0.955;
+        return u < 0.028 || u > 0.972;
     }
     /* =========================================================================
        14. PUBLIC CONTROL APIS (VIEW MODES, SPEED, COZY NIGHT LIGHTING)
@@ -4051,14 +4295,14 @@ export class ThreeStage {
             gsap.to(this.controls.target, {
                 x: 0,
                 y: 0,
-                z: 0,
+                z: -0.20,
                 duration: 0.85,
                 ease: 'power2.inOut',
             });
             gsap.to(this.camera.position, {
                 x: 0.01,
-                y: 7.2,
-                z: 0.01,
+                y: 8.5,
+                z: -0.19,
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onComplete: () => {
@@ -4071,15 +4315,15 @@ export class ThreeStage {
             this.controls.enabled = false;
             gsap.to(this.controls.target, {
                 x: 0,
-                y: 0.40,
-                z: -0.75,
+                y: 0.35,
+                z: -0.40,
                 duration: 0.85,
                 ease: 'power2.inOut',
             });
             gsap.to(this.camera.position, {
-                x: 5.8,
-                y: 5.4,
-                z: 6.0,
+                x: 6.4,
+                y: 5.8,
+                z: 6.6,
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onComplete: () => {
@@ -4621,7 +4865,7 @@ export class ThreeStage {
         // 1. Advance Track Progress
         this.progress = (this.progress + this.trainSpeed * this.speedMultiplier) % 1.0;
         // 2. Position All 4 Train Cars — 100% Tangent Basis Matrix Alignment!
-        const carOffsets = [0, -0.022, -0.044, -0.066];
+        const carOffsets = [0, -0.0125, -0.0250, -0.0375];
         const cars = [this.locoCar, this.tenderCar, this.coachCar, this.cabooseCar];
         const up = new THREE.Vector3(0, 1, 0);
         cars.forEach((car, idx) => {
@@ -4697,9 +4941,9 @@ export class ThreeStage {
                 this.rainPositions[i * 6 + 4] -= 0.11;
                 // Reset if hitting ground
                 if (this.rainPositions[i * 6 + 1] < 0.02) {
-                    const rx = (Math.random() - 0.5) * 5.2;
+                    const rx = (Math.random() - 0.5) * 11.8;
                     const ry = 3.2 + Math.random() * 0.5;
-                    const rz = (Math.random() - 0.5) * 4.2;
+                    const rz = (Math.random() - 0.5) * 9.6;
                     // Spawn ground splash ripple
                     this.triggerSplash(this.rainPositions[i * 6], 0.025, this.rainPositions[i * 6 + 2]);
                     this.rainPositions[i * 6] = rx;
