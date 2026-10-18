@@ -658,10 +658,7 @@ class RecommendationsApp {
     const keyLabels = ['A', 'B', 'C', 'D'];
     const optionsHtml = q.options.map((opt, i) => `
       <div class="quiz-option-card" data-opt-idx="${i}" role="button" tabindex="0">
-        <div class="option-header-row">
-          <span class="option-key-badge">${keyLabels[i]}</span>
-          <span class="option-hint-tag">${opt.hint}</span>
-        </div>
+        <span class="option-key-badge">${keyLabels[i]}</span>
         <div class="option-text">${opt.text}</div>
       </div>
     `).join('');
@@ -790,31 +787,29 @@ class RecommendationsApp {
 
       return `
         <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${game.title}">
-          <div class="arranged-card-cover-wrap">
-            <img src="${game.image}" alt="${game.title}" class="arranged-card-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
-          </div>
-          <div>
-            <div class="game-top-meta">
-              <span class="game-match-score">${rec.matchScore}% MATCH</span>
-              ${isTop ? '<span class="soulmate-flag-tag">#1 RECOMMENDED SOULMATE</span>' : ''}
-            </div>
-            <div class="arranged-game-name-row">
-              <h4 class="arranged-game-name">${game.title}</h4>
-              <span class="arranged-card-year">${game.releaseYear}</span>
-            </div>
-            <div class="arranged-game-studio">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
-            <p class="arranged-game-desc">${game.description}</p>
-            <div class="arranged-game-why">
-              <strong>Why it matches your profile:</strong> ${rec.highlightNote}
+          <img src="${game.image}" alt="${game.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+          <div class="card-scrim"></div>
+          <div class="card-top-bar">
+            <div class="card-badge-left">
+              ${isTop ? '<span class="soulmate-flag-tag">#1 SOULMATE</span>' : ''}
+              <span class="card-sim-badge score-excellent">${rec.matchScore}% MATCH</span>
             </div>
           </div>
-          <div class="arranged-game-actions">
-            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="game-play-btn" onclick="event.stopPropagation()">
-              <span>${storeName}</span> &nearr;
-            </a>
-            <button class="game-source-btn arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()">
-              <span>Details</span> &rarr;
-            </button>
+          <div class="card-overlay-content">
+            <div class="card-title-row">
+              <h4 class="card-title">${game.title}</h4>
+              <span class="card-year">${game.releaseYear}</span>
+            </div>
+            <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
+            <div class="card-action-bar">
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()">
+                <span>${storeName}</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+              </a>
+              <button class="card-btn-action secondary arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()">
+                <span>Details</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1136,53 +1131,31 @@ class RecommendationsApp {
       badgeHtml = `<span class="card-rating-badge">&#9733; ${pct}% Positive</span>`;
     }
 
-    const platformBadgesHtml = game.platforms
-      .map((p) => {
-        const iconSvg =
-          p.badge === 'steam'
-            ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.005.105.005.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 14.819C1.865 20.082 6.474 24 12 24c6.627 0 12-5.373 12-12S18.627 0 11.979 0z"/></svg>`
-            : p.badge === 'itch'
-            ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3.193 1.58C1.848 1.93.003 3.488 0 4.634v1.895c0 1.545 1.487 2.872 2.747 2.872 1.517 0 2.747-1.144 2.747-2.585 0 1.44 1.23 2.585 2.747 2.585 1.516 0 2.746-1.144 2.746-2.585 0 1.44 1.23 2.585 2.747 2.585 1.516 0 2.747-1.144 2.747-2.585 0 1.44 1.23 2.585 2.747 2.585 1.26 0 2.747-1.327 2.747-2.872V4.634c-.003-1.146-1.848-2.705-3.193-3.054C19.123 1.157 14.935 1 12 1s-7.123.157-8.807.58zM12 9.547c-1.365 0-2.593.707-3.35 1.764-.757-1.057-1.985-1.764-3.35-1.764-2.228 0-4.04 1.83-4.04 4.084V21.5c0 .825.67 1.5 1.5 1.5h18.38c.83 0 1.5-.675 1.5-1.5v-7.869c0-2.254-1.812-4.084-4.04-4.084-1.365 0-2.593.707-3.35 1.764-.757-1.057-1.985-1.764-3.35-1.764z"/></svg>`
-            : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg>`;
-
-        return `
-          <a href="${p.url}" target="_blank" rel="noopener noreferrer" class="platform-badge badge-${p.badge}" title="View on ${p.name}" onclick="event.stopPropagation()">
-            ${iconSvg}
-            <span>${p.name}</span>
-            <span class="ext-arrow">&nearr;</span>
-          </a>
-        `;
-      })
-      .join('');
+    const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
+    const storeName = game.platforms[0]?.name || 'Steam Store';
 
     card.innerHTML = `
-      <div class="card-cover-wrap">
-        <img src="${game.image}" alt="${game.title}" class="card-cover-img" loading="eager" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
-        <div class="card-cover-pills">
+      <img src="${game.image}" alt="${game.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+      <div class="card-scrim"></div>
+      <div class="card-top-bar">
+        <div class="card-badge-left">
           ${badgeHtml}
           ${game.isSamtagonOriginal ? `<span class="badge-samtagon-float">Original</span>` : ''}
         </div>
       </div>
-
-      <div class="card-body">
-        <div class="card-header-line">
+      <div class="card-overlay-content">
+        <div class="card-title-row">
           <h3 class="card-title">${game.title}</h3>
-          <span class="release-year">${game.releaseYear}</span>
+          <span class="card-year">${game.releaseYear}</span>
         </div>
-        <div class="card-developer-line">${game.developer}</div>
-
-        <p class="card-desc">${(() => {
-          const sentences = game.description.match(/[^.!?]+[.!?]+/g) || [game.description];
-          return sentences.slice(0, 2).join(' ');
-        })()}</p>
-
-        <div class="card-actions">
-          <div class="platforms-group">
-            ${platformBadgesHtml}
-          </div>
-          <button class="rabbit-hole-btn" title="View Full Details">
+        <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
+        <div class="card-action-bar">
+          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()">
+            <span>${storeName}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+          </a>
+          <button class="card-btn-action secondary card-details-trigger" onclick="event.stopPropagation()">
             <span>Details</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
@@ -1190,6 +1163,13 @@ class RecommendationsApp {
 
     // Click card opens full Game Detail Modal
     card.addEventListener('click', () => {
+      this.audio.playChime(783.99, 0.06);
+      this.openGameDetailModal(game);
+    });
+
+    const detailsBtn = card.querySelector<HTMLElement>('.card-details-trigger');
+    detailsBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
       this.audio.playChime(783.99, 0.06);
       this.openGameDetailModal(game);
     });
