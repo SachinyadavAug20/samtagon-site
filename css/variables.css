@@ -52,9 +52,9 @@
    Always inactive on initial load; toggled on demand
    ========================================================================== */
 [data-theme="dark"] {
-  --bg-primary: #0A0F1D;
-  --bg-surface: #111827;
-  --bg-subtle: #1E293B;
+  --bg-primary: #07090E;
+  --bg-surface: #0E1422;
+  --bg-subtle: #162032;
 
   --accent-emerald: #10B981;
   --accent-emerald-hover: #34D399;
@@ -62,11 +62,11 @@
   --accent-emerald-border: rgba(16, 185, 129, 0.32);
 
   --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
+  --text-secondary: #94A3B8;
   --text-muted: #64748B;
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.16);
+  --border-subtle: transparent;
+  --border-medium: rgba(255, 255, 255, 0.06);
 
   --shadow-sm: none;
   --shadow-md: none;

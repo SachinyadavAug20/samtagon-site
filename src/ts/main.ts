@@ -108,7 +108,7 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     btn.addEventListener('click', () => {
       viewBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      const view = btn.dataset.view as 'isometric' | 'top' | 'cinematic' | 'director' | 'trackside';
+      const view = btn.dataset.view as 'isometric' | 'top' | 'cinematic' | 'engine' | 'director' | 'trackside';
       stage?.setViewMode(view);
       audio.playButtonPress();
     });
@@ -171,4 +171,17 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     audio.playChime(880, 0.12);
     stage?.triggerWhistleHop();
   });
+
+  // 8. Deep-link URL params (?view=engine & ?theme=dark)
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedView = urlParams.get('view') as 'isometric' | 'top' | 'cinematic' | 'engine' | 'director' | 'trackside' | null;
+  if (requestedView) {
+    viewBtns.forEach((b) => b.classList.toggle('active', b.dataset.view === requestedView));
+    stage?.setViewMode(requestedView);
+  }
+  const requestedTheme = urlParams.get('theme');
+  if (requestedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    stage?.setNightMode(true);
+  }
 }

@@ -145,5 +145,17 @@ function setupZenInteractions(stage, audio) {
         audio.playChime(880, 0.12);
         stage?.triggerWhistleHop();
     });
+    // 8. Deep-link URL params (?view=engine & ?theme=dark)
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestedView = urlParams.get('view');
+    if (requestedView) {
+        viewBtns.forEach((b) => b.classList.toggle('active', b.dataset.view === requestedView));
+        stage?.setViewMode(requestedView);
+    }
+    const requestedTheme = urlParams.get('theme');
+    if (requestedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        stage?.setNightMode(true);
+    }
 }
 //# sourceMappingURL=main.js.map

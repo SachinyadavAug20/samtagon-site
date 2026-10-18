@@ -123,12 +123,13 @@ export class ThreeStage {
   private villageWellBucket: THREE.Mesh | null = null;
   private butterflies: Array<{ mesh: THREE.Group; basePos: THREE.Vector3; phase: number; speed: number }> = [];
 
-  // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Cinematic, Director, Trackside)
-  private currentViewMode: 'isometric' | 'top' | 'cinematic' | 'director' | 'trackside' = 'isometric';
+  // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Engine, Director, Trackside)
+  private currentViewMode: 'isometric' | 'top' | 'cinematic' | 'engine' | 'director' | 'trackside' = 'isometric';
   private directorShotIndex: number = 0;
   private directorTimer: number = 0;
   private directorShotDuration: number = 6.8;
   private directorNeedsCut: boolean = true;
+  private engineBankRoll: number = 0;
   private lastAnimTime: number = 0;
 
   // Day / Night & Celestial Systems
@@ -516,44 +517,33 @@ export class ThreeStage {
     this.starsPoints = new THREE.Points(starGeo, starMat);
     this.celestialGroup.add(this.starsPoints);
 
-    // 3. Radiant 3D Sun with Dynamic Corona Flare
+    // 3. Radiant 3D Sun nestled in the alpine sky (Zero square sprite clipping)
     const sunGroup = new THREE.Group();
     const sunGeo = new THREE.SphereGeometry(0.24, 24, 24);
     const sunMat = new THREE.MeshStandardMaterial({
       color: 0xfffbeb,
       emissive: 0xfbbf24,
-      emissiveIntensity: 1.4,
+      emissiveIntensity: 1.6,
       roughness: 0.2,
       metalness: 0.1,
     });
     const sunSphere = new THREE.Mesh(sunGeo, sunMat);
     sunGroup.add(sunSphere);
 
-    // Radiant Sun Flare Corona Sprite
-    const sunCanvas = document.createElement('canvas');
-    sunCanvas.width = 128;
-    sunCanvas.height = 128;
-    const sctx = sunCanvas.getContext('2d')!;
-    const sunGrad = sctx.createRadialGradient(64, 64, 10, 64, 64, 64);
-    sunGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-    sunGrad.addColorStop(0.25, 'rgba(251, 191, 36, 0.7)');
-    sunGrad.addColorStop(0.55, 'rgba(245, 158, 11, 0.3)');
-    sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    sctx.fillStyle = sunGrad;
-    sctx.fillRect(0, 0, 128, 128);
-
-    const sunCoronaTex = new THREE.CanvasTexture(sunCanvas);
-    const sunCoronaMat = new THREE.SpriteMaterial({
-      map: sunCoronaTex,
+    // Warm concentric aura glow (pure 3D sphere with NormalBlending, ZERO rectangular clipping!)
+    const auraMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
       transparent: true,
-      blending: THREE.AdditiveBlending,
-      opacity: 0.85,
+      opacity: 0.22,
+      side: THREE.BackSide,
+      depthWrite: false,
     });
-    this.sunCorona = new THREE.Sprite(sunCoronaMat);
-    this.sunCorona.scale.set(1.9, 1.9, 1);
-    sunGroup.add(this.sunCorona);
+    const sunAura = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 16), auraMat);
+    sunGroup.add(sunAura);
+    this.sunCorona = sunAura as any;
 
-    sunGroup.position.set(2.8, 2.3, -1.6);
+    // Positioned safely within the viewport framing
+    sunGroup.position.set(1.3, 2.1, -1.8);
     this.sunMesh = sunGroup;
     this.celestialGroup.add(this.sunMesh);
   }
@@ -562,17 +552,17 @@ export class ThreeStage {
      3. SCULPTED FLOATING ISLAND & SOFT CONTACT SHADOW
      ========================================================================= */
   private buildSculptedIsland(): void {
-    // 1. Soft Diffused Contact Shadow on Ground Floor (Seamless organic blend)
-    const shadowGeo = new THREE.PlaneGeometry(9.6, 6.2);
+    // 1. Soft Diffused Contact Shadow on Ground Floor (Organic circular falloff, ZERO corners)
+    const shadowGeo = new THREE.CircleGeometry(3.6, 48);
     const shadowCanvas = document.createElement('canvas');
     shadowCanvas.width = 256;
     shadowCanvas.height = 256;
     const sctx = shadowCanvas.getContext('2d')!;
 
-    const sgrad = sctx.createRadialGradient(128, 128, 40, 128, 128, 125);
-    sgrad.addColorStop(0, 'rgba(15, 23, 42, 0.22)');
-    sgrad.addColorStop(0.55, 'rgba(15, 23, 42, 0.07)');
-    sgrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+    const sgrad = sctx.createRadialGradient(128, 128, 20, 128, 128, 125);
+    sgrad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
+    sgrad.addColorStop(0.5, 'rgba(0, 0, 0, 0.03)');
+    sgrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     sctx.fillStyle = sgrad;
     sctx.fillRect(0, 0, 256, 256);
 
@@ -3449,8 +3439,8 @@ export class ThreeStage {
         this.setViewMode('top');
         this.updateActiveViewPill('top');
       } else if (e.code === 'Digit3') {
-        this.setViewMode('cinematic');
-        this.updateActiveViewPill('cinematic');
+        this.setViewMode('engine');
+        this.updateActiveViewPill('engine');
       } else if (e.code === 'Digit4') {
         this.setViewMode('director');
         this.updateActiveViewPill('director');
@@ -3467,7 +3457,9 @@ export class ThreeStage {
 
   private updateActiveViewPill(viewName: string): void {
     document.querySelectorAll('[data-view]').forEach((btn) => {
-      btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
+      const v = btn.getAttribute('data-view');
+      const isMatch = v === viewName || (viewName === 'engine' && v === 'cinematic') || (viewName === 'cinematic' && v === 'engine');
+      btn.classList.toggle('active', isMatch);
     });
   }
 
@@ -3723,9 +3715,12 @@ export class ThreeStage {
     p.mesh.scale.setScalar(0.7 * scaleMultiplier);
     p.mesh.visible = true;
     p.life = 1.0;
-    p.vx = (Math.random() - 0.5) * 0.005;
-    p.vy = 0.012 + Math.random() * 0.008;
-    p.vz = (Math.random() - 0.5) * 0.005;
+
+    // Impart backward momentum from train speed into slipstream
+    const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
+    p.vx = -tangent.x * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
+    p.vy = 0.014 + Math.random() * 0.007;
+    p.vz = -tangent.z * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
 
     const isInsideTunnel = this.isTrainInTunnel();
     this.audio.playSteamChuff(isInsideTunnel);
@@ -3745,12 +3740,53 @@ export class ThreeStage {
     if (multiplier >= 3.0) {
       this.triggerWhistleHop();
     }
+    if (this.currentViewMode === 'engine' || this.currentViewMode === 'cinematic') {
+      const targetFov = multiplier >= 3.0 ? 64 : multiplier >= 2.0 ? 54 : 48;
+      gsap.to(this.camera, {
+        fov: targetFov,
+        duration: 0.45,
+        ease: 'power2.out',
+        onUpdate: () => this.camera.updateProjectionMatrix(),
+      });
+    }
   }
 
-  public setViewMode(mode: 'isometric' | 'top' | 'cinematic' | 'director' | 'trackside'): void {
+  public setViewMode(mode: 'isometric' | 'top' | 'cinematic' | 'engine' | 'director' | 'trackside'): void {
     this.currentViewMode = mode;
     this.controls.enabled = mode === 'isometric' || mode === 'top';
     this.controls.autoRotate = false;
+
+    // Dynamic FOV for immersive velocity in Engine Ride mode
+    if (mode === 'engine' || mode === 'cinematic') {
+      const targetFov = this.speedMultiplier >= 3.0 ? 64 : this.speedMultiplier >= 2.0 ? 54 : 48;
+      gsap.to(this.camera, {
+        fov: targetFov,
+        duration: 0.8,
+        ease: 'power2.out',
+        onUpdate: () => this.camera.updateProjectionMatrix(),
+      });
+      // Activate warm headlight lantern beam onto rails!
+      if (this.headlampBeam) this.headlampBeam.visible = true;
+      if (this.headlampCoreBeam) this.headlampCoreBeam.visible = true;
+      if (this.headlampTrackPool) this.headlampTrackPool.visible = true;
+      this.audio.playWhistle();
+    } else {
+      this.engineBankRoll = 0;
+      this.camera.up.set(0, 1, 0);
+      if (this.camera.fov !== 38) {
+        gsap.to(this.camera, {
+          fov: 38,
+          duration: 0.8,
+          ease: 'power2.out',
+          onUpdate: () => this.camera.updateProjectionMatrix(),
+        });
+      }
+      if (!this.isNightMode) {
+        if (this.headlampBeam) this.headlampBeam.visible = false;
+        if (this.headlampCoreBeam) this.headlampCoreBeam.visible = false;
+        if (this.headlampTrackPool) this.headlampTrackPool.visible = false;
+      }
+    }
 
     if (mode === 'top') {
       this.controls.enabled = false;
@@ -3888,10 +3924,10 @@ export class ThreeStage {
           this.sunLight.intensity = 2.6;
         }
         if (this.sunMesh) {
-          this.sunMesh.position.set(2.8, 2.3, -1.6);
+          this.sunMesh.position.set(1.3, 2.1, -1.8);
           this.sunMesh.scale.set(1, 1, 1);
           if (this.sunCorona) {
-            ((this.sunCorona as THREE.Sprite).material as THREE.SpriteMaterial).opacity = 0.85;
+            ((this.sunCorona as any).material as THREE.MeshBasicMaterial).opacity = 0.22;
           }
         }
         if (this.moonLight) this.moonLight.intensity = 0;
@@ -4256,9 +4292,9 @@ export class ThreeStage {
       if (this.sunMesh) {
         this.sunMesh.position.set(4.5, -0.8, 2.0);
         sunriseTL.to(this.sunMesh.position, {
-          x: 2.8,
-          y: 2.3,
-          z: -1.6,
+          x: 1.3,
+          y: 2.1,
+          z: -1.8,
           duration: dur,
           ease: 'power2.out',
         }, dur * 0.15);
@@ -4272,8 +4308,8 @@ export class ThreeStage {
         }, dur * 0.2);
 
         if (this.sunCorona) {
-          sunriseTL.to((this.sunCorona.material as THREE.SpriteMaterial), {
-            opacity: 0.85,
+          sunriseTL.to(((this.sunCorona as any).material as THREE.MeshBasicMaterial), {
+            opacity: 0.22,
             duration: dur * 0.8,
           }, dur * 0.25);
         }
@@ -4354,9 +4390,10 @@ export class ThreeStage {
       this.audio.playRailClickClack(this.speedMultiplier, isInsideTunnel);
     }
 
-    // 4. Volumetric Smokestack Puffs
+    // 4. Volumetric Smokestack Puffs (Faster cadence in Engine Mode)
+    const puffThreshold = (this.currentViewMode === 'engine' || this.currentViewMode === 'cinematic') ? 16 : 28;
     this.steamTimer += this.speedMultiplier;
-    if (this.steamTimer >= 28) {
+    if (this.steamTimer >= puffThreshold) {
       this.steamTimer = 0;
       this.spawnSteamPuff(1.0);
     }
@@ -4579,21 +4616,44 @@ export class ThreeStage {
         this.camera.lookAt(targetLook);
         this.controls.target.copy(targetLook);
       }
-    } else if (this.currentViewMode === 'cinematic') {
-      const locoPos = this.locoCar.position;
-      const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
+    } else if (this.currentViewMode === 'cinematic' || this.currentViewMode === 'engine') {
+      // 1. Dynamic track curvature and banking roll lean into turns
+      const uCurr = this.progress;
+      const uAhead = (this.progress + 0.024) % 1.0;
+      const tCurr = this.trackCurve.getTangentAt(uCurr).normalize();
+      const tAhead = this.trackCurve.getTangentAt(uAhead).normalize();
 
-      // Camera positioned smoothly behind and above the locomotive along the track tangent
-      const targetCamPos = locoPos.clone().sub(tangent.clone().multiplyScalar(0.78)).add(new THREE.Vector3(0, 0.38, 0));
+      // Horizontal cross product gives curvature & steering direction
+      const curveRate = (tCurr.x * tAhead.z - tCurr.z * tAhead.x);
+      const targetRoll = -curveRate * 42.0; // Dynamic lean into turns
+      this.engineBankRoll += (targetRoll - this.engineBankRoll) * 0.12;
+
+      // 2. High-speed mechanical rumble and track joint vibration
+      const rumbleY = Math.sin(Date.now() * 0.026 * this.speedMultiplier) * 0.0022;
+      const swayZ = Math.sin(Date.now() * 0.013 * this.speedMultiplier) * 0.0032;
+
+      // 3. Camera Position in Locomotive Local Space (behind and over cab)
+      // Local +X is locomotive forward, +Y is up, +Z is lateral right
+      const localCamPos = new THREE.Vector3(-0.34, 0.23 + rumbleY, swayZ);
+      const worldCamPos = this.locoCar.localToWorld(localCamPos.clone());
+
+      // Tunnel clearance adaptation: smooth glide underneath the stone arch
       if (this.isTrainInTunnel()) {
-        targetCamPos.y = Math.max(0.48, targetCamPos.y);
+        worldCamPos.y = Math.min(worldCamPos.y, 0.265);
       }
-      // LookAt target projected ahead of the train along the track
-      const targetLook = locoPos.clone().add(tangent.clone().multiplyScalar(0.75)).add(new THREE.Vector3(0, 0.12, 0));
 
-      this.camera.position.lerp(targetCamPos, 0.08);
-      this.camera.lookAt(targetLook);
-      this.controls.target.copy(targetLook);
+      // 4. Look-Ahead Point: sweeping gaze forward along track curve
+      const uLook = (this.progress + 0.065) % 1.0;
+      const trackLookPoint = this.trackCurve.getPointAt(uLook);
+      const worldLookTarget = this.rootGroup.localToWorld(trackLookPoint.clone().add(new THREE.Vector3(0, 0.09, 0)));
+
+      // Smooth camera interpolation for fluid cinematic tracking
+      this.camera.position.lerp(worldCamPos, 0.18);
+      this.camera.lookAt(worldLookTarget);
+
+      // Apply banking roll along camera line-of-sight
+      this.camera.rotateZ(this.engineBankRoll);
+      this.controls.target.copy(worldLookTarget);
     } else if (this.currentViewMode === 'trackside') {
       // Scenic ground-level spotter tripod camera
       const tripodPos = new THREE.Vector3(0.65, 0.36, 0.88);
