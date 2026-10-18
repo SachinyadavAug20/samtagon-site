@@ -5,19 +5,22 @@
 
 export class ProceduralAudio {
   private ctx: AudioContext | null = null;
-  private isMuted: boolean = true;
+  private isMuted: boolean = false;
   private masterGain: GainNode | null = null;
 
   constructor() {
     // Auto-unlock Web Audio upon the first user interaction gesture
     const unlock = () => {
       this.initContext();
-      this.isMuted = false;
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('touchstart', unlock);
     };
     window.addEventListener('pointerdown', unlock, { passive: true });
     window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('click', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
   }
 
   public initContext(): void {
@@ -25,7 +28,7 @@ export class ProceduralAudio {
       const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioCtxClass();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : 0.48, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
     }
     if (this.ctx.state === 'suspended') {
@@ -37,7 +40,7 @@ export class ProceduralAudio {
     this.initContext();
     this.isMuted = !this.isMuted;
     if (this.masterGain && this.ctx) {
-      const targetGain = this.isMuted ? 0 : 0.18;
+      const targetGain = this.isMuted ? 0 : 0.48;
       this.masterGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
     }
     if (!this.isMuted) {
@@ -200,16 +203,17 @@ export class ProceduralAudio {
    * Authentic Toy Wooden Train Whistle ("Toot Toot!")
    */
   public playWhistle(): void {
+    this.initContext();
     if (this.isMuted || !this.ctx || !this.masterGain) return;
 
     try {
       const now = this.ctx.currentTime;
-      const freqs = [587.33, 783.99, 987.77]; // G major chord (D5, G5, B5)
+      const freqs = [587.33, 783.99, 987.77, 1174.66]; // Rich resonant G major chime with octave
 
       // Double toot: short toot then longer sustained toot
       const bursts = [
-        { time: now, dur: 0.14 },
-        { time: now + 0.18, dur: 0.36 },
+        { time: now, dur: 0.16 },
+        { time: now + 0.20, dur: 0.42 },
       ];
 
       bursts.forEach(({ time, dur }) => {
@@ -218,19 +222,19 @@ export class ProceduralAudio {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
 
-          osc.type = idx === 0 ? 'sine' : 'triangle';
-          osc.frequency.setValueAtTime(freq * 0.98, time);
+          osc.type = idx === 0 ? 'sine' : (idx === 1 ? 'triangle' : 'sawtooth');
+          osc.frequency.setValueAtTime(freq * 0.985, time);
           osc.frequency.linearRampToValueAtTime(freq, time + 0.04);
 
           gain.gain.setValueAtTime(0.001, time);
-          gain.gain.linearRampToValueAtTime(0.08 / freqs.length, time + 0.03);
+          gain.gain.linearRampToValueAtTime(0.32 / freqs.length, time + 0.035);
           gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
           osc.connect(gain);
           gain.connect(this.masterGain);
 
           osc.start(time);
-          osc.stop(time + dur + 0.05);
+          osc.stop(time + dur + 0.06);
         });
       });
     } catch {
@@ -449,26 +453,27 @@ export class ProceduralAudio {
   }
 
   /**
-   * Continuous Rhythmic Rail Click-Clack over rail joints
+   * Continuous Rhythmic Rail Click-Clack over rail joints with Spatial Audio & Panning
    */
-  public playRailClickClack(speedMultiplier: number = 1.0, isInsideTunnel: boolean = false): void {
+  public playRailClickClack(speedMultiplier: number = 1.0, isInsideTunnel: boolean = false, volumeMultiplier: number = 1.0, pan: number = 0): void {
     if (this.isMuted || !this.ctx || !this.masterGain) return;
 
     try {
       const now = this.ctx.currentTime;
-      const vol = isInsideTunnel ? 0.14 : 0.075;
-      const cutoff = isInsideTunnel ? 700 : 1500;
+      const baseVol = isInsideTunnel ? 0.22 : 0.14;
+      const vol = Math.max(0.02, Math.min(0.65, baseVol * volumeMultiplier));
+      const cutoff = isInsideTunnel ? 700 : 1600;
 
       // Click 1 (Leading axle)
-      this.synthesizeAxleClick(now, 1080 + Math.random() * 80, vol, cutoff);
+      this.synthesizeAxleClick(now, 1080 + Math.random() * 80, vol, cutoff, pan);
       // Click 2 (Trailing axle 45ms later)
-      this.synthesizeAxleClick(now + 0.045, 920 + Math.random() * 80, vol * 0.8, cutoff);
+      this.synthesizeAxleClick(now + 0.045, 920 + Math.random() * 80, vol * 0.8, cutoff, pan);
     } catch {
       // ignore
     }
   }
 
-  private synthesizeAxleClick(time: number, freq: number, volume: number, filterCutoff: number): void {
+  private synthesizeAxleClick(time: number, freq: number, volume: number, filterCutoff: number, pan: number = 0): void {
     if (!this.ctx || !this.masterGain) return;
 
     const osc = this.ctx.createOscillator();
@@ -488,16 +493,24 @@ export class ProceduralAudio {
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.masterGain);
+
+    if (this.ctx.createStereoPanner) {
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan)), time);
+      gain.connect(panner);
+      panner.connect(this.masterGain);
+    } else {
+      gain.connect(this.masterGain);
+    }
 
     osc.start(time);
     osc.stop(time + 0.04);
   }
 
   /**
-   * Steam Locomotive Chuff-Chuff Exhaust Puff
+   * Steam Locomotive Chuff-Chuff Exhaust Puff with Spatial Audio & Panning
    */
-  public playSteamChuff(isInsideTunnel: boolean = false): void {
+  public playSteamChuff(isInsideTunnel: boolean = false, volumeMultiplier: number = 1.0, pan: number = 0): void {
     if (this.isMuted || !this.ctx || !this.masterGain) return;
 
     try {
@@ -516,15 +529,24 @@ export class ProceduralAudio {
 
       const filter = this.ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(isInsideTunnel ? 380 : 680, now);
+      filter.frequency.setValueAtTime(isInsideTunnel ? 380 : 720, now);
 
+      const baseVol = isInsideTunnel ? 0.20 : 0.12;
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(isInsideTunnel ? 0.11 : 0.065, now);
+      gain.gain.setValueAtTime(Math.max(0.02, Math.min(0.55, baseVol * volumeMultiplier)), now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
       noise.connect(filter);
       filter.connect(gain);
-      gain.connect(this.masterGain);
+
+      if (this.ctx.createStereoPanner) {
+        const panner = this.ctx.createStereoPanner();
+        panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan)), now);
+        gain.connect(panner);
+        panner.connect(this.masterGain);
+      } else {
+        gain.connect(this.masterGain);
+      }
 
       noise.start(now);
     } catch {

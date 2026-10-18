@@ -1,37 +1,49 @@
 :root {
   /* ==========================================================================
-     SAMTAGON STUDIOS — WARM ALABASTER DAYLIGHT TOKENS
-     Awwwards Minimal, Playful, Warm, and Crystal-Clear
+     SAMTAGON STUDIOS — ARCHITECTURAL SOLID TOKENS
+     Zero gradients, zero blur, sharp geometric corners
+     Storybook Ember Palette: Solar Amber (#F59E0B) + Coral Rose (#FB7185)
      ========================================================================== */
 
   /* Daylight Canvas & Surfaces */
-  --bg-primary: #FAFAF9;
+  --bg-primary: #F8FAFC;
   --bg-surface: #FFFFFF;
-  --bg-subtle: #F5F5F4;
+  --bg-subtle: #F1F5F9;
 
-  /* Fresh Handcrafted Accents */
-  --accent-emerald: #059669;
-  --accent-emerald-hover: #047857;
-  --accent-emerald-soft: #ECFDF5;
-  --accent-emerald-border: #A7F3D0;
+  /* Distinctive Storybook Ember Accent Roles (NO BLUE, NO INDIGO) */
+  --primary: #D97706;
+  --primary-hover: #B45309;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #E11D48;
+  --secondary-hover: #BE123C;
+  --secondary-foreground: #FFFFFF;
+
+  --highlight: #F59E0B;
+
+  /* Backward Compatibility Mapping */
+  --accent-emerald: var(--primary);
+  --accent-emerald-hover: var(--primary-hover);
+  --accent-emerald-soft: #FEF3C7;
+  --accent-emerald-border: #FCD34D;
 
   /* High-Contrast Crisp Ink Typography */
-  --text-primary: #0F172A;
+  --text-primary: #090a0c;
   --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  --text-muted: #64748B;
 
-  /* Clean Architectural Borders */
+  /* Architectural Sharp Borders */
   --border-subtle: #E2E8F0;
   --border-medium: #CBD5E1;
 
-  /* Radii & Layout */
+  /* ZERO ROUNDED CORNERS — ALL SHARP! */
   --nav-height: 64px;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
-  --radius-full: 9999px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-full: 0px;
 
-  /* Physical Shadows -> Solid Crisp Flat Borders */
+  /* Physical Shadows -> Absolute Zero Blur */
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-button: none;
@@ -41,32 +53,41 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Snappy Tactile Springs & Transitions */
-  --transition-fast: 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Transitions */
+  --transition-fast: 140ms ease-out;
+  --transition-bounce: 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ==========================================================================
-   COZY NIGHT MODE (DARK THEME) TOKENS
-   Deep starry obsidian with warm glowing lantern accents
-   Always inactive on initial load; toggled on demand
+   MATTE BLACK & SLATE THEME (DARK THEME) TOKENS
+   Deep matte black #090a0c with slate #121316 and solid Solar Amber
    ========================================================================== */
 [data-theme="dark"] {
-  --bg-primary: #07090E;
-  --bg-surface: #0E1422;
-  --bg-subtle: #162032;
+  --bg-primary: #090a0c;
+  --bg-surface: #121316;
+  --bg-subtle: #191a1e;
 
-  --accent-emerald: #10B981;
-  --accent-emerald-hover: #34D399;
-  --accent-emerald-soft: rgba(16, 185, 129, 0.14);
-  --accent-emerald-border: rgba(16, 185, 129, 0.32);
+  --primary: #F59E0B;
+  --primary-hover: #FBBF24;
+  --primary-foreground: #090a0c;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --secondary: #FB7185;
+  --secondary-hover: #F43F5E;
+  --secondary-foreground: #090a0c;
 
-  --border-subtle: transparent;
-  --border-medium: rgba(255, 255, 255, 0.06);
+  --highlight: #FBBF24;
+
+  --accent-emerald: var(--primary);
+  --accent-emerald-hover: var(--primary-hover);
+  --accent-emerald-soft: #241d13;
+  --accent-emerald-border: #78350F;
+
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+
+  --border-subtle: #22242a;
+  --border-medium: #2e3138;
 
   --shadow-sm: none;
   --shadow-md: none;

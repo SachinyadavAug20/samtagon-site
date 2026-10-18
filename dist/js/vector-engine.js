@@ -127,14 +127,17 @@ export class VectorEngine {
             const cosSim = this.cosineSimilarity(queryVector, game.embedding);
             // 3. Fuzzy text score for title & tags matching
             const fuzzyScore = this.computeFuzzyScore(trimmed, game);
-            // Hybrid blend: 70% semantic vector cosine similarity + 30% fuzzy title/keyword match
-            const hybridScore = cosSim * 0.70 + fuzzyScore * 0.30;
+            // Prioritize strong fuzzy keyword/title matches directly
+            const hybridScore = fuzzyScore >= 0.65
+                ? Math.max(cosSim * 0.2 + fuzzyScore * 0.8, fuzzyScore * 0.95)
+                : cosSim * 0.70 + fuzzyScore * 0.30;
+            const displaySim = Math.max(cosSim, fuzzyScore);
             // Detect matching query words in game tags
             const queryTokens = trimmed.split(/\s+/).filter((t) => t.length > 2);
             const commonTags = game.tags.filter((tag) => queryTokens.some((tok) => tag.toLowerCase().includes(tok) || tok.includes(tag.toLowerCase())));
             matches.push({
                 game,
-                similarity: cosSim,
+                similarity: displaySim,
                 fuzzyScore,
                 hybridScore,
                 commonTags,
@@ -343,31 +346,95 @@ export class VectorEngine {
         return hash;
     }
     /**
-     * Fast fuzzy score for title and tag matches
+     * Fast, typo-tolerant fuzzy score for title, acronym, and tag matches
      */
     static computeFuzzyScore(query, game) {
         const titleLower = game.title.toLowerCase();
-        const queryLower = query.toLowerCase();
+        const queryLower = query.toLowerCase().trim();
         // Exact match
         if (titleLower === queryLower)
             return 1.0;
         // Substring match
         if (titleLower.includes(queryLower))
-            return 0.85;
+            return 0.92;
+        const titleWords = titleLower.split(/[\s:,-]+/).filter(Boolean);
+        // Acronym match (e.g. GTA -> Grand Theft Auto, LoL -> League of Legends, RDR -> Red Dead Redemption)
+        const acronym = titleWords.map((w) => w[0]).join('');
+        if (acronym === queryLower || acronym.startsWith(queryLower))
+            return 0.95;
         // Word prefix match
-        const titleWords = titleLower.split(/\s+/);
         if (titleWords.some((w) => w.startsWith(queryLower)))
+            return 0.88;
+        // Subsequence match (e.g. "detroid" -> "detroit", "gta5" -> "Grand Theft Auto V")
+        if (this.isSubsequence(queryLower, titleLower))
+            return 0.82;
+        // Damerau-Levenshtein typo tolerance against title words
+        let bestWordSim = 0.0;
+        for (const word of titleWords) {
+            if (word.length >= 3 && queryLower.length >= 3) {
+                const dist = this.levenshteinDistance(queryLower, word);
+                const maxLen = Math.max(queryLower.length, word.length);
+                const sim = 1.0 - dist / maxLen;
+                if (sim > bestWordSim)
+                    bestWordSim = sim;
+            }
+        }
+        if (bestWordSim >= 0.70) {
+            return bestWordSim * 0.90; // e.g. "detroid" vs "detroit" -> 0.77
+        }
+        // Full title Levenshtein similarity
+        if (queryLower.length >= 5) {
+            const dist = this.levenshteinDistance(queryLower, titleLower);
+            const sim = 1.0 - dist / Math.max(queryLower.length, titleLower.length);
+            if (sim >= 0.65)
+                return sim * 0.85;
+        }
+        // Match in developer or subtitle
+        if (game.developer.toLowerCase().includes(queryLower))
+            return 0.80;
+        if (game.subtitle.toLowerCase().includes(queryLower))
             return 0.75;
         // Query contained in tags or genre
         if (game.genres.some((g) => g.toLowerCase().includes(queryLower)))
-            return 0.65;
+            return 0.70;
         if (game.tags.some((t) => t.toLowerCase().includes(queryLower)))
-            return 0.60;
-        // Acronym match (e.g. FTL -> Faster Than Light)
-        const acronym = titleWords.map((w) => w[0]).join('');
-        if (acronym === queryLower)
-            return 0.80;
+            return 0.68;
+        // Fuzzy match against tags
+        for (const tag of game.tags) {
+            if (queryLower.length >= 4 && tag.length >= 4) {
+                const dist = this.levenshteinDistance(queryLower, tag.toLowerCase());
+                const sim = 1.0 - dist / Math.max(queryLower.length, tag.length);
+                if (sim >= 0.75)
+                    return sim * 0.70;
+            }
+        }
         return 0.0;
+    }
+    static isSubsequence(sub, str) {
+        let i = 0;
+        let j = 0;
+        while (i < sub.length && j < str.length) {
+            if (sub[i] === str[j])
+                i++;
+            j++;
+        }
+        return i === sub.length;
+    }
+    static levenshteinDistance(s1, s2) {
+        const m = s1.length;
+        const n = s2.length;
+        const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+        for (let i = 0; i <= m; i++)
+            dp[i][0] = i;
+        for (let j = 0; j <= n; j++)
+            dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+                dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+            }
+        }
+        return dp[m][n];
     }
 }
 //# sourceMappingURL=vector-engine.js.map

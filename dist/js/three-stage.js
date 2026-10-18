@@ -98,7 +98,15 @@ export class ThreeStage {
     balloonBurnerFlame = null;
     villageWellGroup = new THREE.Group();
     villageWellBucket = null;
+    townFountainGroup = new THREE.Group();
+    townFountainJet = null;
+    farmBarnGroup = new THREE.Group();
+    depotShedGroup = new THREE.Group();
     butterflies = [];
+    // Mechanical Steam Engine Rods
+    leftSideRod = null;
+    rightSideRod = null;
+    wheelAngle = 0;
     // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Engine, Director, Trackside)
     currentViewMode = 'isometric';
     directorShotIndex = 0;
@@ -152,10 +160,10 @@ export class ThreeStage {
         this.scene = new THREE.Scene();
         const width = this.container.clientWidth || 920;
         const height = this.container.clientHeight || 520;
-        this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-        // Heroic isometric viewpoint with comfortable framing and breathing room
-        this.camera.position.set(4.35, 3.25, 4.35);
-        this.camera.lookAt(0, 0.15, 0);
+        this.camera = new THREE.PerspectiveCamera(38, width / height, 0.02, 100);
+        // Heroic isometric viewpoint with comfortable framing, generous breathing room and zero edge clipping
+        this.camera.position.set(5.0, 3.85, 5.0);
+        this.camera.lookAt(0, 0.10, -0.20);
         // 2. High-Fidelity WebGL Renderer with Soft Shadow Mapping
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
@@ -179,7 +187,7 @@ export class ThreeStage {
         this.controls.maxPolarAngle = Math.PI * 0.44; // Never look from below ground
         this.controls.minDistance = 1.6; // Deep close-up zoom
         this.controls.maxDistance = 12.5; // Wide panoramic zoom-out
-        this.controls.target.set(0, 0.15, 0);
+        this.controls.target.set(0, 0.10, -0.20);
         // 4. Assemble Group Hierarchies
         this.scene.add(this.rootGroup);
         this.scene.add(this.celestialGroup);
@@ -201,8 +209,10 @@ export class ThreeStage {
         this.buildStoneViaductAndTunnel();
         this.buildMiniatureStationAndTown();
         this.buildDutchWindmill();
+        this.buildWestFarmlandAndBarn();
         this.buildCanalWatermill();
         this.buildVillageCottageAndSignals();
+        this.buildEastVillageAndPlaza();
         this.buildBioluminescentFireflies();
         this.buildLevelCrossingAndTelegraph();
         this.buildLushNatureAndFlock();
@@ -210,6 +220,7 @@ export class ThreeStage {
         this.buildAlpineMountainRidge();
         this.buildCampsiteAndCampfire();
         this.buildRailwayWaterTower();
+        this.buildRailwayServiceDepot();
         this.buildHotAirBalloon();
         this.buildMiniatureVillageLife();
         // 7. Weather Engine Setup
@@ -365,19 +376,22 @@ export class ThreeStage {
         this.sunLight.shadow.camera.top = 4.5;
         this.sunLight.shadow.camera.bottom = -4.5;
         this.sunLight.shadow.bias = -0.0006;
+        this.sunLight.shadow.normalBias = 0.02;
         this.scene.add(this.sunLight);
-        // Soft Cool Rim / Fill Light
-        this.fillLight = new THREE.DirectionalLight(0xdbeafe, 1.1);
+        // Soft Neutral Rim / Fill Light
+        this.fillLight = new THREE.DirectionalLight(0xf1f5f9, 1.1);
         this.fillLight.position.set(-4.5, 4.0, -3.5);
         this.scene.add(this.fillLight);
-        // Silvery Lunar Moonlight (Active in night mode)
-        this.moonLight = new THREE.DirectionalLight(0x93c5fd, 0);
+        // Silvery Lunar Moonlight (Active in night mode, pure silver moonlight)
+        this.moonLight = new THREE.DirectionalLight(0xf8fafc, 0);
         this.moonLight.position.set(-3.5, 5.5, -3.5);
         this.moonLight.castShadow = true;
         this.moonLight.shadow.mapSize.width = 1024;
         this.moonLight.shadow.mapSize.height = 1024;
         this.moonLight.shadow.camera.near = 1.0;
         this.moonLight.shadow.camera.far = 18;
+        this.moonLight.shadow.bias = -0.0008;
+        this.moonLight.shadow.normalBias = 0.04;
         this.scene.add(this.moonLight);
     }
     buildCelestialElements() {
@@ -391,7 +405,7 @@ export class ThreeStage {
         });
         this.moonMesh = new THREE.Mesh(moonGeo, moonMat);
         // Positioned in upper sky above the diorama
-        this.moonMesh.position.set(-2.0, 1.45, -0.8);
+        this.moonMesh.position.set(-2.4, 2.8, -2.4);
         this.moonMesh.scale.setScalar(0.001); // Hidden in daylight
         this.celestialGroup.add(this.moonMesh);
         // Soft Moon Glow Halo Sprite
@@ -469,14 +483,15 @@ export class ThreeStage {
        ========================================================================= */
     buildSculptedIsland() {
         // 1. Soft Diffused Contact Shadow on Ground Floor (Organic circular falloff, ZERO corners)
-        const shadowGeo = new THREE.CircleGeometry(3.6, 48);
+        const shadowGeo = new THREE.CircleGeometry(5.4, 64);
         const shadowCanvas = document.createElement('canvas');
         shadowCanvas.width = 256;
         shadowCanvas.height = 256;
         const sctx = shadowCanvas.getContext('2d');
-        const sgrad = sctx.createRadialGradient(128, 128, 20, 128, 128, 125);
+        const sgrad = sctx.createRadialGradient(128, 128, 20, 128, 128, 112);
         sgrad.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
-        sgrad.addColorStop(0.5, 'rgba(0, 0, 0, 0.03)');
+        sgrad.addColorStop(0.40, 'rgba(0, 0, 0, 0.03)');
+        sgrad.addColorStop(0.72, 'rgba(0, 0, 0, 0)');
         sgrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         sctx.fillStyle = sgrad;
         sctx.fillRect(0, 0, 256, 256);
@@ -503,39 +518,155 @@ export class ThreeStage {
             roughness: 0.65,
             metalness: 0.02,
         });
+        const alpineTurfMat = new THREE.MeshStandardMaterial({
+            color: 0x418a4d, // Slightly deeper alpine meadow green
+            map: meadowTex,
+            roughness: 0.70,
+            metalness: 0.02,
+        });
         const baseHeight = 0.22;
-        const baseRadius = 2.05;
-        const centerOffset = 1.42;
-        // Left Bedrock Disc
-        const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.06, baseHeight, 48), bedrockMat);
+        const baseRadius = 1.80;
+        const centerOffset = 1.85;
+        // A. Left Lowland Bedrock Disc (West wing countryside lobe)
+        const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.08, baseHeight, 52), bedrockMat);
         leftBase.position.set(-centerOffset, -baseHeight * 0.5, 0);
+        leftBase.scale.set(1.0, 1.0, 0.94);
         leftBase.receiveShadow = true;
         this.sceneryGroup.add(leftBase);
         // Left Grass Turf Cap
-        const leftTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 48), turfMat);
+        const leftTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 52), turfMat);
         leftTurf.position.set(-centerOffset, 0.015, 0);
+        leftTurf.scale.set(1.0, 1.0, 0.94);
         leftTurf.receiveShadow = true;
         this.sceneryGroup.add(leftTurf);
-        // Right Bedrock Disc
-        const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.06, baseHeight, 48), bedrockMat);
+        // B. Right Lowland Bedrock Disc (East wing alpine village lobe)
+        const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.08, baseHeight, 52), bedrockMat);
         rightBase.position.set(centerOffset, -baseHeight * 0.5, 0);
+        rightBase.scale.set(1.0, 1.0, 0.94);
         rightBase.receiveShadow = true;
         this.sceneryGroup.add(rightBase);
         // Right Grass Turf Cap
-        const rightTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 48), turfMat);
+        const rightTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 52), turfMat);
         rightTurf.position.set(centerOffset, 0.015, 0);
+        rightTurf.scale.set(1.0, 1.0, 0.94);
         rightTurf.receiveShadow = true;
         this.sceneryGroup.add(rightTurf);
-        // Center Connecting Isthmus Bedrock
-        const centerBase = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, baseHeight, 2.45), bedrockMat);
+        // C. Center Connecting Valley Isthmus
+        const centerBase = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, baseHeight, 1.70), bedrockMat);
         centerBase.position.set(0, -baseHeight * 0.5, 0);
         centerBase.receiveShadow = true;
         this.sceneryGroup.add(centerBase);
-        // Center Turf Cap (Clean meadow isthmus)
-        const centerTurf = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, 0.035, 2.42), turfMat);
+        const centerTurf = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, 0.035, 1.68), turfMat);
         centerTurf.position.set(0, 0.015, 0);
         centerTurf.receiveShadow = true;
         this.sceneryGroup.add(centerTurf);
+        // D. SCULPTED ALPINE HIGHLAND BEDROCK LOBE (North-West peak foundation)
+        const alpineBaseRadius = 2.10;
+        const alpineBaseX = -1.20;
+        const alpineBaseZ = -2.60;
+        const alpineBedrock = new THREE.Mesh(new THREE.CylinderGeometry(alpineBaseRadius, alpineBaseRadius + 0.06, baseHeight, 48), bedrockMat);
+        alpineBedrock.position.set(alpineBaseX, -baseHeight * 0.5, alpineBaseZ);
+        alpineBedrock.receiveShadow = true;
+        this.sceneryGroup.add(alpineBedrock);
+        const alpineTurf = new THREE.Mesh(new THREE.CylinderGeometry(alpineBaseRadius - 0.02, alpineBaseRadius, 0.035, 48), alpineTurfMat);
+        alpineTurf.position.set(alpineBaseX, 0.015, alpineBaseZ);
+        alpineTurf.receiveShadow = true;
+        this.sceneryGroup.add(alpineTurf);
+        // E. NORTH-EAST RAILWAY SERVICE DEPOT LOBE (Dedicated plateau safely outside track)
+        const depotLobeR = 1.70;
+        const depotLobeX = 1.60;
+        const depotLobeZ = -2.10;
+        const depotBedrock = new THREE.Mesh(new THREE.CylinderGeometry(depotLobeR, depotLobeR + 0.06, baseHeight, 40), bedrockMat);
+        depotBedrock.position.set(depotLobeX, -baseHeight * 0.5, depotLobeZ);
+        depotBedrock.receiveShadow = true;
+        this.sceneryGroup.add(depotBedrock);
+        const depotTurf = new THREE.Mesh(new THREE.CylinderGeometry(depotLobeR - 0.02, depotLobeR, 0.035, 40), alpineTurfMat);
+        depotTurf.position.set(depotLobeX, 0.015, depotLobeZ);
+        depotTurf.receiveShadow = true;
+        this.sceneryGroup.add(depotTurf);
+        // F. SOUTH STATION PROMENADE APRON (Hugs the station platform cleanly without protruding wasteland)
+        const southLobeR = 0.72;
+        const southLobeX = 0.00;
+        const southLobeZ = 1.20;
+        const southBedrock = new THREE.Mesh(new THREE.CylinderGeometry(southLobeR, southLobeR + 0.06, baseHeight, 40), bedrockMat);
+        southBedrock.position.set(southLobeX, -baseHeight * 0.5, southLobeZ);
+        southBedrock.receiveShadow = true;
+        this.sceneryGroup.add(southBedrock);
+        const southTurf = new THREE.Mesh(new THREE.CylinderGeometry(southLobeR - 0.02, southLobeR, 0.035, 40), turfMat);
+        southTurf.position.set(southLobeX, 0.015, southLobeZ);
+        southTurf.receiveShadow = true;
+        this.sceneryGroup.add(southTurf);
+        // G. Gentle Rolling Meadow Hillocks & Undulations (Spread out across all lobes)
+        const hillMat = turfMat;
+        const knolls = [
+            { x: -2.25, y: 0.025, z: -0.45, r: 0.70, h: 0.040 }, // West Windmill knoll
+            { x: -2.05, y: 0.025, z: 0.25, r: 0.65, h: 0.035 }, // West Farmstead barn mound
+            { x: 2.05, y: 0.020, z: 0.00, r: 0.75, h: 0.030 }, // East Village Plaza knoll
+            { x: 2.45, y: 0.020, z: 0.30, r: 0.60, h: 0.030 }, // East Bakery garden mound
+            { x: 1.60, y: 0.025, z: -2.10, r: 0.75, h: 0.035 }, // North Depot plateau knoll
+            { x: 0.00, y: 0.020, z: 1.20, r: 0.60, h: 0.030 }, // South Station apron mound
+        ];
+        knolls.forEach((k) => {
+            const knoll = new THREE.Mesh(new THREE.CylinderGeometry(k.r * 0.45, k.r, k.h, 18), hillMat);
+            knoll.position.set(k.x, k.y, k.z);
+            knoll.receiveShadow = true;
+            this.sceneryGroup.add(knoll);
+        });
+        // H. Stepping Stones & Promenade Paths (Connecting Station to Farmstead & Village)
+        const gravelMat = new THREE.MeshStandardMaterial({
+            color: 0xc8b898,
+            roughness: 0.9,
+        });
+        const pathCoords = [
+            // Promenade from Station (0.00, 0.85) heading west towards farmstead
+            [-0.18, 0.82], [-0.36, 0.76], [-0.55, 0.68], [-0.74, 0.58], [-0.95, 0.46], [-1.15, 0.35],
+            // Promenade from Station (0.00, 0.85) heading east towards village plaza
+            [0.18, 0.82], [0.36, 0.76], [0.55, 0.68], [0.74, 0.58], [0.95, 0.46], [1.15, 0.32], [1.32, 0.18],
+            // Stepping stones approaching canal bridge
+            [-0.14, 0.16], [-0.08, 0.10], [0.0, 0.0], [0.08, -0.10], [0.14, -0.16],
+        ];
+        pathCoords.forEach(([px, pz], idx) => {
+            const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.052, 0.008, 7), gravelMat);
+            stone.position.set(px, 0.034, pz);
+            stone.rotation.y = idx * 0.7;
+            stone.receiveShadow = true;
+            this.sceneryGroup.add(stone);
+        });
+        // I. Low-Poly Split-Rail Pasture Fences along Sheep Field (West Lobe, safe clearance > 0.70)
+        const fenceMat = new THREE.MeshStandardMaterial({
+            color: 0x6d4c41,
+            roughness: 0.75,
+        });
+        const fenceSegments = [
+            { start: [-1.55, -0.40], end: [-1.20, -0.40] },
+            { start: [-1.20, -0.40], end: [-1.20, -0.22] },
+            { start: [-1.55, -0.22], end: [-1.55, -0.40] },
+        ];
+        fenceSegments.forEach(({ start, end }) => {
+            const [x1, z1] = start;
+            const [x2, z2] = end;
+            const dx = x2 - x1;
+            const dz = z2 - z1;
+            const len = Math.sqrt(dx * dx + dz * dz);
+            const angle = Math.atan2(dz, dx);
+            const mx = (x1 + x2) * 0.5;
+            const mz = (z1 + z2) * 0.5;
+            [-len * 0.48, len * 0.48].forEach((offset) => {
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.10, 0.018), fenceMat);
+                const px = mx + Math.cos(angle) * offset;
+                const pz = mz + Math.sin(angle) * offset;
+                post.position.set(px, 0.08, pz);
+                post.castShadow = true;
+                this.sceneryGroup.add(post);
+            });
+            [0.065, 0.105].forEach((ry) => {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.012, 0.012), fenceMat);
+                rail.position.set(mx, ry, mz);
+                rail.rotation.y = -angle;
+                rail.castShadow = true;
+                this.sceneryGroup.add(rail);
+            });
+        });
     }
     /* =========================================================================
        4. HANDCRAFTED SCENIC POND & CANAL (GLITCH-FREE STONE EMBANKMENT & BOAT)
@@ -779,9 +910,9 @@ export class ThreeStage {
         const viaductElevation = 0.38; // Viaduct clearance elevation
         for (let i = 0; i < N; i++) {
             const t = (i / N) * Math.PI * 2;
-            // Lemniscate of Gerono (Expanded longer path): x = A sin(t), z = B sin(2t)
-            const x = Math.sin(t) * 2.80;
-            const z = Math.sin(2 * t) * 1.40;
+            // Lemniscate of Gerono (Grand expanded longer path): x = A sin(t), z = B sin(2t)
+            const x = Math.sin(t) * 3.30;
+            const z = Math.sin(2 * t) * 1.60;
             // Elevation Profile:
             // At t = pi: Overpass summit on top of stone viaduct (y = 0.435)
             // At t = 0: Underpass ground level through stone arch tunnel (y = 0.055)
@@ -860,8 +991,8 @@ export class ThreeStage {
        7. ARCHITECTURAL ASHLAR STONE VIADUCT WITH VOUSSOIR ARCHES & LANTERNS
        ========================================================================= */
     buildStoneViaductAndTunnel() {
-        // Rotate viaduct group by +0.7809 rad (+44.74 deg) so deck aligns with overpass at t=pi (local X) and arch tunnel directly faces viewer at t=0 (local Z)
-        this.viaductGroup.rotation.y = 0.7809;
+        // Rotate viaduct group by +0.7702 rad (+44.13 deg) so deck aligns with overpass at t=pi (local X) and arch tunnel directly faces viewer at t=0 (local Z)
+        this.viaductGroup.rotation.y = 0.7702;
         const stoneTex = this.createStoneBrickTexture();
         const stoneMat = new THREE.MeshStandardMaterial({
             color: 0xded5c5,
@@ -1046,14 +1177,14 @@ export class ThreeStage {
        ========================================================================= */
     buildMiniatureStationAndTown() {
         const station = new THREE.Group();
-        // Positioned safely inside the inner right loop curve with comfortable rail clearance
-        station.position.set(1.10, 0, 0.48);
-        station.rotation.y = 0.25;
+        // Positioned safely on the southern promenade apron (track clearance 0.905)
+        station.position.set(0.00, 0.04, 1.25);
+        station.rotation.y = 0;
         const stoneMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.5 });
         const terracottaMat = new THREE.MeshStandardMaterial({ color: 0xdd6b20, roughness: 0.35 });
-        // Raised Stone Platform
-        const platform = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.05, 0.20), stoneMat);
+        // Raised Stone Platform (Parallel to the track)
+        const platform = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.22), stoneMat);
         platform.position.y = 0.025;
         platform.castShadow = true;
         platform.receiveShadow = true;
@@ -1101,6 +1232,14 @@ export class ThreeStage {
         const suitcase = new THREE.Mesh(new THREE.BoxGeometry(0.040, 0.030, 0.022), new THREE.MeshStandardMaterial({ color: 0x92400e }));
         suitcase.position.set(-0.16, 0.065, -0.04);
         station.add(suitcase);
+        // Platform Milk Cans & Cargo Trunks
+        const milkCanMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3 });
+        [-0.19, -0.21].forEach((cx, i) => {
+            const can = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.036, 8), milkCanMat);
+            can.position.set(cx, 0.065, 0.04 + i * 0.03);
+            can.castShadow = true;
+            station.add(can);
+        });
         // Cute Passenger Meeples waiting on platform
         const meepleColors = [0x2563eb, 0xd97706];
         meepleColors.forEach((col, idx) => {
@@ -1129,8 +1268,8 @@ export class ThreeStage {
        ========================================================================= */
     buildDutchWindmill() {
         this.windmillGroup = new THREE.Group();
-        // Positioned safely on the western meadow knoll (track distance 0.57)
-        this.windmillGroup.position.set(-1.62, 0.035, 0.05);
+        // Positioned safely on the northwest knoll of the expanded west loop (track clearance 0.998)
+        this.windmillGroup.position.set(-2.25, 0.035, -0.45);
         const stoneTex = this.createStoneBrickTexture();
         const stoneMat = new THREE.MeshStandardMaterial({
             color: 0xd6cbb8,
@@ -1169,70 +1308,31 @@ export class ThreeStage {
         tower.castShadow = true;
         tower.receiveShadow = true;
         this.windmillGroup.add(tower);
-        // 3. Staged Gallery / Balcony Ring at mid-height
-        const galleryDeck = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.014, 8), woodMat);
-        galleryDeck.position.y = 0.22;
-        galleryDeck.castShadow = true;
-        this.windmillGroup.add(galleryDeck);
-        // Gallery timber balustrade posts
-        for (let g = 0; g < 8; g++) {
-            const gAngle = (g / 8) * Math.PI * 2;
-            const gx = Math.cos(gAngle) * 0.19;
-            const gz = Math.sin(gAngle) * 0.19;
-            const gPost = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.045, 0.012), woodMat);
-            gPost.position.set(gx, 0.245, gz);
-            this.windmillGroup.add(gPost);
-        }
-        // 4. Domed Slate Boat Cap
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.07, 8), capMat);
-        cap.position.y = 0.46;
+        // 3. Rotating Cap Dome & Windshaft
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.10, 8), capMat);
+        cap.position.y = 0.49;
         cap.castShadow = true;
         this.windmillGroup.add(cap);
-        const capCone = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.08, 8), capMat);
-        capCone.position.y = 0.52;
-        capCone.castShadow = true;
-        this.windmillGroup.add(capCone);
-        // Fantail strut angling backward
-        const fantailPole = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.008, 0.18, 6), woodMat);
-        fantailPole.position.set(-0.09, 0.47, 0);
-        fantailPole.rotation.z = Math.PI * 0.35;
-        this.windmillGroup.add(fantailPole);
-        // 5. Windshaft Axle & 4 Rotating Lattice Sails
+        // 4. Sail Lattice Cross with Canvas Sails
         this.windmillSails = new THREE.Group();
-        // Position windshaft hub on the front face (towards +X diorama center)
-        this.windmillSails.position.set(0.11, 0.46, 0);
-        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.024, 8), woodMat);
-        hub.rotation.z = Math.PI * 0.5;
+        this.windmillSails.position.set(0, 0.44, 0.13);
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.024, 8), woodMat);
+        hub.rotation.x = Math.PI * 0.5;
         this.windmillSails.add(hub);
-        // 4 Cross Spars & Canvas Lattice Sails
-        for (let s = 0; s < 4; s++) {
-            const sparAngle = (s * Math.PI) / 2;
-            const spar = new THREE.Group();
-            spar.rotation.x = sparAngle;
-            // Heavy timber whip/stock
-            const stock = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.24, 0.012), woodMat);
-            stock.position.y = 0.12;
-            stock.castShadow = true;
-            spar.add(stock);
-            // Lattice sailcloth vane
-            const vane = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.18, 0.055), sailClothMat);
-            vane.position.set(0.006, 0.14, 0.030);
-            vane.rotation.y = 0.18; // Aerodynamic pitch angle
-            vane.castShadow = true;
-            spar.add(vane);
-            // Wood lattice ribs
-            for (let r = 0; r < 4; r++) {
-                const rib = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.005, 0.058), woodMat);
-                rib.position.set(0.007, 0.07 + r * 0.045, 0.030);
-                spar.add(rib);
-            }
-            this.windmillSails.add(spar);
+        for (let i = 0; i < 4; i++) {
+            const sailArm = new THREE.Group();
+            sailArm.rotation.z = (i * Math.PI) / 2;
+            const spar = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.28, 0.01), woodMat);
+            spar.position.y = 0.14;
+            sailArm.add(spar);
+            const sail = new THREE.Mesh(new THREE.PlaneGeometry(0.055, 0.22), sailClothMat);
+            sail.position.set(0.032, 0.15, 0.005);
+            sail.rotation.y = 0.15;
+            sailArm.add(sail);
+            this.windmillSails.add(sailArm);
         }
         this.windmillGroup.add(this.windmillSails);
-        // 6. Arched Wooden Door & Illuminated Windows
-        const door = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.055, 0.035), woodMat);
-        door.position.set(0.165, 0.065, 0);
-        this.windmillGroup.add(door);
+        // 5. Warm Windows and Interior Lantern
         const winMat = new THREE.MeshStandardMaterial({
             color: 0xfef08a,
             emissive: 0xfbbf24,
@@ -1246,6 +1346,133 @@ export class ThreeStage {
         this.windmillLight.position.set(0.08, 0.28, 0);
         this.windmillGroup.add(this.windmillLight);
         this.sceneryGroup.add(this.windmillGroup);
+    }
+    /* =========================================================================
+       8b-2. WEST COUNTRYSIDE FARMLAND: BARN, SILO, CROP FIELDS & HAY BALES
+       ========================================================================= */
+    buildWestFarmlandAndBarn() {
+        const farmGroup = new THREE.Group();
+        // Positioned safely in the center of the expanded west loop meadow (track clearance 1.244)
+        farmGroup.position.set(-2.05, 0.04, 0.15);
+        const barnWoodMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.65 });
+        const trimMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.45 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+        const stoneMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 });
+        const strawMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.85 });
+        const siloMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.75, roughness: 0.25 });
+        const cropSoilMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
+        const wheatMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 });
+        const greenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 });
+        // 1. Red Timber Dutch Barn
+        const barn = new THREE.Group();
+        const stoneBase = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.04, 0.24), stoneMat);
+        stoneBase.position.y = 0.02;
+        stoneBase.castShadow = true;
+        barn.add(stoneBase);
+        const barnWalls = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.22), barnWoodMat);
+        barnWalls.position.y = 0.12;
+        barnWalls.castShadow = true;
+        barn.add(barnWalls);
+        // White Cross-bracing on Barn Doors
+        const doorL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, 0.01), trimMat);
+        doorL.position.set(-0.035, 0.09, 0.112);
+        barn.add(doorL);
+        const doorR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, 0.01), trimMat);
+        doorR.position.set(0.035, 0.09, 0.112);
+        barn.add(doorR);
+        // Gambrel Mansard Barn Roof
+        const roofBase = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.06, 0.25), roofMat);
+        roofBase.position.y = 0.23;
+        roofBase.castShadow = true;
+        barn.add(roofBase);
+        const roofRidge = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.08, 4), roofMat);
+        roofRidge.rotation.y = Math.PI * 0.25;
+        roofRidge.position.y = 0.29;
+        roofRidge.scale.set(1.1, 1.0, 1.8);
+        roofRidge.castShadow = true;
+        barn.add(roofRidge);
+        // Hayloft Door with warm lantern
+        const hayDoor = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.01), trimMat);
+        hayDoor.position.set(0, 0.23, 0.128);
+        barn.add(hayDoor);
+        const hayLantern = new THREE.PointLight(0xfef08a, 0.6, 0.8);
+        hayLantern.position.set(0, 0.26, 0.14);
+        barn.add(hayLantern);
+        farmGroup.add(barn);
+        this.farmBarnGroup = farmGroup;
+        // 2. Galvanized Grain Silo with Conical Cap (Positioned safely beside barn at -1.55, 0.40)
+        const silo = new THREE.Group();
+        silo.position.set(-0.22, 0, 0.10);
+        const siloBody = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.32, 16), siloMat);
+        siloBody.position.y = 0.16;
+        siloBody.castShadow = true;
+        silo.add(siloBody);
+        const siloDome = new THREE.Mesh(new THREE.SphereGeometry(0.066, 12, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), siloMat);
+        siloDome.position.y = 0.32;
+        siloDome.castShadow = true;
+        silo.add(siloDome);
+        // Silo Ladder
+        for (let r = 0; r < 6; r++) {
+            const rung = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.005, 0.005), trimMat);
+            rung.position.set(0, 0.08 + r * 0.045, 0.068);
+            silo.add(rung);
+        }
+        farmGroup.add(silo);
+        // 3. Golden Hay Bales (Round rolled bales with twine + stacked straw blocks)
+        const baleGroup = new THREE.Group();
+        baleGroup.position.set(-0.25, 0, -0.08);
+        const rolledBale = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.06, 12), strawMat);
+        rolledBale.rotation.z = Math.PI * 0.5;
+        rolledBale.position.set(0, 0.038, 0);
+        rolledBale.castShadow = true;
+        baleGroup.add(rolledBale);
+        const sq1 = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.045), strawMat);
+        sq1.position.set(0.08, 0.018, 0.02);
+        sq1.castShadow = true;
+        baleGroup.add(sq1);
+        const sq2 = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.035, 0.045), strawMat);
+        sq2.position.set(0.08, 0.053, 0.02);
+        sq2.rotation.y = 0.2;
+        sq2.castShadow = true;
+        baleGroup.add(sq2);
+        farmGroup.add(baleGroup);
+        // 4. Furrowed Crop Patch (Golden Wheat & Cabbage Rows)
+        const cropPatch = new THREE.Group();
+        cropPatch.position.set(-0.45, 0, -0.22);
+        const soilBed = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.015, 0.22), cropSoilMat);
+        soilBed.position.y = 0.008;
+        cropPatch.add(soilBed);
+        [-0.08, 0.0, 0.08].forEach((cz, ridx) => {
+            for (let cx = -0.10; cx <= 0.10; cx += 0.04) {
+                if (ridx % 2 === 0) {
+                    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.008, 0.045, 5), wheatMat);
+                    stalk.position.set(cx, 0.035, cz);
+                    cropPatch.add(stalk);
+                }
+                else {
+                    const cabbage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.014, 0), greenMat);
+                    cabbage.position.set(cx, 0.025, cz);
+                    cropPatch.add(cabbage);
+                }
+            }
+        });
+        farmGroup.add(cropPatch);
+        // 5. Miniature Orchard with Fruit Trees
+        const appleTree = new THREE.Group();
+        appleTree.position.set(-0.35, 0, -0.40);
+        const trk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.026, 0.14, 6), barnWoodMat);
+        trk.position.y = 0.07;
+        appleTree.add(trk);
+        const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(0.11, 1), greenMat);
+        leaves.position.y = 0.18;
+        appleTree.add(leaves);
+        const appleMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        [[-0.06, 0.16, 0.05], [0.06, 0.19, -0.04], [0.0, 0.22, 0.07], [0.04, 0.15, 0.06]].forEach(([ax, ay, az]) => {
+            const apple = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), appleMat);
+            apple.position.set(ax, ay, az);
+            appleTree.add(apple);
+        });
+        farmGroup.add(appleTree);
     }
     /* =========================================================================
        8c. CANAL WATERMILL WITH ROTATING PADDLE WHEEL & SLUICE FLUME
@@ -1366,9 +1593,9 @@ export class ThreeStage {
        8d. COUNTRY VILLAGE COTTAGE & TRACKSIDE SEMAPHORE SIGNALS
        ========================================================================= */
     buildVillageCottageAndSignals() {
-        // 1. Half-Timbered English Cottage (Inside Right Loop Meadow, clearance 0.75)
+        // 1. Half-Timbered Alpine Inn Cottage (Inside East Loop Meadow, clearance 0.871)
         this.cottageGroup = new THREE.Group();
-        this.cottageGroup.position.set(1.42, 0.035, 0.22);
+        this.cottageGroup.position.set(2.40, 0.035, -0.35);
         this.cottageGroup.rotation.y = -0.35;
         const stoneMat = new THREE.MeshStandardMaterial({
             color: 0xcfd8dc,
@@ -1455,9 +1682,9 @@ export class ThreeStage {
         this.cottageLight.position.set(0, 0.14, 0);
         this.cottageGroup.add(this.cottageLight);
         this.sceneryGroup.add(this.cottageGroup);
-        // 2. Trackside Victorian Mechanical Semaphore Signal
+        // 2. Trackside Victorian Mechanical Semaphore Signal (Safe clearance 0.671)
         this.semaphoreGroup = new THREE.Group();
-        this.semaphoreGroup.position.set(-0.62, 0.035, 0.96);
+        this.semaphoreGroup.position.set(-0.35, 0.035, 1.25);
         const poleMat = new THREE.MeshStandardMaterial({
             color: 0x1e293b,
             metalness: 0.8,
@@ -1508,6 +1735,125 @@ export class ThreeStage {
         this.semaphoreLight.position.set(0.01, 0.32, 0.02);
         this.semaphoreGroup.add(this.semaphoreLight);
         this.sceneryGroup.add(this.semaphoreGroup);
+    }
+    /* =========================================================================
+       8d-2. EAST ALPINE VILLAGE: TOWN FOUNTAIN, BAKERY & COBBLESTONE PLAZA
+       ========================================================================= */
+    buildEastVillageAndPlaza() {
+        const plazaGroup = new THREE.Group();
+        // Positioned safely in the center of the expanded east loop meadow (track clearance 1.250)
+        plazaGroup.position.set(2.05, 0.04, 0.00);
+        const stoneMat = new THREE.MeshStandardMaterial({
+            color: 0xcfd8dc,
+            map: this.createStoneBrickTexture(),
+            roughness: 0.65,
+        });
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.7 });
+        const plasterMat = new THREE.MeshStandardMaterial({ color: 0xfafaf9, roughness: 0.85 });
+        const tileMat = new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.5 });
+        const waterMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.2 });
+        const lampMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
+        const lampGlowMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfbbf24, emissiveIntensity: 1.2 });
+        // 1. Cobblestone Plaza Floor (Radial paving)
+        const plazaFloor = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.40, 0.012, 24), stoneMat);
+        plazaFloor.position.y = 0.006;
+        plazaFloor.receiveShadow = true;
+        plazaGroup.add(plazaFloor);
+        // 2. Majestic Carved 2-Tier Limestone Fountain (Replaces well away from tracks!)
+        const fountain = new THREE.Group();
+        const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 0.07, 16), stoneMat);
+        basin.position.y = 0.035;
+        basin.castShadow = true;
+        fountain.add(basin);
+        const pool = new THREE.Mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.01, 16), waterMat);
+        pool.position.y = 0.065;
+        fountain.add(pool);
+        const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.14, 12), stoneMat);
+        pedestal.position.y = 0.13;
+        fountain.add(pedestal);
+        const upperBasin = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.10, 0.04, 12), stoneMat);
+        upperBasin.position.y = 0.19;
+        upperBasin.castShadow = true;
+        fountain.add(upperBasin);
+        const upperPool = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.01, 12), waterMat);
+        upperPool.position.y = 0.205;
+        fountain.add(upperPool);
+        const finial = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.05, 8), stoneMat);
+        finial.position.y = 0.24;
+        fountain.add(finial);
+        // Animated Fountain Spray Particles
+        const jetCount = 28;
+        const jetGeo = new THREE.BufferGeometry();
+        const jetPos = new Float32Array(jetCount * 3);
+        for (let j = 0; j < jetCount; j++) {
+            const a = (j / jetCount) * Math.PI * 2;
+            const r = 0.02 + Math.random() * 0.05;
+            jetPos[j * 3] = Math.cos(a) * r;
+            jetPos[j * 3 + 1] = 0.24 + Math.random() * 0.08;
+            jetPos[j * 3 + 2] = Math.sin(a) * r;
+        }
+        jetGeo.setAttribute('position', new THREE.BufferAttribute(jetPos, 3));
+        const jetMat = new THREE.PointsMaterial({
+            color: 0x38bdf8,
+            size: 0.022,
+            transparent: true,
+            opacity: 0.85,
+        });
+        this.townFountainJet = new THREE.Points(jetGeo, jetMat);
+        fountain.add(this.townFountainJet);
+        plazaGroup.add(fountain);
+        this.townFountainGroup = plazaGroup;
+        // 3. Second Alpine Cottage: The Village Bakery (at 1.65, 0.28, clearance 0.88)
+        const bakery = new THREE.Group();
+        bakery.position.set(0.25, 0, 0.28);
+        bakery.rotation.y = -0.55;
+        const bBase = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.04, 0.22), stoneMat);
+        bBase.position.y = 0.02;
+        bakery.add(bBase);
+        const bWalls = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.20), plasterMat);
+        bWalls.position.y = 0.11;
+        bWalls.castShadow = true;
+        bakery.add(bWalls);
+        const bRoofL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.022, 0.14), tileMat);
+        bRoofL.position.set(0, 0.21, -0.05);
+        bRoofL.rotation.x = 0.65;
+        bRoofL.castShadow = true;
+        bakery.add(bRoofL);
+        const bRoofR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.022, 0.14), tileMat);
+        bRoofR.position.set(0, 0.21, 0.05);
+        bRoofR.rotation.x = -0.65;
+        bRoofR.castShadow = true;
+        bakery.add(bRoofR);
+        // Striped Awning over Bakery window
+        const awningMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
+        const awning = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.06), awningMat);
+        awning.position.set(0, 0.13, 0.125);
+        awning.rotation.x = 0.35;
+        bakery.add(awning);
+        const bWinMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        const bWin = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.05), bWinMat);
+        bWin.position.set(0, 0.09, 0.102);
+        bakery.add(bWin);
+        plazaGroup.add(bakery);
+        // 4. Plaza Cast-Iron Streetlamps and Wooden Benches
+        [[-0.18, 0.14], [-0.18, -0.14]].forEach(([lx, lz]) => {
+            const lamp = new THREE.Group();
+            lamp.position.set(lx, 0, lz);
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.24, 8), lampMat);
+            post.position.y = 0.12;
+            post.castShadow = true;
+            lamp.add(post);
+            const lantern = new THREE.Mesh(new THREE.DodecahedronGeometry(0.022, 0), lampGlowMat);
+            lantern.position.y = 0.25;
+            lamp.add(lantern);
+            plazaGroup.add(lamp);
+        });
+        const pBench = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.035, 0.045), woodMat);
+        pBench.position.set(0.08, 0.025, -0.22);
+        pBench.rotation.y = -0.3;
+        pBench.castShadow = true;
+        plazaGroup.add(pBench);
+        this.sceneryGroup.add(plazaGroup);
     }
     /* =========================================================================
        8e. BIOLUMINESCENT NIGHT FIREFLIES
@@ -1675,11 +2021,11 @@ export class ThreeStage {
        ========================================================================= */
     getApproxDistanceToTrack(x, z) {
         let minD = Infinity;
-        const N = 72;
+        const N = 140;
         for (let i = 0; i < N; i++) {
             const t = (i / N) * Math.PI * 2;
-            const tx = Math.sin(t) * 2.22;
-            const tz = Math.sin(2 * t) * 1.10;
+            const tx = Math.sin(t) * 3.30;
+            const tz = Math.sin(2 * t) * 1.60;
             const d = Math.hypot(tx - x, tz - z);
             if (d < minD)
                 minD = d;
@@ -1687,20 +2033,22 @@ export class ThreeStage {
         return minD;
     }
     buildLushNatureAndFlock() {
-        // 100% collision-free trees placed exclusively inside the meadow loops (min track clearance >= 0.445)
+        // 100% collision-free trees placed organically across the expanded landscape (clearance >= 0.50)
         const treeData = [
-            // Left lobe interior meadow
-            { x: -1.15, z: 0.0, type: 'pine', col: 0x166534, scale: 1.2 },
-            { x: -1.35, z: 0.25, type: 'deciduous', col: 0x22c55e, scale: 1.1 },
-            { x: -0.90, z: -0.22, type: 'pine', col: 0x15803d, scale: 1.05 },
-            { x: -1.45, z: -0.20, type: 'deciduous', col: 0x65a30d, scale: 1.0 },
-            { x: -0.85, z: 0.20, type: 'deciduous', col: 0x4ade80, scale: 0.9 },
-            // Right lobe interior meadow
-            { x: 1.15, z: 0.0, type: 'pine', col: 0x166534, scale: 1.2 },
-            { x: 1.35, z: -0.25, type: 'deciduous', col: 0x22c55e, scale: 1.1 },
-            { x: 0.90, z: -0.22, type: 'pine', col: 0x15803d, scale: 1.05 },
-            { x: 1.45, z: -0.15, type: 'deciduous', col: 0x65a30d, scale: 1.0 },
-            { x: 0.75, z: 0.10, type: 'deciduous', col: 0x4ade80, scale: 0.9 },
+            // Left lobe interior meadow & knolls
+            { x: -2.75, z: 0.10, type: 'deciduous', col: 0x15803d, scale: 1.1 },
+            { x: -2.60, z: -0.35, type: 'pine', col: 0x166534, scale: 1.2 },
+            { x: -2.80, z: -0.10, type: 'deciduous', col: 0x22c55e, scale: 1.0 },
+            { x: -1.75, z: -0.55, type: 'pine', col: 0x14532d, scale: 1.15 },
+            { x: -1.45, z: 0.45, type: 'deciduous', col: 0x65a30d, scale: 1.05 },
+            { x: -1.15, z: -0.30, type: 'pine', col: 0x15803d, scale: 0.95 },
+            // Right lobe interior meadow & knolls
+            { x: 2.75, z: 0.10, type: 'deciduous', col: 0x15803d, scale: 1.1 },
+            { x: 2.60, z: -0.45, type: 'pine', col: 0x166534, scale: 1.2 },
+            { x: 2.80, z: -0.10, type: 'deciduous', col: 0x22c55e, scale: 1.0 },
+            { x: 1.75, z: 0.50, type: 'pine', col: 0x14532d, scale: 1.15 },
+            { x: 1.45, z: -0.45, type: 'deciduous', col: 0x65a30d, scale: 1.05 },
+            { x: 1.15, z: 0.30, type: 'pine', col: 0x15803d, scale: 0.95 },
         ];
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
         treeData.forEach(({ x, z, type, col, scale }) => {
@@ -1739,13 +2087,15 @@ export class ThreeStage {
             this.interactiveTrees.push(tree);
             this.sceneryGroup.add(tree);
         });
-        // Cute Low-Poly Fluffy Sheep Grazing safely on the Meadow (clearance > 0.6)
+        // Cute Low-Poly Fluffy Sheep Grazing safely on the Meadows (clearance > 0.85)
         const sheepMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
         const sheepHeadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
         const sheepCoords = [
-            [-1.40, 0.04, 0.15],
-            [-1.55, 0.04, -0.15],
-            [1.35, 0.04, -0.10],
+            [-1.85, 0.04, 0.35],
+            [-2.20, 0.04, 0.38],
+            [-2.35, 0.04, -0.15],
+            [1.75, 0.04, -0.15],
+            [2.15, 0.04, -0.40],
         ];
         sheepCoords.forEach(([sx, sy, sz]) => {
             const sheep = new THREE.Group();
@@ -1996,6 +2346,38 @@ export class ThreeStage {
         const whistle = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.035, 6), brassDetailMat);
         whistle.position.set(-0.03, 0.19, 0.03);
         loco.add(whistle);
+        // Front Smokebox Door with Brass Numberplate "7"
+        const smokeboxMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.45, metalness: 0.4 });
+        const smokeboxDoor = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.072, 0.012, 16), smokeboxMat);
+        smokeboxDoor.rotation.z = Math.PI * 0.5;
+        smokeboxDoor.position.set(0.186, 0.125, 0);
+        smokeboxDoor.castShadow = true;
+        loco.add(smokeboxDoor);
+        const numberPlate = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.006, 12), brassDetailMat);
+        numberPlate.rotation.z = Math.PI * 0.5;
+        numberPlate.position.set(0.193, 0.125, 0);
+        loco.add(numberPlate);
+        // Dual Twin Steam Cylinders & Crosshead Guides
+        const cylMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.7 });
+        [-0.102, 0.102].forEach((cz) => {
+            const cyl = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.088, 12), cylMat);
+            cyl.rotation.z = Math.PI * 0.5;
+            cyl.position.set(0.09, 0.045, cz);
+            cyl.castShadow = true;
+            loco.add(cyl);
+            const piston = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.05, 8), brassDetailMat);
+            piston.rotation.z = Math.PI * 0.5;
+            piston.position.set(0.035, 0.045, cz);
+            loco.add(piston);
+        });
+        // Engineer Cab Interior Firebox Door with Warm Amber Hearth Glow
+        const fireboxMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+        const firebox = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.05, 0.01), fireboxMat);
+        firebox.position.set(-0.02, 0.10, 0);
+        loco.add(firebox);
+        const fireboxGlow = new THREE.PointLight(0xf97316, 0.8, 0.6);
+        fireboxGlow.position.set(-0.04, 0.12, 0);
+        loco.add(fireboxGlow);
         // Coupler knuckle
         const couplerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.4 });
         const locoCoupler = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.016, 0.024), couplerMat);
@@ -2008,6 +2390,17 @@ export class ThreeStage {
             [0.08, 0.045, -0.09],
             [-0.08, 0.045, -0.09],
         ], 0.045);
+        // Reciprocating Side Connecting Rods (Left & Right)
+        const rodMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
+        const rodGeo = new THREE.BoxGeometry(0.18, 0.010, 0.006);
+        this.leftSideRod = new THREE.Mesh(rodGeo, rodMat);
+        this.leftSideRod.position.set(0, 0.045, 0.104);
+        this.leftSideRod.castShadow = true;
+        loco.add(this.leftSideRod);
+        this.rightSideRod = new THREE.Mesh(rodGeo, rodMat);
+        this.rightSideRod.position.set(0, 0.045, -0.104);
+        this.rightSideRod.castShadow = true;
+        loco.add(this.rightSideRod);
         this.locoCar = loco;
         this.trainGroup.add(this.locoCar);
         // -------------------------------------------------------------
@@ -2057,6 +2450,21 @@ export class ThreeStage {
         cRoof.position.y = 0.19;
         cRoof.castShadow = true;
         coach.add(cRoof);
+        // Clerestory Raised Monitor Roof Tier
+        const clerestory = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.022, 0.11), roofMat);
+        clerestory.position.y = 0.21;
+        clerestory.castShadow = true;
+        coach.add(clerestory);
+        // End Balcony Vestibule Railings
+        const vestibuleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.4 });
+        [-0.19, 0.19].forEach((vx) => {
+            const platform = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.012, 0.15), vestibuleMat);
+            platform.position.set(vx, 0.046, 0);
+            coach.add(platform);
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.045, 0.15), vestibuleMat);
+            rail.position.set(vx, 0.072, 0);
+            coach.add(rail);
+        });
         // Illuminated Passenger Windows
         this.coachWindowMat = new THREE.MeshStandardMaterial({
             color: 0xfef08a,
@@ -2116,6 +2524,22 @@ export class ThreeStage {
         const cupolaRoof = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.018, 0.16), roofMat);
         cupolaRoof.position.set(-0.02, 0.245, 0);
         caboose.add(cupolaRoof);
+        // Cupola Look-out Windows
+        const cupolaWinMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+        [-0.072, 0.072].forEach((cz) => {
+            const cWin = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.035), cupolaWinMat);
+            cWin.position.set(-0.02, 0.20, cz);
+            if (cz < 0)
+                cWin.rotation.y = Math.PI;
+            caboose.add(cWin);
+        });
+        // Rear Observation Deck with Brass Railing
+        const obsDeck = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.012, 0.15), couplerMat);
+        obsDeck.position.set(-0.175, 0.046, 0);
+        caboose.add(obsDeck);
+        const obsRail = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.045, 0.15), brassDetailMat);
+        obsRail.position.set(-0.195, 0.072, 0);
+        caboose.add(obsRail);
         // Front Coupler Knuckle
         const cabooseCouplerF = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.016, 0.024), couplerMat);
         cabooseCouplerF.position.set(0.16, 0.048, 0);
@@ -2218,16 +2642,30 @@ export class ThreeStage {
             color: 0x451a03,
             roughness: 0.8,
         });
-        // Single Simple & Majestic Low-Poly Mountain Peak (Replaces 3 cluttered mountains)
-        const mtnX = -1.6;
-        const mtnZ = -1.6;
-        const mtnR = 1.95;
-        const mtnH = 2.30;
-        const snowH = 0.85;
-        const segments = 8;
+        const subRockMat = new THREE.MeshStandardMaterial({
+            color: 0x334155,
+            roughness: 0.90,
+            flatShading: true,
+        });
+        const boulderMat = new THREE.MeshStandardMaterial({
+            color: 0x64748b,
+            roughness: 0.82,
+            flatShading: true,
+        });
+        // 1. Single Majestic Low-Poly Mountain Peak (Organic backdrop, clearance >= 0.55 from rails)
+        // Mountain base is centered on the northern alpine bedrock lobe at (-1.35, -2.95)
+        const mtnX = -1.35;
+        const mtnZ = -2.95;
+        const mtnR = 1.60;
+        const mtnH = 2.75;
+        const snowH = 0.96;
+        const segments = 8; // Pure faceted low-poly look
+        snowMat.polygonOffset = true;
+        snowMat.polygonOffsetFactor = -1;
+        snowMat.polygonOffsetUnits = -1;
         const rockCone = new THREE.Mesh(new THREE.ConeGeometry(mtnR, mtnH, segments, 1), rockMat);
         rockCone.position.set(mtnX, mtnH * 0.5 - 0.22, mtnZ);
-        rockCone.rotation.y = 0.35;
+        rockCone.rotation.y = 0.40;
         rockCone.receiveShadow = true;
         rockCone.castShadow = true;
         alpineGroup.add(rockCone);
@@ -2236,8 +2674,26 @@ export class ThreeStage {
         snowCone.rotation.y = rockCone.rotation.y;
         snowCone.receiveShadow = true;
         alpineGroup.add(snowCone);
+        // 2. Low-Poly Granite Boulders at Mountain Foothills
+        const boulders = [
+            { x: -2.8, z: -2.3, s: 0.18 },
+            { x: -2.3, z: -2.0, s: 0.22 },
+            { x: -1.1, z: -2.1, s: 0.16 },
+            { x: 0.4, z: -2.4, s: 0.20 },
+            { x: -0.1, z: -2.5, s: 0.15 },
+        ];
+        boulders.forEach((b) => {
+            const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(b.s, 0), boulderMat);
+            boulder.position.set(b.x, 0.08, b.z);
+            boulder.rotation.set(0.4, 0.7, 0.2);
+            boulder.castShadow = true;
+            boulder.receiveShadow = true;
+            alpineGroup.add(boulder);
+        });
         const firOffsets = [
-            [-2.6, -1.0], [-2.3, -1.3], [-2.0, -1.6], [-1.6, -2.0], [-1.3, -2.3], [-1.0, -2.6]
+            [-2.9, -2.4], [-2.5, -2.2], [-2.1, -2.1], [-1.4, -2.3],
+            [-0.8, -2.2], [-0.2, -2.4], [0.3, -2.6], [-3.1, -3.0],
+            [-2.6, -3.4], [-1.0, -3.3], [0.6, -3.2]
         ];
         firOffsets.forEach(([fx, fz], idx) => {
             const fir = new THREE.Group();
@@ -2264,8 +2720,8 @@ export class ThreeStage {
        ========================================================================= */
     buildCampsiteAndCampfire() {
         const camp = new THREE.Group();
-        // Safely centered inside the western meadow clearing, far from all track curves
-        camp.position.set(-1.08, 0.04, 0.40);
+        // Safely positioned in the northwest pine clearing (track clearance > 0.80)
+        camp.position.set(-1.30, 0.04, -2.10);
         const tent1 = new THREE.Group();
         tent1.position.set(-0.16, 0, 0.08);
         tent1.rotation.y = 0.42;
@@ -2357,7 +2813,8 @@ export class ThreeStage {
        ========================================================================= */
     buildRailwayWaterTower() {
         const tower = new THREE.Group();
-        tower.position.set(0.85, 0.04, -1.35);
+        // Positioned safely on the northeast railway depot lobe (track distance > 0.90)
+        tower.position.set(1.65, 0.04, -2.35);
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
         const staveMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 });
         const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
@@ -2400,8 +2857,8 @@ export class ThreeStage {
         finial.position.y = roof.position.y + 0.13;
         tower.add(finial);
         const spoutGroup = new THREE.Group();
-        spoutGroup.position.set(0, legH + 0.24, tankR + 0.02);
-        spoutGroup.rotation.y = Math.PI * 0.5;
+        spoutGroup.position.set(-0.28, legH + 0.24, 0);
+        spoutGroup.rotation.y = -Math.PI * 0.5; // Points sideways into service depot grounds, 100% away from tracks!
         spoutGroup.rotation.x = 0.25;
         const tubeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.4 });
         const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.055, 0.32, 12), tubeMat);
@@ -2436,11 +2893,85 @@ export class ThreeStage {
         this.sceneryGroup.add(this.waterTowerGroup);
     }
     /* =========================================================================
+       11d-2. EXPANDED SCENERY: RAILWAY MAINTENANCE DEPOT, BUNKER & TOOLS
+       ========================================================================= */
+    buildRailwayServiceDepot() {
+        const depotGroup = new THREE.Group();
+        // Safely positioned on the North-East Railway Plateau (clearance > 0.85)
+        depotGroup.position.set(1.70, 0.04, -2.10);
+        const stoneMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
+        const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.7 });
+        const corrugatedMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.35 });
+        const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.25 });
+        const coalMat = new THREE.MeshStandardMaterial({ color: 0x090a0f, roughness: 0.95 });
+        const barrelMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.7, roughness: 0.3 });
+        // 1. Locomotive Service Shed / Workshop
+        const shed = new THREE.Group();
+        const shedBase = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.03, 0.28), stoneMat);
+        shedBase.position.y = 0.015;
+        shed.add(shedBase);
+        // Open-front timber posts
+        [-0.16, 0.16].forEach((px) => {
+            [-0.12, 0.12].forEach((pz) => {
+                const post = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.18, 0.02), woodMat);
+                post.position.set(px, 0.10, pz);
+                post.castShadow = true;
+                shed.add(post);
+            });
+        });
+        // Corrugated metal pitched roof
+        const roofL = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.016, 0.16), corrugatedMat);
+        roofL.position.set(0, 0.23, -0.06);
+        roofL.rotation.x = 0.45;
+        roofL.castShadow = true;
+        shed.add(roofL);
+        const roofR = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.016, 0.16), corrugatedMat);
+        roofR.position.set(0, 0.23, 0.06);
+        roofR.rotation.x = -0.45;
+        roofR.castShadow = true;
+        shed.add(roofR);
+        // Back wall
+        const backWall = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.015), woodMat);
+        backWall.position.set(0, 0.10, -0.12);
+        shed.add(backWall);
+        // Workbench with vise & tools inside
+        const bench = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.06), woodMat);
+        bench.position.set(0, 0.045, -0.08);
+        bench.castShadow = true;
+        shed.add(bench);
+        const toolbox = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.025, 0.03), ironMat);
+        toolbox.position.set(0.04, 0.09, -0.08);
+        shed.add(toolbox);
+        depotGroup.add(shed);
+        // 2. Open Coal Bunker Bin loaded with lump coal
+        const bunker = new THREE.Group();
+        bunker.position.set(-0.28, 0, 0.05);
+        const binWalls = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.09, 0.16), woodMat);
+        binWalls.position.y = 0.045;
+        binWalls.castShadow = true;
+        bunker.add(binWalls);
+        const coalLump = new THREE.Mesh(new THREE.DodecahedronGeometry(0.07, 1), coalMat);
+        coalLump.position.set(0, 0.08, 0);
+        coalLump.scale.set(1.1, 0.6, 0.9);
+        coalLump.castShadow = true;
+        bunker.add(coalLump);
+        depotGroup.add(bunker);
+        // 3. Stored Oil Drums & Grease Barrels
+        [[-0.24, 0, -0.10], [-0.29, 0, -0.08]].forEach(([bx, by, bz]) => {
+            const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.08, 10), barrelMat);
+            drum.position.set(bx, 0.04, bz);
+            drum.castShadow = true;
+            depotGroup.add(drum);
+        });
+        this.depotShedGroup = depotGroup;
+        this.sceneryGroup.add(this.depotShedGroup);
+    }
+    /* =========================================================================
        11e. EXPANDED SCENERY: FLOATING SKY HOT AIR BALLOON
        ========================================================================= */
     buildHotAirBalloon() {
         const balloon = new THREE.Group();
-        balloon.position.set(-0.5, 2.1, -2.4);
+        balloon.position.set(1.60, 2.70, 0.60);
         const envMatRed = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.45 });
         const envMatGold = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.45 });
         const envMatTeal = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.45 });
@@ -2488,47 +3019,54 @@ export class ThreeStage {
         this.celestialGroup.add(this.hotAirBalloonGroup);
     }
     /* =========================================================================
-       11f. EXPANDED SCENERY: RUSTIC WATER WELL, WILDFLOWER BUTTERFLIES & STATION TRUNKS
+       11f. EXPANDED SCENERY: WILDFLOWER BUTTERFLIES, PROMENADE BENCH & STATION TRUNKS
        ========================================================================= */
     buildMiniatureVillageLife() {
         const lifeGroup = new THREE.Group();
-        // 1. Rustic Cobblestone Water Well with Timber Canopy & Bucket
-        const well = new THREE.Group();
-        well.position.set(0.52, 0.04, 0.40); // Safe in eastern meadow clearing
-        const stoneMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85 });
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
-        const waterMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2, metalness: 0.1 });
-        const roofMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 });
-        // Cobblestone curb
-        const curb = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.09, 0.07, 12), stoneMat);
-        curb.position.y = 0.035;
-        curb.castShadow = true;
-        well.add(curb);
-        // Well water inside
-        const waterDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.01, 12), waterMat);
-        waterDisc.position.y = 0.055;
-        well.add(waterDisc);
-        // Two wooden posts
-        [-0.07, 0.07].forEach((px) => {
-            const post = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.18, 0.016), woodMat);
-            post.position.set(px, 0.12, 0);
-            post.castShadow = true;
-            well.add(post);
+        const stoneMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85 });
+        // 1b. Rustic Wooden Park Bench on Promenade (Safe clearance 0.934)
+        const benchGroup = new THREE.Group();
+        benchGroup.position.set(0.10, 0.04, 1.38);
+        benchGroup.rotation.y = 0.35;
+        const benchSeat = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.012, 0.045), woodMat);
+        benchSeat.position.y = 0.038;
+        benchSeat.castShadow = true;
+        benchGroup.add(benchSeat);
+        const benchBack = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.045, 0.01), woodMat);
+        benchBack.position.set(0, 0.065, -0.02);
+        benchBack.castShadow = true;
+        benchGroup.add(benchBack);
+        [-0.055, 0.055].forEach((bx) => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.038, 0.04), stoneMat);
+            leg.position.set(bx, 0.019, 0);
+            benchGroup.add(leg);
         });
-        // Peaked timber roof
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.08, 4), roofMat);
-        roof.rotation.y = Math.PI * 0.25;
-        roof.position.y = 0.22;
-        roof.castShadow = true;
-        well.add(roof);
-        // Little hanging bucket
-        const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.016, 0.028, 8), woodMat);
-        bucket.position.set(0, 0.13, 0);
-        bucket.castShadow = true;
-        well.add(bucket);
-        this.villageWellBucket = bucket;
-        lifeGroup.add(well);
-        this.villageWellGroup = well;
+        lifeGroup.add(benchGroup);
+        // 1c. Warm Cast-Iron Promenade Streetlamp Lanterns (Safe clearance 0.828 from track)
+        const lampMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.8 });
+        const lampGlowMat = new THREE.MeshStandardMaterial({
+            color: 0xfef08a,
+            emissive: 0xfbbf24,
+            emissiveIntensity: 0.85,
+            roughness: 0.2,
+        });
+        const lampPositions = [
+            [-0.26, 0.04, 1.38],
+            [0.26, 0.04, 1.38],
+        ];
+        lampPositions.forEach(([lx, ly, lz]) => {
+            const lamp = new THREE.Group();
+            lamp.position.set(lx, ly, lz);
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.014, 0.26, 8), lampMat);
+            post.position.y = 0.13;
+            post.castShadow = true;
+            lamp.add(post);
+            const lantern = new THREE.Mesh(new THREE.DodecahedronGeometry(0.024, 0), lampGlowMat);
+            lantern.position.y = 0.27;
+            lamp.add(lantern);
+            lifeGroup.add(lamp);
+        });
         // 2. Wildflower Meadow Clusters
         const flowerMatRed = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
         const flowerMatYellow = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 });
@@ -2542,6 +3080,8 @@ export class ThreeStage {
         ];
         const mats = [flowerMatRed, flowerMatYellow, flowerMatBlue, flowerMatPurple];
         flowerCoords.forEach(([fx, fz], idx) => {
+            if (this.getApproxDistanceToTrack(fx, fz) < 0.45)
+                return;
             const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.004, 0.04, 4), stemMat);
             stem.position.set(fx, 0.06, fz);
             lifeGroup.add(stem);
@@ -2584,7 +3124,7 @@ export class ThreeStage {
         });
         // 4. Station Platform Details: Vintage Luggage Trunks & Milk Cans
         const stationLife = new THREE.Group();
-        stationLife.position.set(-1.46, 0.09, -0.42); // Safe on the station platform
+        stationLife.position.set(-0.16, 0.09, 1.25); // Safe on the station platform
         const trunk1 = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.038, 0.04), woodMat);
         trunk1.position.set(0, 0.019, 0);
         trunk1.castShadow = true;
@@ -2815,11 +3355,19 @@ export class ThreeStage {
                     return;
                 }
             }
-            // Check Village Well
-            if (this.villageWellGroup) {
-                const wellHits = this.raycaster.intersectObject(this.villageWellGroup, true);
-                if (wellHits.length > 0) {
-                    this.triggerWellSplash();
+            // Check Town Fountain
+            if (this.townFountainGroup) {
+                const fountainHits = this.raycaster.intersectObject(this.townFountainGroup, true);
+                if (fountainHits.length > 0) {
+                    this.triggerFountainSurge();
+                    return;
+                }
+            }
+            // Check West Farm Barn & Silo
+            if (this.farmBarnGroup) {
+                const barnHits = this.raycaster.intersectObject(this.farmBarnGroup, true);
+                if (barnHits.length > 0) {
+                    this.triggerBarnBoop();
                     return;
                 }
             }
@@ -2863,7 +3411,8 @@ export class ThreeStage {
                 ...(this.campsiteGroup ? [this.campsiteGroup] : []),
                 ...(this.waterTowerGroup ? [this.waterTowerGroup] : []),
                 ...(this.hotAirBalloonGroup ? [this.hotAirBalloonGroup] : []),
-                ...(this.villageWellGroup ? [this.villageWellGroup] : []),
+                ...(this.townFountainGroup ? [this.townFountainGroup] : []),
+                ...(this.farmBarnGroup ? [this.farmBarnGroup] : []),
             ];
             const hits = this.raycaster.intersectObjects(interactiveTargets, true);
             if (hits.length > 0) {
@@ -3076,18 +3625,35 @@ export class ThreeStage {
             });
         }
     }
-    triggerWellSplash() {
-        if (!this.villageWellBucket)
+    triggerFountainSurge() {
+        if (!this.townFountainJet)
             return;
         this.audio.playChime(659.25, 0.08); // E5 playful chime
         this.audio.playWaterDrop();
-        gsap.killTweensOf(this.villageWellBucket.position);
-        gsap.to(this.villageWellBucket.position, {
-            y: 0.08,
+        gsap.killTweensOf(this.townFountainJet.scale);
+        gsap.to(this.townFountainJet.scale, {
+            x: 1.8,
+            y: 2.2,
+            z: 1.8,
             duration: 0.35,
             yoyo: true,
             repeat: 1,
-            ease: 'power2.inOut',
+            ease: 'power2.out',
+        });
+    }
+    triggerBarnBoop() {
+        if (!this.farmBarnGroup)
+            return;
+        this.audio.playChime(523.25, 0.08); // C5 cheerful bell
+        gsap.killTweensOf(this.farmBarnGroup.scale);
+        gsap.to(this.farmBarnGroup.scale, {
+            x: 1.08,
+            y: 1.12,
+            z: 1.08,
+            duration: 0.25,
+            yoyo: true,
+            repeat: 1,
+            ease: 'back.out(2)',
         });
     }
     triggerLanternSpark() {
@@ -3228,6 +3794,8 @@ export class ThreeStage {
         this.controls.autoRotate = false;
         // Dynamic FOV for immersive velocity in Engine Ride mode
         if (mode === 'engine' || mode === 'cinematic') {
+            this.camera.near = 0.02;
+            this.camera.updateProjectionMatrix();
             const targetFov = this.speedMultiplier >= 3.0 ? 64 : this.speedMultiplier >= 2.0 ? 54 : 48;
             gsap.to(this.camera, {
                 fov: targetFov,
@@ -3235,16 +3803,30 @@ export class ThreeStage {
                 ease: 'power2.out',
                 onUpdate: () => this.camera.updateProjectionMatrix(),
             });
-            // Activate warm headlight lantern beam onto rails!
+            // Mount camera directly in front of the locomotive pilot looking forward down the rails (100% obstruction-free, zero clipping!)
+            const localCamPos = new THREE.Vector3(0.32, 0.20, 0);
+            const initialCamPos = this.locoCar.localToWorld(localCamPos.clone());
+            const localLookTarget = new THREE.Vector3(1.8, 0.12, 0);
+            const initialLookTarget = this.locoCar.localToWorld(localLookTarget.clone());
+            gsap.killTweensOf(this.camera.position);
+            gsap.killTweensOf(this.controls.target);
+            this.camera.position.copy(initialCamPos);
+            this.camera.lookAt(initialLookTarget);
+            this.controls.target.copy(initialLookTarget);
+            // In engine view, hide volumetric additive cylinders so they don't cover the camera lens in yellow fog!
             if (this.headlampBeam)
-                this.headlampBeam.visible = true;
+                this.headlampBeam.visible = false;
             if (this.headlampCoreBeam)
-                this.headlampCoreBeam.visible = true;
+                this.headlampCoreBeam.visible = false;
             if (this.headlampTrackPool)
                 this.headlampTrackPool.visible = true;
+            if (this.headlampSpotLight)
+                this.headlampSpotLight.intensity = 2.4;
             this.audio.playWhistle();
         }
         else {
+            this.camera.near = 0.1;
+            this.camera.updateProjectionMatrix();
             this.engineBankRoll = 0;
             this.camera.up.set(0, 1, 0);
             if (this.camera.fov !== 38) {
@@ -3255,7 +3837,15 @@ export class ThreeStage {
                     onUpdate: () => this.camera.updateProjectionMatrix(),
                 });
             }
-            if (!this.isNightMode) {
+            if (this.isNightMode) {
+                if (this.headlampBeam)
+                    this.headlampBeam.visible = true;
+                if (this.headlampCoreBeam)
+                    this.headlampCoreBeam.visible = true;
+                if (this.headlampTrackPool)
+                    this.headlampTrackPool.visible = true;
+            }
+            else {
                 if (this.headlampBeam)
                     this.headlampBeam.visible = false;
                 if (this.headlampCoreBeam)
@@ -3289,15 +3879,15 @@ export class ThreeStage {
             this.controls.enabled = false;
             gsap.to(this.controls.target, {
                 x: 0,
-                y: 0.15,
-                z: 0,
+                y: 0.10,
+                z: -0.20,
                 duration: 0.85,
                 ease: 'power2.inOut',
             });
             gsap.to(this.camera.position, {
-                x: 4.35,
-                y: 3.25,
-                z: 4.35,
+                x: 5.0,
+                y: 3.85,
+                z: 5.0,
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onComplete: () => {
@@ -3318,17 +3908,17 @@ export class ThreeStage {
             if (isNight) {
                 // Immediate Midnight setup for initial load
                 if (this.ambientLight) {
-                    this.ambientLight.color.set(0x1e293b);
+                    this.ambientLight.color.set(0x18181b);
                     this.ambientLight.intensity = 0.65;
                 }
                 if (this.hemiLight) {
-                    this.hemiLight.color.set(0x0f172a);
-                    this.hemiLight.groundColor.set(0x020617);
+                    this.hemiLight.color.set(0x27272a);
+                    this.hemiLight.groundColor.set(0x090a0c);
                     this.hemiLight.intensity = 0.35;
                 }
                 if (this.sunLight) {
                     this.sunLight.position.set(6.5, 0.25, 1.8);
-                    this.sunLight.color.set(0x38bdf8);
+                    this.sunLight.color.set(0xf8fafc);
                     this.sunLight.intensity = 0.15;
                 }
                 if (this.sunMesh) {
@@ -3342,7 +3932,7 @@ export class ThreeStage {
                     this.moonLight.intensity = 1.45;
                 }
                 if (this.moonMesh) {
-                    this.moonMesh.position.set(-2.0, 1.45, -0.8);
+                    this.moonMesh.position.set(-2.4, 2.8, -2.4);
                     this.moonMesh.scale.set(1, 1, 1);
                     if (this.moonMesh.children[0]) {
                         this.moonMesh.children[0].material.opacity = 0.85;
@@ -3421,7 +4011,7 @@ export class ThreeStage {
                 if (this.moonLight)
                     this.moonLight.intensity = 0;
                 if (this.moonMesh) {
-                    this.moonMesh.position.set(-2.0, -0.7, -0.8);
+                    this.moonMesh.position.set(-2.4, -0.7, -2.4);
                     this.moonMesh.scale.setScalar(0.001);
                     if (this.moonMesh.children[0]) {
                         this.moonMesh.children[0].material.opacity = 0;
@@ -3505,9 +4095,9 @@ export class ThreeStage {
                     },
                 }, 0);
                 sunsetTL.to(sunCol, {
-                    r: 0.22,
-                    g: 0.74,
-                    b: 0.97, // Cool dusk twilight
+                    r: 0.97,
+                    g: 0.98,
+                    b: 0.98, // Silvery neutral moonlight
                     duration: dur * 0.5,
                     ease: 'power1.in',
                     onUpdate: () => {
@@ -3550,9 +4140,9 @@ export class ThreeStage {
                     },
                 }, 0);
                 sunsetTL.to(ambCol, {
-                    r: 0.12,
-                    g: 0.16,
-                    b: 0.23, // Midnight blue
+                    r: 0.10,
+                    g: 0.10,
+                    b: 0.11, // Neutral slate / matte black
                     duration: dur * 0.55,
                     onUpdate: () => {
                         this.ambientLight.color.setRGB(ambCol.r, ambCol.g, ambCol.b);
@@ -3565,9 +4155,9 @@ export class ThreeStage {
             }
             // 3. Moon rises from below horizon
             if (this.moonMesh) {
-                this.moonMesh.position.set(-2.0, -0.7, -0.8);
+                this.moonMesh.position.set(-2.4, -0.7, -2.4);
                 sunsetTL.to(this.moonMesh.position, {
-                    y: 1.45,
+                    y: 2.8,
                     duration: dur,
                     ease: 'power2.out',
                 }, dur * 0.2);
@@ -3855,23 +4445,40 @@ export class ThreeStage {
             car.quaternion.setFromRotationMatrix(rotMat);
             car.position.copy(pos);
         });
-        // 3. Realistic Wheel Rotation along rolling cylinder axis
+        // 3. Realistic Wheel Rotation along rolling cylinder axis & reciprocating rods
+        const wheelRot = 0.08 * this.speedMultiplier;
+        this.wheelAngle = (this.wheelAngle - wheelRot) % (Math.PI * 2);
         this.rotatingWheels.forEach((w) => {
-            w.rotation.z -= 0.08 * this.speedMultiplier;
+            w.rotation.z -= wheelRot;
         });
+        if (this.leftSideRod && this.rightSideRod) {
+            const crankR = 0.022;
+            const crankX = Math.cos(this.wheelAngle) * crankR;
+            const crankY = Math.sin(this.wheelAngle) * crankR;
+            this.leftSideRod.position.set(crankX, 0.045 + crankY, 0.104);
+            this.rightSideRod.position.set(crankX, 0.045 + crankY, -0.104);
+        }
+        // Dynamic Spatial Audio: compute distance and stereo panning based on locomotive screen position
+        const locoScreenPos = this.locoCar.position.clone().project(this.camera);
+        const stereoPan = Math.max(-0.85, Math.min(0.85, locoScreenPos.x));
+        const camDist = this.camera.position.distanceTo(this.locoCar.position);
+        const isEngineCam = (this.currentViewMode === 'engine' || this.currentViewMode === 'cinematic');
+        const spatialGain = isEngineCam ? 1.6 : Math.max(0.35, Math.min(1.7, 5.2 / Math.max(1.0, camDist)));
+        const effectivePan = isEngineCam ? 0 : stereoPan;
         // 3b. Continuous Rhythmic Rail Click-Clack
         this.railClickAccumulator += this.trainSpeed * this.speedMultiplier;
         if (this.railClickAccumulator >= 0.034) {
             this.railClickAccumulator = 0;
             const isInsideTunnel = this.isTrainInTunnel();
-            this.audio.playRailClickClack(this.speedMultiplier, isInsideTunnel);
+            this.audio.playRailClickClack(this.speedMultiplier, isInsideTunnel, spatialGain, effectivePan);
         }
         // 4. Volumetric Smokestack Puffs (Faster cadence in Engine Mode)
-        const puffThreshold = (this.currentViewMode === 'engine' || this.currentViewMode === 'cinematic') ? 16 : 28;
+        const puffThreshold = isEngineCam ? 16 : 28;
         this.steamTimer += this.speedMultiplier;
         if (this.steamTimer >= puffThreshold) {
             this.steamTimer = 0;
             this.spawnSteamPuff(1.0);
+            this.audio.playSteamChuff(this.isTrainInTunnel(), spatialGain, effectivePan);
         }
         this.steamParticles.forEach((p) => {
             if (p.life > 0) {
@@ -3965,6 +4572,9 @@ export class ThreeStage {
         if (this.waterwheel) {
             this.waterwheel.rotation.x += 0.016 * this.speedMultiplier;
         }
+        if (this.townFountainJet) {
+            this.townFountainJet.rotation.y += 0.02;
+        }
         // 9b. Bioluminescent Fireflies Harmonic Drift & Night Glow Pulsing
         if (this.fireflies.length > 0) {
             const fTime = Date.now() * 0.001;
@@ -3998,7 +4608,7 @@ export class ThreeStage {
         // 9d. Hot Air Balloon Thermal Bob
         if (this.hotAirBalloonGroup) {
             const bTime = Date.now() * 0.001;
-            this.hotAirBalloonGroup.position.y = 2.45 + Math.sin(bTime * 1.2) * 0.08;
+            this.hotAirBalloonGroup.position.y = 2.70 + Math.sin(bTime * 1.2) * 0.08;
             this.hotAirBalloonGroup.rotation.z = Math.sin(bTime * 0.8) * 0.04;
         }
         // 9e. Fluttering Meadow Butterflies & Fluffy Sheep Grazing
@@ -4055,8 +4665,8 @@ export class ThreeStage {
                 targetLook = locoPos.clone().add(tangent.clone().multiplyScalar(0.75)).add(new THREE.Vector3(0, 0.12, 0));
             }
             else if (this.directorShotIndex === 2) {
-                // Shot 2: Station Platform Spectator Angle
-                targetCamPos = new THREE.Vector3(-1.42, 0.46, 1.25);
+                // Shot 2: Station Platform Spectator Angle (Track clearance 0.833)
+                targetCamPos = new THREE.Vector3(-0.45, 0.28, 1.55);
                 targetLook = locoPos.clone().add(new THREE.Vector3(0, 0.08, 0));
             }
             else {
@@ -4078,40 +4688,39 @@ export class ThreeStage {
             }
         }
         else if (this.currentViewMode === 'cinematic' || this.currentViewMode === 'engine') {
-            // 1. Dynamic track curvature and banking roll lean into turns
+            // 1. Subtle, gentle track curvature banking (strictly clamped to avoid nauseating tilts)
             const uCurr = this.progress;
             const uAhead = (this.progress + 0.024) % 1.0;
             const tCurr = this.trackCurve.getTangentAt(uCurr).normalize();
             const tAhead = this.trackCurve.getTangentAt(uAhead).normalize();
-            // Horizontal cross product gives curvature & steering direction
             const curveRate = (tCurr.x * tAhead.z - tCurr.z * tAhead.x);
-            const targetRoll = -curveRate * 42.0; // Dynamic lean into turns
-            this.engineBankRoll += (targetRoll - this.engineBankRoll) * 0.12;
+            // Gentle banking roll (maximum ±0.025 radians ~ 1.4 degrees)
+            const targetRoll = Math.max(-0.025, Math.min(0.025, -curveRate * 1.5));
+            this.engineBankRoll += (targetRoll - this.engineBankRoll) * 0.08;
             // 2. High-speed mechanical rumble and track joint vibration
-            const rumbleY = Math.sin(Date.now() * 0.026 * this.speedMultiplier) * 0.0022;
-            const swayZ = Math.sin(Date.now() * 0.013 * this.speedMultiplier) * 0.0032;
-            // 3. Camera Position in Locomotive Local Space (behind and over cab)
-            // Local +X is locomotive forward, +Y is up, +Z is lateral right
-            const localCamPos = new THREE.Vector3(-0.34, 0.23 + rumbleY, swayZ);
+            const rumbleY = Math.sin(Date.now() * 0.026 * this.speedMultiplier) * 0.0012;
+            // 3. Front Pilot Hood Camera (100% obstruction-free, zero clipping!)
+            // Mounted directly in front of pilot cowcatcher looking forward down the rails
+            const localCamPos = new THREE.Vector3(0.32, 0.20 + rumbleY, 0);
             const worldCamPos = this.locoCar.localToWorld(localCamPos.clone());
-            // Tunnel clearance adaptation: smooth glide underneath the stone arch
-            if (this.isTrainInTunnel()) {
-                worldCamPos.y = Math.min(worldCamPos.y, 0.265);
-            }
-            // 4. Look-Ahead Point: sweeping gaze forward along track curve
-            const uLook = (this.progress + 0.065) % 1.0;
-            const trackLookPoint = this.trackCurve.getPointAt(uLook);
-            const worldLookTarget = this.rootGroup.localToWorld(trackLookPoint.clone().add(new THREE.Vector3(0, 0.09, 0)));
+            // Safe floor limit: never dip below ground level
+            worldCamPos.y = Math.max(worldCamPos.y, 0.18);
+            // 4. Forward look target along locomotive's centerline ahead
+            const localLookTarget = new THREE.Vector3(1.8, 0.12, 0);
+            const worldLookTarget = this.locoCar.localToWorld(localLookTarget.clone());
             // Smooth camera interpolation for fluid cinematic tracking
-            this.camera.position.lerp(worldCamPos, 0.18);
+            this.camera.position.lerp(worldCamPos, 0.25);
+            this.camera.up.set(0, 1, 0);
             this.camera.lookAt(worldLookTarget);
-            // Apply banking roll along camera line-of-sight
-            this.camera.rotateZ(this.engineBankRoll);
+            // Gentle banking roll along line of sight
+            if (Math.abs(this.engineBankRoll) > 0.001) {
+                this.camera.rotateZ(this.engineBankRoll);
+            }
             this.controls.target.copy(worldLookTarget);
         }
         else if (this.currentViewMode === 'trackside') {
-            // Scenic ground-level spotter tripod camera
-            const tripodPos = new THREE.Vector3(0.65, 0.36, 0.88);
+            // Scenic ground-level spotter tripod camera (Track clearance 0.847)
+            const tripodPos = new THREE.Vector3(0.55, 0.32, 1.65);
             this.camera.position.lerp(tripodPos, 0.08);
             const lookPos = this.locoCar.position.clone().add(new THREE.Vector3(0, 0.10, 0));
             this.camera.lookAt(lookPos);

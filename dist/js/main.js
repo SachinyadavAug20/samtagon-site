@@ -7,7 +7,8 @@
  */
 import { ProceduralAudio } from './audio-synth.js';
 import { ThreeStage } from './three-stage.js';
-document.addEventListener('DOMContentLoaded', () => {
+import gsap from 'gsap';
+function initMain() {
     // 1. Procedural Audio Synthesizer (Acoustic feedback on interaction)
     const audio = new ProceduralAudio();
     window.samtagonAudio = audio;
@@ -23,45 +24,52 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Playful acoustics & micro-interactions
     setupZenInteractions(stage, audio);
     console.log('Samtagon Studios online. Zen mode active.');
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMain);
+}
+else {
+    initMain();
+}
 function setupZenInteractions(stage, audio) {
-    // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode)
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    let isDarkMode = prefersDark;
-    if (isDarkMode) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        stage?.setNightMode(true, true); // Immediate dark mode for system dark preference
-    }
-    else {
-        document.documentElement.removeAttribute('data-theme');
-        stage?.setNightMode(false, true); // Immediate light mode for system light preference
-    }
-    // Listen to OS system color scheme changes
-    window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener('change', (e) => {
-        isDarkMode = e.matches;
-        if (isDarkMode) {
+    // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode or Stored Theme)
+    const savedTheme = localStorage.getItem('samtagon_theme');
+    const urlParams = new URLSearchParams(window.location.search);
+    const themeParam = urlParams.get('theme');
+    let isDarkMode = themeParam ? themeParam === 'dark' : (savedTheme ? savedTheme === 'dark' : true);
+    const applyTheme = (dark, immediate = false) => {
+        if (dark) {
             document.documentElement.setAttribute('data-theme', 'dark');
-            audio.playChime(523.25, 0.08); // C5 twilight chime
-            stage?.setNightMode(true);
+            localStorage.setItem('samtagon_theme', 'dark');
+            stage?.setNightMode(true, immediate);
         }
         else {
             document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('samtagon_theme', 'light');
+            stage?.setNightMode(false, immediate);
+        }
+    };
+    applyTheme(isDarkMode, true);
+    // Listen to OS system color scheme changes
+    window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener('change', (e) => {
+        isDarkMode = e.matches;
+        applyTheme(isDarkMode, false);
+        if (isDarkMode) {
+            audio.playChime(523.25, 0.08); // C5 twilight chime
+        }
+        else {
             audio.playMorningBirdSong();
-            stage?.setNightMode(false);
         }
     });
     const themeBtn = document.getElementById('theme-toggle-btn');
     themeBtn?.addEventListener('click', () => {
         isDarkMode = !isDarkMode;
+        applyTheme(isDarkMode, false);
         if (isDarkMode) {
-            document.documentElement.setAttribute('data-theme', 'dark');
             audio.playChime(523.25, 0.08); // C5 twilight chime
-            stage?.setNightMode(true); // Smooth GSAP sunset animation!
         }
         else {
-            document.documentElement.removeAttribute('data-theme');
             audio.playMorningBirdSong(); // Joyful morning birdsong chirp on sunrise!
-            stage?.setNightMode(false); // Smooth GSAP sunrise animation!
         }
     });
     // Audio Mute / Unmute Toggle
@@ -146,16 +154,104 @@ function setupZenInteractions(stage, audio) {
         stage?.triggerWhistleHop();
     });
     // 8. Deep-link URL params (?view=engine & ?theme=dark)
-    const urlParams = new URLSearchParams(window.location.search);
     const requestedView = urlParams.get('view');
     if (requestedView) {
         viewBtns.forEach((b) => b.classList.toggle('active', b.dataset.view === requestedView));
         stage?.setViewMode(requestedView);
     }
-    const requestedTheme = urlParams.get('theme');
-    if (requestedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        stage?.setNightMode(true);
-    }
+    // 9. Tactile Sharp GSAP Button Interactions
+    setupGsapButtonInteractions();
+}
+function setupGsapButtonInteractions() {
+    // 1. Primary & Secondary CTA Action Buttons
+    const ctaBtns = document.querySelectorAll('.zen-btn');
+    ctaBtns.forEach((btn) => {
+        const arrow = btn.querySelector('.btn-arrow-icon');
+        const icon = btn.querySelector('svg:not(.btn-arrow-icon)');
+        btn.addEventListener('mouseenter', () => {
+            gsap.to(btn, { y: -3, scale: 1.025, duration: 0.16, ease: 'power2.out', overwrite: 'auto' });
+            if (arrow)
+                gsap.to(arrow, { x: 3, y: -3, duration: 0.16, ease: 'power2.out', overwrite: 'auto' });
+            if (icon)
+                gsap.to(icon, { scale: 1.15, duration: 0.18, ease: 'back.out(2)', overwrite: 'auto' });
+        });
+        btn.addEventListener('mouseleave', () => {
+            gsap.to(btn, { y: 0, scale: 1, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+            if (arrow)
+                gsap.to(arrow, { x: 0, y: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+            if (icon)
+                gsap.to(icon, { scale: 1, rotation: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+        });
+        btn.addEventListener('mousedown', () => {
+            gsap.to(btn, { y: 1, scale: 0.96, duration: 0.08, ease: 'power1.in', overwrite: 'auto' });
+        });
+        btn.addEventListener('mouseup', () => {
+            gsap.to(btn, { y: -3, scale: 1.025, duration: 0.24, ease: 'back.out(2.5)', overwrite: 'auto' });
+        });
+    });
+    // 2. Toolbar Stage & Speed Buttons
+    const toolbarBtns = document.querySelectorAll('.stage-icon-btn, .stage-speed-btn, .zen-theme-toggle');
+    toolbarBtns.forEach((btn) => {
+        const svg = btn.querySelector('svg');
+        btn.addEventListener('mouseenter', () => {
+            gsap.to(btn, { y: -2, duration: 0.14, ease: 'power2.out', overwrite: 'auto' });
+            if (svg)
+                gsap.to(svg, { scale: 1.15, duration: 0.16, ease: 'back.out(2)', overwrite: 'auto' });
+        });
+        btn.addEventListener('mouseleave', () => {
+            gsap.to(btn, { y: 0, scale: 1, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+            if (svg)
+                gsap.to(svg, { scale: 1, rotation: 0, x: 0, y: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+        });
+        btn.addEventListener('mousedown', () => {
+            gsap.to(btn, { scale: 0.92, duration: 0.08, ease: 'power1.in', overwrite: 'auto' });
+        });
+        btn.addEventListener('mouseup', () => {
+            gsap.to(btn, { scale: 1, duration: 0.2, ease: 'back.out(3)', overwrite: 'auto' });
+        });
+    });
+    // 3. Steam Whistle Dynamic Wobble Blast Animation
+    const whistleBtn = document.getElementById('whistle-btn');
+    whistleBtn?.addEventListener('click', () => {
+        const whistleSvg = whistleBtn.querySelector('svg');
+        if (whistleSvg) {
+            gsap.fromTo(whistleSvg, { rotation: -16, scale: 1.25 }, {
+                rotation: 16,
+                scale: 1.1,
+                duration: 0.045,
+                repeat: 7,
+                yoyo: true,
+                ease: 'sine.inOut',
+                onComplete: () => {
+                    gsap.to(whistleSvg, { rotation: 0, scale: 1, duration: 0.12 });
+                },
+            });
+        }
+    });
+    // 4. Locomotive Train Engine Button Lunge Animation
+    const engineBtn = document.querySelector('[data-view="engine"]');
+    engineBtn?.addEventListener('click', () => {
+        const engineSvg = engineBtn.querySelector('svg');
+        if (engineSvg) {
+            gsap.fromTo(engineSvg, { x: -5, scale: 1.2 }, {
+                x: 4,
+                duration: 0.09,
+                repeat: 3,
+                yoyo: true,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                    gsap.to(engineSvg, { x: 0, scale: 1, duration: 0.12 });
+                },
+            });
+        }
+    });
+    // 5. Theme Toggle 360 Spin Animation
+    const themeToggle = document.getElementById('theme-toggle-btn');
+    themeToggle?.addEventListener('click', () => {
+        const activeSvg = themeToggle.querySelector('svg:not([style*="none"])') || themeToggle.querySelector('svg');
+        if (activeSvg) {
+            gsap.fromTo(activeSvg, { rotation: -180, scale: 0.6 }, { rotation: 0, scale: 1, duration: 0.45, ease: 'back.out(2)' });
+        }
+    });
 }
 //# sourceMappingURL=main.js.map

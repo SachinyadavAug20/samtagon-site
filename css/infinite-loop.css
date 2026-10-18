@@ -62,7 +62,7 @@
 /* Infinite Loop Interactive Lab Section */
 .infinite-loop-section {
   position: relative;
-  background: radial-gradient(circle at 50% 50%, rgba(20, 27, 38, 0.6) 0%, rgba(8, 10, 15, 0.95) 100%);
+  background: radial-gradient(circle at 50% 50%, rgba(18, 19, 22, 0.8) 0%, #090a0c 100%);
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
 }
@@ -173,7 +173,7 @@
 }
 
 .hud-stat-box {
-  background: rgba(14, 18, 26, 0.95);
+  background: rgba(18, 19, 22, 0.95);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   padding: 8px 14px;

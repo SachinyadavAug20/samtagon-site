@@ -88,20 +88,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-full);
-  background: var(--bg-surface);
-  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
   padding: 0;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .zen-theme-toggle:hover {
-  color: var(--accent-emerald);
-  transform: translateY(-1px);
+  color: var(--primary);
+  border-color: var(--primary);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 12px rgba(217, 119, 6, 0.2);
 }
 
 .zen-theme-toggle .sun-icon {
@@ -168,12 +171,15 @@
 
 .zen-canvas-holder {
   width: 100%;
-  height: clamp(520px, 60vh, 700px);
+  height: clamp(560px, 66vh, 760px);
   display: block;
   cursor: grab;
   outline: none;
   position: relative;
   z-index: 1;
+  background: transparent !important;
+  mask-image: radial-gradient(ellipse 96% 92% at 50% 50%, #000 82%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 96% 92% at 50% 50%, #000 82%, transparent 100%);
 }
 
 .zen-canvas-holder:active {
@@ -196,19 +202,19 @@
 .ctrl-dock-group {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-full);
-  padding: 4px 6px;
-  border: none;
-  box-shadow: none;
-  transition: background-color var(--transition-normal);
+  gap: 2px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
+  border-radius: 0;
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .stage-icon-btn {
   width: 38px;
   height: 38px;
-  border-radius: var(--radius-full);
+  border-radius: 0;
   border: none;
   background: transparent;
   color: var(--text-secondary);
@@ -216,28 +222,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  position: relative;
 }
 
 .stage-icon-btn:hover {
   color: var(--text-primary);
   background: var(--bg-subtle);
-  transform: translateY(-1px);
 }
 
 .stage-icon-btn.active {
-  background: var(--accent-emerald);
-  color: #FFFFFF;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .stage-speed-btn {
-  height: 36px;
+  height: 38px;
   padding: 0 14px;
-  border-radius: var(--radius-full);
+  border-radius: 0;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -245,43 +251,45 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  position: relative;
 }
 
 .stage-speed-btn:hover {
   color: var(--text-primary);
   background: var(--bg-subtle);
-  transform: translateY(-1px);
 }
 
 .stage-speed-btn.active {
-  background: var(--accent-emerald);
-  color: #FFFFFF;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .stage-whistle-btn {
-  width: 44px;
-  height: 44px;
-  background: var(--bg-surface);
-  border: none;
-  box-shadow: none;
-  color: var(--accent-emerald);
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.15);
+  color: var(--primary);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .stage-whistle-btn:hover {
-  background: var(--accent-emerald);
-  color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%), var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 16px rgba(217, 119, 6, 0.35);
 }
 
-/* Actions (Zero blur, crisp borderless modern pills) */
+/* Actions (Zero blur, crisp borderless modern sharp buttons) */
 .zen-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  margin-top: 10px;
+  gap: 16px;
+  margin-top: 14px;
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
@@ -290,51 +298,48 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: 0.94rem;
-  padding: 12px 26px;
-  border-radius: var(--radius-full);
-  border: none;
-  box-shadow: none;
+  letter-spacing: 0.02em;
+  padding: 14px 28px;
+  border-radius: 0;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--transition-fast);
   white-space: nowrap;
   text-decoration: none;
+  position: relative;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .zen-btn-primary {
-  background: #10B981;
-  color: #FFFFFF;
-  box-shadow: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 65%, rgba(0, 0, 0, 0.08) 100%), var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(217, 119, 6, 0.28);
 }
 
 .zen-btn-primary:hover {
-  background: #059669;
-  transform: translateY(-2px);
-  box-shadow: none;
-}
-
-.zen-btn-primary:active {
-  transform: scale(0.97);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0) 65%, rgba(0, 0, 0, 0.12) 100%), var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 6px 20px rgba(217, 119, 6, 0.40);
+  transform: translateY(-1px);
 }
 
 .zen-btn-secondary {
-  background: var(--bg-surface);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
   color: var(--text-primary);
-  border: none;
-  box-shadow: none;
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .zen-btn-secondary:hover {
-  background: var(--bg-subtle);
-  transform: translateY(-2px);
-  box-shadow: none;
-}
-
-.zen-btn-secondary:active {
-  transform: scale(0.97);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 14px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .btn-arrow-icon {
