@@ -25,6 +25,7 @@ class RecommendationsApp {
     rabbitHoleFocusCard;
     rabbitHoleSimilarGrid;
     breadcrumbsContainer;
+    rabbitHoleTitle;
     mathInspector;
     constructor() {
         this.audio = new ProceduralAudio();
@@ -44,6 +45,7 @@ class RecommendationsApp {
         this.searchResultsContainer = document.getElementById('search-results-grid');
         this.resultCountSpan = document.getElementById('result-count');
         this.rabbitHoleSection = document.getElementById('rabbit-hole-section');
+        this.rabbitHoleTitle = document.getElementById('rabbit-hole-title');
         this.rabbitHoleFocusCard = document.getElementById('rabbit-hole-focus');
         this.rabbitHoleSimilarGrid = document.getElementById('rabbit-hole-similar-grid');
         this.breadcrumbsContainer = document.getElementById('rabbit-hole-breadcrumbs');
@@ -245,18 +247,21 @@ class RecommendationsApp {
             this.audio.playChime(783.99, 0.08); // G5 chime
             this.selectGameForRabbitHole(game, true);
         });
-        // Clicking the card itself previews vector math
+        // Clicking the card itself selects it for recommendations
         card.addEventListener('click', () => {
-            this.audio.playChime(587.33, 0.04);
-            this.showVectorMathInspector(game);
+            this.audio.playChime(659.25, 0.05);
+            this.selectGameForRabbitHole(game, true);
         });
         return card;
     }
     /**
-     * Feature 2: Select a game to inspect similar games (The Rabbit Hole)
+     * Select a game to inspect similar games ("Because you liked...")
      */
     selectGameForRabbitHole(game, smoothScroll = true) {
         this.selectedGame = game;
+        if (this.rabbitHoleTitle) {
+            this.rabbitHoleTitle.textContent = `Because you liked ${game.title}`;
+        }
         // Manage breadcrumb history
         const existingIdx = this.rabbitHoleHistory.findIndex((g) => g.id === game.id);
         if (existingIdx !== -1) {
@@ -274,8 +279,10 @@ class RecommendationsApp {
         // Compute Feature 2: Find Top 3 Similar Games
         const similarMatches = VectorEngine.findSimilarGames(game, this.catalog, 3);
         this.renderRabbitHoleSimilar(similarMatches);
-        // Update Live Vector Math Inspector
-        this.showVectorMathInspector(game, similarMatches[0]?.game);
+        // Update Live Vector Math Inspector if present
+        if (this.mathInspector) {
+            this.showVectorMathInspector(game, similarMatches[0]?.game);
+        }
         if (smoothScroll && this.rabbitHoleSection) {
             this.rabbitHoleSection.scrollIntoView({ behavior: 'smooth' });
         }

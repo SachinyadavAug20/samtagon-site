@@ -224,8 +224,8 @@ export class ThreeStage {
     this.rootGroup.add(this.trackGroup);
     this.rootGroup.add(this.trainGroup);
 
-    // Subtle diorama presence scale
-    this.rootGroup.scale.setScalar(1.06);
+    // Subtle diorama presence scale with natural breathing room
+    this.rootGroup.scale.setScalar(0.96);
 
     // 5. Rich Studio Lighting & Celestial Elements
     this.setupLighting();
@@ -562,16 +562,16 @@ export class ThreeStage {
      3. SCULPTED FLOATING ISLAND & SOFT CONTACT SHADOW
      ========================================================================= */
   private buildSculptedIsland(): void {
-    // 1. Soft Diffused Contact Shadow on Ground Floor
-    const shadowGeo = new THREE.PlaneGeometry(6.4, 4.4);
+    // 1. Soft Diffused Contact Shadow on Ground Floor (Seamless organic blend)
+    const shadowGeo = new THREE.PlaneGeometry(9.6, 6.2);
     const shadowCanvas = document.createElement('canvas');
     shadowCanvas.width = 256;
     shadowCanvas.height = 256;
     const sctx = shadowCanvas.getContext('2d')!;
 
-    const sgrad = sctx.createRadialGradient(128, 128, 40, 128, 128, 120);
-    sgrad.addColorStop(0, 'rgba(15, 23, 42, 0.28)');
-    sgrad.addColorStop(0.6, 'rgba(15, 23, 42, 0.12)');
+    const sgrad = sctx.createRadialGradient(128, 128, 40, 128, 128, 125);
+    sgrad.addColorStop(0, 'rgba(15, 23, 42, 0.22)');
+    sgrad.addColorStop(0.55, 'rgba(15, 23, 42, 0.07)');
     sgrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
     sctx.fillStyle = sgrad;
     sctx.fillRect(0, 0, 256, 256);
@@ -603,8 +603,8 @@ export class ThreeStage {
     });
 
     const baseHeight = 0.22;
-    const baseRadius = 1.62;
-    const centerOffset = 1.12;
+    const baseRadius = 2.05;
+    const centerOffset = 1.42;
 
     // Left Bedrock Disc
     const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.06, baseHeight, 48), bedrockMat);
@@ -631,13 +631,13 @@ export class ThreeStage {
     this.sceneryGroup.add(rightTurf);
 
     // Center Connecting Isthmus Bedrock
-    const centerBase = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, baseHeight, 1.95), bedrockMat);
+    const centerBase = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, baseHeight, 2.45), bedrockMat);
     centerBase.position.set(0, -baseHeight * 0.5, 0);
     centerBase.receiveShadow = true;
     this.sceneryGroup.add(centerBase);
 
     // Center Turf Cap (Clean meadow isthmus)
-    const centerTurf = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, 0.035, 1.92), turfMat);
+    const centerTurf = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, 0.035, 2.42), turfMat);
     centerTurf.position.set(0, 0.015, 0);
     centerTurf.receiveShadow = true;
     this.sceneryGroup.add(centerTurf);
@@ -924,17 +924,17 @@ export class ThreeStage {
      ========================================================================= */
   private buildInfiniteTrackCurve(): void {
     const pts: THREE.Vector3[] = [];
-    const N = 180;
-    const bridgeSpan = 0.92; // Angle span around t=0 where track climbs over viaduct
+    const N = 260;
+    const bridgeSpan = 0.95; // Angle span around t=0 where track climbs over viaduct
     const baseHeight = 0.055; // Ground rail elevation
     const viaductElevation = 0.38; // Viaduct clearance elevation
 
     for (let i = 0; i < N; i++) {
       const t = (i / N) * Math.PI * 2;
 
-      // Lemniscate of Gerono: x = A sin(t), z = B sin(2t)
-      const x = Math.sin(t) * 2.22;
-      const z = Math.sin(2 * t) * 1.10;
+      // Lemniscate of Gerono (Expanded longer path): x = A sin(t), z = B sin(2t)
+      const x = Math.sin(t) * 2.80;
+      const z = Math.sin(2 * t) * 1.40;
 
       // Elevation Profile:
       // At t = pi: Overpass summit on top of stone viaduct (y = 0.435)
@@ -966,7 +966,7 @@ export class ThreeStage {
       metalness: 0.1,
     });
 
-    const tieCount = 110;
+    const tieCount = 160;
     const up = new THREE.Vector3(0, 1, 0);
 
     for (let i = 0; i < tieCount; i++) {
@@ -985,7 +985,7 @@ export class ThreeStage {
     }
 
     // Extrude Dual Continuous Polished Steel Rails
-    const samples = 220;
+    const samples = 280;
     const railOffset = 0.066;
     const leftPts: THREE.Vector3[] = [];
     const rightPts: THREE.Vector3[] = [];
@@ -1004,8 +1004,8 @@ export class ThreeStage {
     const leftRailCurve = new THREE.CatmullRomCurve3(leftPts, true);
     const rightRailCurve = new THREE.CatmullRomCurve3(rightPts, true);
 
-    const railGeoLeft = new THREE.TubeGeometry(leftRailCurve, 220, 0.013, 8, true);
-    const railGeoRight = new THREE.TubeGeometry(rightRailCurve, 220, 0.013, 8, true);
+    const railGeoLeft = new THREE.TubeGeometry(leftRailCurve, 280, 0.013, 8, true);
+    const railGeoRight = new THREE.TubeGeometry(rightRailCurve, 280, 0.013, 8, true);
 
     const railMat = new THREE.MeshStandardMaterial({
       color: 0xd4d4d8,
@@ -2642,30 +2642,29 @@ export class ThreeStage {
       roughness: 0.8,
     });
 
-    const peaks = [
-      { x: 0.15, z: -2.85, r: 1.45, h: 1.85, snowH: 0.65, segments: 7 },
-      { x: -1.95, z: -2.55, r: 1.25, h: 1.50, snowH: 0.52, segments: 6 },
-      { x: 2.15, z: -2.65, r: 1.35, h: 1.65, snowH: 0.58, segments: 6 },
-    ];
+    // Single Simple & Majestic Low-Poly Mountain Peak (Replaces 3 cluttered mountains)
+    const mtnX = -1.6;
+    const mtnZ = -1.6;
+    const mtnR = 1.95;
+    const mtnH = 2.30;
+    const snowH = 0.85;
+    const segments = 8;
 
-    peaks.forEach(({ x, z, r, h, snowH, segments }) => {
-      const rockCone = new THREE.Mesh(new THREE.ConeGeometry(r, h, segments, 1), rockMat);
-      rockCone.position.set(x, h * 0.5 - 0.22, z);
-      rockCone.rotation.y = (x * 1.5) % Math.PI;
-      rockCone.receiveShadow = true;
-      rockCone.castShadow = true;
-      alpineGroup.add(rockCone);
+    const rockCone = new THREE.Mesh(new THREE.ConeGeometry(mtnR, mtnH, segments, 1), rockMat);
+    rockCone.position.set(mtnX, mtnH * 0.5 - 0.22, mtnZ);
+    rockCone.rotation.y = 0.35;
+    rockCone.receiveShadow = true;
+    rockCone.castShadow = true;
+    alpineGroup.add(rockCone);
 
-      const snowCone = new THREE.Mesh(new THREE.ConeGeometry(r * (snowH / h) * 1.05, snowH, segments, 1), snowMat);
-      snowCone.position.set(x, h - snowH * 0.5 - 0.21, z);
-      snowCone.rotation.y = rockCone.rotation.y;
-      snowCone.receiveShadow = true;
-      alpineGroup.add(snowCone);
-    });
+    const snowCone = new THREE.Mesh(new THREE.ConeGeometry(mtnR * (snowH / mtnH) * 1.05, snowH, segments, 1), snowMat);
+    snowCone.position.set(mtnX, mtnH - snowH * 0.5 - 0.21, mtnZ);
+    snowCone.rotation.y = rockCone.rotation.y;
+    snowCone.receiveShadow = true;
+    alpineGroup.add(snowCone);
 
     const firOffsets = [
-      [-2.3, -2.1], [-1.8, -2.15], [-1.4, -2.3], [-0.8, -2.4],
-      [-0.3, -2.5], [0.5, -2.5], [1.1, -2.4], [1.6, -2.25], [2.2, -2.15]
+      [-2.6, -1.0], [-2.3, -1.3], [-2.0, -1.6], [-1.6, -2.0], [-1.3, -2.3], [-1.0, -2.6]
     ];
     firOffsets.forEach(([fx, fz], idx) => {
       const fir = new THREE.Group();
@@ -2902,7 +2901,7 @@ export class ThreeStage {
      ========================================================================= */
   private buildHotAirBalloon(): void {
     const balloon = new THREE.Group();
-    balloon.position.set(1.9, 2.45, -1.1);
+    balloon.position.set(-0.5, 2.1, -2.4);
 
     const envMatRed = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.45 });
     const envMatGold = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.45 });
@@ -4322,7 +4321,7 @@ export class ThreeStage {
     this.progress = (this.progress + this.trainSpeed * this.speedMultiplier) % 1.0;
 
     // 2. Position All 4 Train Cars — 100% Tangent Basis Matrix Alignment!
-    const carOffsets = [0, -0.028, -0.056, -0.084];
+    const carOffsets = [0, -0.022, -0.044, -0.066];
     const cars = [this.locoCar, this.tenderCar, this.coachCar, this.cabooseCar];
     const up = new THREE.Vector3(0, 1, 0);
 

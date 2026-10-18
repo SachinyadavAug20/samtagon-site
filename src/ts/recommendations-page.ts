@@ -28,7 +28,8 @@ class RecommendationsApp {
   private rabbitHoleFocusCard!: HTMLElement;
   private rabbitHoleSimilarGrid!: HTMLElement;
   private breadcrumbsContainer!: HTMLElement;
-  private mathInspector!: HTMLElement;
+  private rabbitHoleTitle!: HTMLElement | null;
+  private mathInspector!: HTMLElement | null;
 
   constructor() {
     this.audio = new ProceduralAudio();
@@ -51,10 +52,11 @@ class RecommendationsApp {
     this.searchResultsContainer = document.getElementById('search-results-grid') as HTMLElement;
     this.resultCountSpan = document.getElementById('result-count') as HTMLElement;
     this.rabbitHoleSection = document.getElementById('rabbit-hole-section') as HTMLElement;
+    this.rabbitHoleTitle = document.getElementById('rabbit-hole-title');
     this.rabbitHoleFocusCard = document.getElementById('rabbit-hole-focus') as HTMLElement;
     this.rabbitHoleSimilarGrid = document.getElementById('rabbit-hole-similar-grid') as HTMLElement;
     this.breadcrumbsContainer = document.getElementById('rabbit-hole-breadcrumbs') as HTMLElement;
-    this.mathInspector = document.getElementById('vector-math-inspector') as HTMLElement;
+    this.mathInspector = document.getElementById('vector-math-inspector');
   }
 
   private setupTheme(): void {
@@ -281,20 +283,24 @@ class RecommendationsApp {
       this.selectGameForRabbitHole(game, true);
     });
 
-    // Clicking the card itself previews vector math
+    // Clicking the card itself selects it for recommendations
     card.addEventListener('click', () => {
-      this.audio.playChime(587.33, 0.04);
-      this.showVectorMathInspector(game);
+      this.audio.playChime(659.25, 0.05);
+      this.selectGameForRabbitHole(game, true);
     });
 
     return card;
   }
 
   /**
-   * Feature 2: Select a game to inspect similar games (The Rabbit Hole)
+   * Select a game to inspect similar games ("Because you liked...")
    */
   public selectGameForRabbitHole(game: GameItem, smoothScroll: boolean = true): void {
     this.selectedGame = game;
+
+    if (this.rabbitHoleTitle) {
+      this.rabbitHoleTitle.textContent = `Because you liked ${game.title}`;
+    }
 
     // Manage breadcrumb history
     const existingIdx = this.rabbitHoleHistory.findIndex((g) => g.id === game.id);
@@ -315,8 +321,10 @@ class RecommendationsApp {
     const similarMatches = VectorEngine.findSimilarGames(game, this.catalog, 3);
     this.renderRabbitHoleSimilar(similarMatches);
 
-    // Update Live Vector Math Inspector
-    this.showVectorMathInspector(game, similarMatches[0]?.game);
+    // Update Live Vector Math Inspector if present
+    if (this.mathInspector) {
+      this.showVectorMathInspector(game, similarMatches[0]?.game);
+    }
 
     if (smoothScroll && this.rabbitHoleSection) {
       this.rabbitHoleSection.scrollIntoView({ behavior: 'smooth' });
