@@ -278,6 +278,16 @@ class RecommendationsApp {
   private currentQuery: string = '';
   private currentMatches: GameMatch[] = [];
 
+  // Mode Tabs & View Elements
+  private activeTab: 'quiz' | 'explore' = 'quiz';
+  private tabQuizBtn!: HTMLElement | null;
+  private tabExploreBtn!: HTMLElement | null;
+  private tabQuizLabel!: HTMLElement | null;
+  private viewQuiz!: HTMLElement | null;
+  private viewExplore!: HTMLElement | null;
+  private skipToExploreBtn!: HTMLElement | null;
+  private categoryPillsWrap!: HTMLElement | null;
+
   // Quiz State
   private currentQuestionIndex: number = 0;
   private userAnswers: number[] = [];
@@ -309,6 +319,8 @@ class RecommendationsApp {
     this.audio = new ProceduralAudio();
     this.initDOM();
     this.setupTheme();
+    this.setupTabs();
+    this.setupCategoryPills();
     this.setupEventListeners();
     this.setupSmoothPageTransitions();
     this.initQuiz();
@@ -316,6 +328,14 @@ class RecommendationsApp {
   }
 
   private initDOM(): void {
+    this.tabQuizBtn = document.getElementById('tab-quiz-btn');
+    this.tabExploreBtn = document.getElementById('tab-explore-btn');
+    this.tabQuizLabel = document.getElementById('tab-quiz-label');
+    this.viewQuiz = document.getElementById('view-quiz');
+    this.viewExplore = document.getElementById('view-explore');
+    this.skipToExploreBtn = document.getElementById('skip-to-explore-btn');
+    this.categoryPillsWrap = document.getElementById('category-pills-wrap');
+
     this.quizActiveBox = document.getElementById('quiz-active-box');
     this.quizProfileBox = document.getElementById('quiz-profile-box');
     this.quizStepIndicator = document.getElementById('quiz-step-indicator');
@@ -401,6 +421,102 @@ class RecommendationsApp {
     });
   }
 
+  private setupTabs(): void {
+    this.tabQuizBtn?.addEventListener('click', () => {
+      this.switchTab('quiz');
+    });
+
+    this.tabExploreBtn?.addEventListener('click', () => {
+      this.switchTab('explore');
+    });
+
+    this.skipToExploreBtn?.addEventListener('click', () => {
+      this.switchTab('explore');
+    });
+  }
+
+  public switchTab(tab: 'quiz' | 'explore', searchKeyword?: string): void {
+    this.activeTab = tab;
+    if (tab === 'quiz') {
+      if (this.viewQuiz) this.viewQuiz.style.display = 'block';
+      if (this.viewExplore) this.viewExplore.style.display = 'none';
+      this.tabQuizBtn?.classList.add('active');
+      this.tabQuizBtn?.setAttribute('aria-selected', 'true');
+      this.tabExploreBtn?.classList.remove('active');
+      this.tabExploreBtn?.setAttribute('aria-selected', 'false');
+      this.audio.playChime(523.25, 0.06);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      if (this.viewQuiz) this.viewQuiz.style.display = 'none';
+      if (this.viewExplore) this.viewExplore.style.display = 'block';
+      this.tabExploreBtn?.classList.add('active');
+      this.tabExploreBtn?.setAttribute('aria-selected', 'true');
+      this.tabQuizBtn?.classList.remove('active');
+      this.tabQuizBtn?.setAttribute('aria-selected', 'false');
+      this.audio.playChime(659.25, 0.06);
+
+      if (searchKeyword !== undefined) {
+        if (this.searchInput) {
+          this.searchInput.value = searchKeyword;
+          if (this.clearSearchBtn) this.clearSearchBtn.style.display = searchKeyword ? 'inline-flex' : 'none';
+        }
+        this.currentQuery = searchKeyword;
+        this.currentPage = 1;
+        this.loadCatalog();
+        this.updateCategoryPillActive(searchKeyword);
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  private setupCategoryPills(): void {
+    if (!this.categoryPillsWrap) return;
+    const pills = this.categoryPillsWrap.querySelectorAll<HTMLElement>('.cat-pill');
+    pills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        pills.forEach((p) => p.classList.remove('active'));
+        pill.classList.add('active');
+        const genre = pill.getAttribute('data-genre') || '';
+
+        if (this.searchInput) {
+          this.searchInput.value = genre;
+          if (this.clearSearchBtn) {
+            this.clearSearchBtn.style.display = genre ? 'inline-flex' : 'none';
+          }
+        }
+        this.currentQuery = genre;
+        this.currentPage = 1;
+        this.audio.playQuizSelection();
+        this.loadCatalog();
+
+        const catalogHeading = document.getElementById('catalog-heading');
+        catalogHeading?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
+  private updateCategoryPillActive(keyword: string): void {
+    if (!this.categoryPillsWrap) return;
+    const pills = this.categoryPillsWrap.querySelectorAll<HTMLElement>('.cat-pill');
+    const lower = keyword.trim().toLowerCase();
+    let matched = false;
+
+    pills.forEach((pill) => {
+      const g = (pill.getAttribute('data-genre') || '').toLowerCase();
+      if ((lower === '' && g === '') || (lower && g && (lower.includes(g) || g.includes(lower)))) {
+        pill.classList.add('active');
+        matched = true;
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+
+    if (!matched) {
+      pills.forEach((p) => p.classList.remove('active'));
+    }
+  }
+
   private setupSmoothPageTransitions(): void {
     // Page load gentle entrance
     gsap.fromTo(document.body, { opacity: 0 }, { opacity: 1, duration: 0.32, ease: 'power2.out' });
@@ -468,6 +584,9 @@ class RecommendationsApp {
     if (this.quizStepIndicator) {
       this.quizStepIndicator.textContent = `Question ${index + 1} of ${total}`;
     }
+    if (this.tabQuizLabel) {
+      this.tabQuizLabel.textContent = `Question ${index + 1} of ${total}`;
+    }
     if (this.quizTrackFill) {
       const pct = ((index + 1) / total) * 100;
       this.quizTrackFill.style.width = `${pct}%`;
@@ -513,6 +632,7 @@ class RecommendationsApp {
 
     // Smooth subtle entry animation
     gsap.fromTo(this.quizBody, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.25, ease: 'power2.out' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   private selectOption(optIndex: number): void {
@@ -592,6 +712,10 @@ class RecommendationsApp {
     if (this.quizActiveBox) this.quizActiveBox.style.display = 'none';
     this.quizProfileBox.style.display = 'block';
 
+    if (this.tabQuizLabel) {
+      this.tabQuizLabel.textContent = 'Gamer Profile';
+    }
+
     const p = this.currentProfile;
     const archInfo = ARCHETYPES[p.archetypeId];
 
@@ -656,8 +780,8 @@ class RecommendationsApp {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
             <span>Retake 10 Questions</span>
           </button>
-          <button id="filter-catalog-archetype-btn" class="profile-cta-btn accent-cta">
-            <span>Explore Matching Games in Catalog (${archInfo.catalogSearch})</span> &darr;
+          <button id="unlock-explore-btn" class="profile-cta-btn accent-cta">
+            <span>Explore 12,000+ Games (${archInfo.catalogSearch})</span> &rarr;
           </button>
         </div>
       </div>
@@ -684,10 +808,10 @@ class RecommendationsApp {
       this.retakeQuiz();
     });
 
-    // Hook Filter Catalog Button
-    const filterBtn = document.getElementById('filter-catalog-archetype-btn');
-    filterBtn?.addEventListener('click', () => {
-      this.filterCatalogByArchetype(archInfo.catalogSearch);
+    // Hook Explore Catalog Button
+    const unlockBtn = document.getElementById('unlock-explore-btn');
+    unlockBtn?.addEventListener('click', () => {
+      this.switchTab('explore', archInfo.catalogSearch);
     });
 
     // Smooth reveal animation
@@ -695,24 +819,18 @@ class RecommendationsApp {
   }
 
   private filterCatalogByArchetype(keyword: string): void {
-    if (this.searchInput) {
-      this.searchInput.value = keyword;
-      if (this.clearSearchBtn) this.clearSearchBtn.style.display = 'inline-flex';
-      this.currentQuery = keyword;
-      this.currentPage = 1;
-      this.audio.playChime(659.25, 0.06);
-      this.loadCatalog();
-
-      const catalogSec = document.getElementById('search-section');
-      catalogSec?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    this.switchTab('explore', keyword);
   }
 
   private retakeQuiz(): void {
     this.clearGamerProfileCookie();
     this.currentProfile = null;
     this.userAnswers = [];
+    if (this.tabQuizLabel) {
+      this.tabQuizLabel.textContent = 'Question 1 of 10';
+    }
     this.audio.playChime(523.25, 0.08);
+    this.switchTab('quiz');
     this.renderQuestion(0);
   }
 

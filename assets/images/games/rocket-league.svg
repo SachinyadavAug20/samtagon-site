@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="rlBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#030712" />
+        <stop offset="50%" stop-color="#1e1b4b" />
+        <stop offset="100%" stop-color="#0c4a6e" />
+      </linearGradient>
+      <linearGradient id="rlBoost" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#f97316" />
+        <stop offset="50%" stop-color="#eab308" />
+        <stop offset="100%" stop-color="#06b6d4" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#rlBg)" />
+    <!-- Soccer Ball & Boost Trails -->
+    <g transform="translate(308, 115)">
+      <circle cx="0" cy="0" r="42" fill="#ffffff" stroke="#06b6d4" stroke-width="4" />
+      <polygon points="0,-16 15,-5 9,14 -9,14 -15,-5" fill="#0f172a" />
+      <path d="M-100 20 Q-50 40 0 10" stroke="#f97316" stroke-width="6" fill="none" opacity="0.8" />
+      <path d="M100 -20 Q50 -40 0 -10" stroke="#06b6d4" stroke-width="6" fill="none" opacity="0.8" />
+    </g>
+    <text x="308" y="225" font-family="Impact, Arial Black, sans-serif" font-size="48" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">ROCKET LEAGUE</text>
+    <text x="308" y="265" font-family="monospace" font-size="13" font-weight="700" fill="url(#rlBoost)" text-anchor="middle" letter-spacing="4">VEHICULAR SOCCER &#8226; PSYONIX</text>
+  </svg>

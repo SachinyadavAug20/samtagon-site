@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="lolBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#010a13" />
+        <stop offset="50%" stop-color="#0a1428" />
+        <stop offset="100%" stop-color="#091428" />
+      </linearGradient>
+      <linearGradient id="lolGold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f0e6d2" />
+        <stop offset="50%" stop-color="#c8aa6e" />
+        <stop offset="100%" stop-color="#785a28" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#lolBg)" />
+    <circle cx="308" cy="115" r="48" fill="none" stroke="url(#lolGold)" stroke-width="3" />
+    <polygon points="308,75 320,115 308,105 296,115" fill="url(#lolGold)" />
+    <text x="308" y="215" font-family="Georgia, serif" font-size="34" font-weight="900" fill="url(#lolGold)" text-anchor="middle" letter-spacing="6">LEAGUE OF LEGENDS</text>
+    <text x="308" y="255" font-family="monospace" font-size="13" font-weight="700" fill="#0ac8b9" text-anchor="middle" letter-spacing="4">STRATEGIC MOBA &#8226; RIOT GAMES</text>
+  </svg>

@@ -374,7 +374,7 @@ const RAW_GAMES = [
         title: 'Minecraft',
         subtitle: 'Infinite Procedural Voxel Sandbox of Survival & Creation',
         description: 'Mine deep into caverns, gather obsidian and diamonds, engineer automated redstone contraptions, and construct architectural marvels block by block in an infinite procedural universe. Survive nocturnal monsters, tame wolves, brew potions, brew portals to the Nether, and conquer the Ender Dragon.',
-        image: 'https://assets.xboxservices.com/assets/2b/26/2b2605f6-c567-4d7a-8b83-a4e98f0653b6.jpg?n=Minecraft_GLP-Page-Hero-0_1083x609_02.jpg',
+        image: 'assets/images/games/minecraft.png',
         genres: ['Sandbox', 'Survival', 'Crafting'],
         tags: ['sandbox', 'survival', 'crafting', 'building', 'blocks', 'voxel', 'procedural', 'multiplayer', 'creative', 'cozy'],
         rating: 4.98,

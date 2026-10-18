@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="giBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#0c1024" />
+        <stop offset="50%" stop-color="#18234d" />
+        <stop offset="100%" stop-color="#2c1a4d" />
+      </linearGradient>
+      <linearGradient id="giPrimo" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#a5b4fc" />
+        <stop offset="50%" stop-color="#e0e7ff" />
+        <stop offset="100%" stop-color="#f472b6" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#giBg)" />
+    <!-- Primogem 4-point star -->
+    <g transform="translate(308, 115) scale(0.9)">
+      <polygon points="0,-48 14,-14 48,0 14,14 0,48 -14,14 -48,0 -14,-14" fill="url(#giPrimo)" />
+      <polygon points="0,-24 7,-7 24,0 7,7 0,24 -7,7 -24,0 -7,-7" fill="#ffffff" />
+    </g>
+    <text x="308" y="220" font-family="Georgia, serif" font-size="40" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="6">GENSHIN IMPACT</text>
+    <text x="308" y="260" font-family="monospace" font-size="13" font-weight="700" fill="#f472b6" text-anchor="middle" letter-spacing="4">OPEN WORLD RPG &#8226; HOYOVERSE</text>
+  </svg>

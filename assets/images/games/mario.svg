@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="marioBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7f1d1d" />
+        <stop offset="50%" stop-color="#b91c1c" />
+        <stop offset="100%" stop-color="#e11d48" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#marioBg)" />
+    <!-- Mario Cap / Cappy Eyes -->
+    <g transform="translate(308, 115)">
+      <ellipse cx="0" cy="0" rx="60" ry="32" fill="#ef4444" stroke="#ffffff" stroke-width="3" />
+      <circle cx="-16" cy="-2" r="8" fill="#ffffff" />
+      <circle cx="16" cy="-2" r="8" fill="#ffffff" />
+      <circle cx="-16" cy="-2" r="4" fill="#0284c7" />
+      <circle cx="16" cy="-2" r="4" fill="#0284c7" />
+    </g>
+    <text x="308" y="220" font-family="Arial Black, Impact, sans-serif" font-size="44" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">SUPER MARIO</text>
+    <text x="308" y="255" font-family="Arial Black, sans-serif" font-size="24" font-weight="900" fill="#fde047" text-anchor="middle" letter-spacing="6">ODYSSEY</text>
+    <text x="308" y="285" font-family="monospace" font-size="12" font-weight="700" fill="#ffffff" opacity="0.9" text-anchor="middle" letter-spacing="4">3D PLATFORMER &#8226; NINTENDO</text>
+  </svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="zeldaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#051c14" />
+        <stop offset="50%" stop-color="#0d3b2e" />
+        <stop offset="100%" stop-color="#082b20" />
+      </linearGradient>
+      <linearGradient id="zeldaGold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffe875" />
+        <stop offset="100%" stop-color="#b8860b" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#zeldaBg)" />
+    <g transform="translate(308, 105)">
+      <polygon points="0,-40 -35,20 35,20" fill="url(#zeldaGold)" opacity="0.9" />
+      <polygon points="0,20 -18,-10 18,-10" fill="#0d3b2e" />
+      <circle cx="0" cy="-5" r="28" fill="none" stroke="#22d3ee" stroke-width="2.5" opacity="0.8" />
+    </g>
+    <text x="308" y="215" font-family="Georgia, serif" font-size="30" font-weight="900" fill="url(#zeldaGold)" text-anchor="middle" letter-spacing="4">THE LEGEND OF ZELDA</text>
+    <text x="308" y="248" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#22d3ee" text-anchor="middle" letter-spacing="3">TEARS OF THE KINGDOM</text>
+    <text x="308" y="280" font-family="monospace" font-size="12" font-weight="700" fill="#9ca3af" text-anchor="middle" letter-spacing="4">OPEN WORLD &#8226; NINTENDO</text>
+  </svg>

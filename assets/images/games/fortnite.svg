@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="fnSky" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#14092b" />
+        <stop offset="50%" stop-color="#3c1053" />
+        <stop offset="100%" stop-color="#ff007f" />
+      </linearGradient>
+      <linearGradient id="fnGold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffe600" />
+        <stop offset="100%" stop-color="#f59e0b" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#fnSky)" />
+    <circle cx="500" cy="80" r="120" fill="#00f0ff" opacity="0.12" />
+    <circle cx="100" cy="280" r="140" fill="#ff007f" opacity="0.2" />
+    <g transform="translate(308, 120) scale(1.1)">
+      <polygon points="-40,20 -50,-20 -20,-5 0,-35 20,-5 50,-20 40,20" fill="url(#fnGold)" />
+      <circle cx="0" cy="-35" r="5" fill="#fff" />
+      <circle cx="-50" cy="-20" r="4" fill="#fff" />
+      <circle cx="50" cy="-20" r="4" fill="#fff" />
+    </g>
+    <text x="308" y="225" font-family="Impact, Arial Black, sans-serif" font-size="64" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4" transform="rotate(-3 308 225)">FORTNITE</text>
+    <text x="308" y="265" font-family="monospace" font-size="14" font-weight="800" fill="#00f0ff" text-anchor="middle" letter-spacing="5">BATTLE ROYALE &#8226; EPIC GAMES</text>
+  </svg>

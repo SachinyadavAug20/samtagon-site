@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 616 353" width="616" height="353">
+    <defs>
+      <linearGradient id="rbxBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#090a0f" />
+        <stop offset="100%" stop-color="#181a24" />
+      </linearGradient>
+    </defs>
+    <rect width="616" height="353" fill="url(#rbxBg)" />
+    <g transform="translate(308, 130) rotate(-15)">
+      <rect x="-48" y="-48" width="96" height="96" rx="14" fill="#e02424" />
+      <rect x="-16" y="-16" width="32" height="32" rx="4" fill="#090a0f" />
+    </g>
+    <text x="308" y="240" font-family="Impact, Arial Black, sans-serif" font-size="52" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="6">ROBLOX</text>
+    <text x="308" y="275" font-family="monospace" font-size="13" font-weight="700" fill="#9ca3af" text-anchor="middle" letter-spacing="4">IMAGINATION &#8226; MULTIPLAYER SANDBOX</text>
+  </svg>
