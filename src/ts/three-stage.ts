@@ -196,8 +196,8 @@ export class ThreeStage {
 
     this.camera = new THREE.PerspectiveCamera(38, width / height, 0.02, 100);
     // Heroic isometric viewpoint with comfortable framing, generous breathing room and zero edge clipping
-    this.camera.position.set(5.2, 4.4, 5.6);
-    this.camera.lookAt(0, 0.20, -0.30);
+    this.camera.position.set(5.8, 5.4, 6.0);
+    this.camera.lookAt(0, 0.40, -0.75);
 
     // 2. High-Fidelity WebGL Renderer with Soft Shadow Mapping
     this.renderer = new THREE.WebGLRenderer({
@@ -223,7 +223,7 @@ export class ThreeStage {
     this.controls.maxPolarAngle = Math.PI * 0.42; // Elevated diorama isometric angle
     this.controls.minDistance = 1.6; // Deep close-up zoom
     this.controls.maxDistance = 12.5; // Wide panoramic zoom-out
-    this.controls.target.set(0, 0.20, -0.30);
+    this.controls.target.set(0, 0.40, -0.75);
 
     // 4. Assemble Group Hierarchies
     this.scene.add(this.rootGroup);
@@ -568,21 +568,23 @@ export class ThreeStage {
      ========================================================================= */
   private createIslandShape(): THREE.Shape {
     // Star-convex radial sample around diorama center of mass
-    const center = { x: 0, z: -0.2 };
+    const center = { x: 0, z: -0.30 };
     const lobes = [
-      { x: -1.75, z: 0.0, r: 2.20 },
-      { x:  1.75, z: 0.0, r: 2.20 },
-      { x: -2.35, z: 1.45, r: 1.40 },
-      { x: -2.35, z: -1.45, r: 1.40 },
-      { x:  2.35, z: 1.45, r: 1.40 },
-      { x:  2.35, z: -1.45, r: 1.40 },
-      { x: -3.35, z: 0.0, r: 1.25 },
-      { x:  3.35, z: 0.0, r: 1.25 },
-      { x: -1.20, z: -2.60, r: 2.35 },
-      { x: -1.35, z: -2.95, r: 1.85 },
-      { x:  1.60, z: -2.10, r: 1.90 },
-      { x:  0.00, z:  1.40, r: 1.30 },
-      { x:  0.00, z: -0.30, r: 1.85 },
+      { x: -1.75, z:  0.00, r: 2.30 },
+      { x:  1.75, z:  0.00, r: 2.30 },
+      { x: -2.35, z:  1.55, r: 1.65 },
+      { x: -2.35, z: -1.55, r: 1.65 },
+      { x:  2.35, z:  1.55, r: 1.65 },
+      { x:  2.35, z: -1.55, r: 1.65 },
+      { x: -1.25, z:  1.55, r: 1.45 },
+      { x:  1.25, z:  1.55, r: 1.45 },
+      { x: -3.40, z:  0.00, r: 1.45 },
+      { x:  3.40, z:  0.00, r: 1.45 },
+      { x: -1.20, z: -2.60, r: 2.45 },
+      { x: -1.35, z: -3.00, r: 1.95 },
+      { x:  1.60, z: -2.15, r: 2.05 },
+      { x:  0.00, z:  1.55, r: 1.45 },
+      { x:  0.00, z: -0.30, r: 2.00 },
     ];
 
     const isInside = (x: number, z: number): boolean => {
@@ -595,14 +597,14 @@ export class ThreeStage {
       return false;
     };
 
-    const N_SAMPLES = 120;
+    const N_SAMPLES = 140;
     let rads: number[] = [];
     for (let i = 0; i < N_SAMPLES; i++) {
       const theta = (i / N_SAMPLES) * Math.PI * 2;
       const dirX = Math.cos(theta);
       const dirZ = Math.sin(theta);
       let maxR = 0;
-      for (let r = 0.1; r <= 6.5; r += 0.01) {
+      for (let r = 0.1; r <= 7.0; r += 0.01) {
         const px = center.x + dirX * r;
         const pz = center.z + dirZ * r;
         if (isInside(px, pz)) {
@@ -644,7 +646,7 @@ export class ThreeStage {
      ========================================================================= */
   private buildSculptedIsland(): void {
     // 1. Soft Diffused Contact Shadow on Ground Floor (Organic circular falloff, ZERO corners)
-    const shadowGeo = new THREE.CircleGeometry(6.4, 64);
+    const shadowGeo = new THREE.CircleGeometry(7.2, 64);
     const shadowCanvas = document.createElement('canvas');
     shadowCanvas.width = 256;
     shadowCanvas.height = 256;
@@ -666,7 +668,7 @@ export class ThreeStage {
     });
     const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
     shadowMesh.rotation.x = -Math.PI * 0.5;
-    shadowMesh.position.y = -0.26;
+    shadowMesh.position.y = -0.27;
     this.sceneryGroup.add(shadowMesh);
 
     // 2. Sculpted Solid Island Base: Cream Limestone Bedrock + Lush Textured Meadow Turf
@@ -712,15 +714,12 @@ export class ThreeStage {
     turfMesh.receiveShadow = true;
     this.sceneryGroup.add(turfMesh);
 
-    // C. Gentle Rolling Meadow Hillocks & Undulations (Spread out across all lobes)
+    // C. Gentle Rolling Meadow Hillocks strictly in open fields (Safely away from all building platforms)
     const hillMat = turfMat;
     const knolls = [
-      { x: -2.25, y: 0.038, z: -0.45, r: 0.70, h: 0.045 }, // West Windmill knoll
-      { x: -2.05, y: 0.038, z: 0.25, r: 0.65, h: 0.040 },  // West Farmstead barn mound
-      { x: 2.05, y: 0.038, z: 0.00, r: 0.75, h: 0.035 },   // East Village Plaza knoll
-      { x: 2.45, y: 0.038, z: 0.30, r: 0.60, h: 0.035 },   // East Bakery garden mound
-      { x: 1.60, y: 0.038, z: -2.10, r: 0.75, h: 0.040 },  // North Depot plateau knoll
-      { x: 0.00, y: 0.038, z: 1.20, r: 0.60, h: 0.035 },   // South Station apron mound
+      { x: -2.65, y: 0.038, z: 0.70, r: 0.65, h: 0.040 },  // Far West sheep pasture hillock
+      { x: 2.85, y: 0.038, z: -0.65, r: 0.65, h: 0.035 },  // Far East wildflower meadow crest
+      { x: -2.50, y: 0.038, z: -2.20, r: 0.75, h: 0.040 }, // Far North-West alpine slope knoll
     ];
     knolls.forEach((k) => {
       const knoll = new THREE.Mesh(
@@ -4496,15 +4495,15 @@ export class ThreeStage {
       this.controls.enabled = false;
       gsap.to(this.controls.target, {
         x: 0,
-        y: 0.20,
-        z: -0.30,
+        y: 0.40,
+        z: -0.75,
         duration: 0.85,
         ease: 'power2.inOut',
       });
       gsap.to(this.camera.position, {
-        x: 5.2,
-        y: 4.4,
-        z: 5.6,
+        x: 5.8,
+        y: 5.4,
+        z: 6.0,
         duration: 0.85,
         ease: 'power2.inOut',
         onComplete: () => {
