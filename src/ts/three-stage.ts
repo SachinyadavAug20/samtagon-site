@@ -148,6 +148,10 @@ export class ThreeStage {
   private fillLight!: THREE.DirectionalLight;
   private sunMesh!: THREE.Group;
   private sunCorona!: THREE.Sprite;
+  private godRaysGroup: THREE.Group = new THREE.Group();
+  private beehiveGroup: THREE.Group = new THREE.Group();
+  private orchardGroup: THREE.Group = new THREE.Group();
+  private bees: Array<{ mesh: THREE.Mesh; baseX: number; baseY: number; baseZ: number; speed: number; phase: number; radius: number }> = [];
   private moonMesh!: THREE.Mesh;
   private moonLight!: THREE.DirectionalLight;
   private starsPoints!: THREE.Points;
@@ -561,6 +565,36 @@ export class ThreeStage {
     sunGroup.position.set(1.3, 2.1, -1.8);
     this.sunMesh = sunGroup;
     this.celestialGroup.add(this.sunMesh);
+
+    // 4. Atmospheric Volumetric God-Rays / Sunbeams (Outside-the-box cinematic shafts)
+    this.godRaysGroup = new THREE.Group();
+    const rayMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      transparent: true,
+      opacity: 0.16,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    const rayOffsets = [
+      { x: 0.35, y: -0.2, rotY: -0.15, scaleX: 0.7, len: 4.8 },
+      { x: -0.10, y: 0.0, rotY: 0.05, scaleX: 0.9, len: 5.2 },
+      { x: -0.55, y: 0.15, rotY: 0.22, scaleX: 1.1, len: 5.5 },
+      { x: 0.80, y: -0.3, rotY: -0.32, scaleX: 0.6, len: 4.5 },
+    ];
+
+    rayOffsets.forEach(({ x, y, rotY, scaleX, len }) => {
+      const rayGeo = new THREE.PlaneGeometry(scaleX, len);
+      const ray = new THREE.Mesh(rayGeo, rayMat.clone());
+      // Anchor apex near the sun position (1.3, 2.1, -1.8) and angle down toward terrain
+      ray.position.set(1.3 + x, 1.2 + y, -1.8 + x * 0.4);
+      ray.rotation.x = Math.PI * 0.26;
+      ray.rotation.y = rotY;
+      ray.rotation.z = -0.35;
+      this.godRaysGroup.add(ray);
+    });
+    this.celestialGroup.add(this.godRaysGroup);
   }
 
   /* =========================================================================
@@ -2484,26 +2518,36 @@ export class ThreeStage {
       this.sceneryGroup.add(tree);
     });
 
-    // Cute Low-Poly Fluffy Sheep Grazing safely on the Meadows (clearance > 0.85)
+    // Cute Low-Poly Fluffy Sheep Flock & Lambs Grazing safely on the Meadows (clearance > 0.85)
     const sheepMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
     const sheepHeadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
 
     const sheepCoords = [
-      [-1.85, 0.04, 0.35],
-      [-2.20, 0.04, 0.38],
-      [-2.35, 0.04, -0.15],
-      [1.75, 0.04, -0.15],
-      [2.15, 0.04, -0.40],
+      // Adult sheep in western meadow pasture
+      { pos: [-1.85, 0.04, 0.35], scale: 1.0 },
+      { pos: [-2.20, 0.04, 0.40], scale: 1.0 },
+      { pos: [-2.45, 0.04, 0.20], scale: 1.0 },
+      { pos: [-2.60, 0.04, 0.65], scale: 0.95 },
+      { pos: [-2.35, 0.04, -0.15], scale: 1.0 },
+      // Playful little lambs
+      { pos: [-2.05, 0.04, 0.55], scale: 0.65 },
+      { pos: [-2.50, 0.04, 0.42], scale: 0.65 },
+      // Eastern meadow sheep
+      { pos: [1.75, 0.04, -0.15], scale: 1.0 },
+      { pos: [2.15, 0.04, -0.40], scale: 1.0 },
+      { pos: [2.45, 0.04, 0.45], scale: 0.9 },
     ];
 
-    sheepCoords.forEach(([sx, sy, sz]) => {
+    sheepCoords.forEach(({ pos: [sx, sy, sz], scale }) => {
       const sheep = new THREE.Group();
       sheep.position.set(sx, sy, sz);
+      sheep.scale.setScalar(scale);
 
       // Woolly Body
       const body = new THREE.Mesh(new THREE.DodecahedronGeometry(0.045, 1), sheepMat);
       body.position.y = 0.045;
       body.scale.set(1.2, 0.9, 0.9);
+      body.castShadow = true;
       sheep.add(body);
 
       // Tiny Head
@@ -2522,6 +2566,7 @@ export class ThreeStage {
     const cowHornMat = new THREE.MeshStandardMaterial({ color: 0xfef9c3, roughness: 0.35 });
     const cowBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.07), cowBodyMat);
     cowBody.position.y = 0.055;
+    cowBody.castShadow = true;
     cow.add(cowBody);
     const cowHead = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), cowBodyMat);
     cowHead.position.set(0.08, 0.075, 0);
@@ -2537,17 +2582,157 @@ export class ThreeStage {
     this.interactiveSheep.push(cow);
     this.sceneryGroup.add(cow);
 
-    // Cheerful Wildflower Dots (Filtered to ensure ZERO flowers near rails)
-    const flowerColors = [0xef4444, 0xfacc15, 0xffffff, 0xa855f7];
-    for (let f = 0; f < 48; f++) {
-      const lobe = f % 2 === 0 ? -1.15 : 1.15;
-      const rad = 0.22 + (f % 5) * 0.14;
+    // Rustic Wooden Split-Rail Pasture Fences
+    const fenceWoodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+    const fencePosts = [
+      [-1.75, 0.15], [-2.05, 0.15], [-2.35, 0.15], [-2.65, 0.15],
+      [-2.80, 0.35], [-2.80, 0.65], [-2.65, 0.85], [-2.35, 0.85],
+    ];
+    fencePosts.forEach(([px, pz], idx) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.014, 0.08, 5), fenceWoodMat);
+      post.position.set(px, 0.04, pz);
+      post.castShadow = true;
+      this.sceneryGroup.add(post);
+
+      if (idx < fencePosts.length - 1) {
+        const next = fencePosts[idx + 1];
+        const midX = (px + next[0]) * 0.5;
+        const midZ = (pz + next[1]) * 0.5;
+        const len = Math.hypot(next[0] - px, next[1] - pz);
+        const ang = Math.atan2(next[1] - pz, next[0] - px);
+
+        [0.055, 0.032].forEach((ry) => {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.008, 0.008), fenceWoodMat);
+          rail.position.set(midX, ry, midZ);
+          rail.rotation.y = -ang;
+          this.sceneryGroup.add(rail);
+        });
+      }
+    });
+
+    // Trail Directional Signpost
+    const signpost = new THREE.Group();
+    signpost.position.set(-1.68, 0.04, 0.62);
+    const postPole = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.014, 0.14, 6), fenceWoodMat);
+    postPole.position.y = 0.07;
+    signpost.add(postPole);
+
+    const signBoard1 = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.018, 0.006), fenceWoodMat);
+    signBoard1.position.set(0.02, 0.12, 0);
+    signBoard1.rotation.y = 0.25;
+    signpost.add(signBoard1);
+
+    const signBoard2 = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.016, 0.006), fenceWoodMat);
+    signBoard2.position.set(-0.02, 0.09, 0);
+    signBoard2.rotation.y = -0.35;
+    signpost.add(signBoard2);
+    this.sceneryGroup.add(signpost);
+
+    // ============================================================
+    // EASTERN ORCHARD & HONEY BEEHIVES (Alive Scenery)
+    // ============================================================
+    this.orchardGroup = new THREE.Group();
+    this.orchardGroup.position.set(2.35, 0, 0.15);
+
+    // Miniature Fruit Trees with Red Apples
+    const fruitTreeMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.55 });
+    const appleMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
+    const oTrunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
+
+    const orchardTreePositions = [
+      { x: 0.0, z: 0.0 },
+      { x: 0.35, z: -0.25 },
+    ];
+
+    orchardTreePositions.forEach(({ x, z }) => {
+      const oTree = new THREE.Group();
+      oTree.position.set(x, 0, z);
+
+      const oTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.028, 0.14, 6), oTrunkMat);
+      oTrunk.position.y = 0.07;
+      oTrunk.castShadow = true;
+      oTree.add(oTrunk);
+
+      const canopy = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14, 1), fruitTreeMat);
+      canopy.position.set(0, 0.18, 0);
+      canopy.castShadow = true;
+      oTree.add(canopy);
+
+      // Embedded shiny red apples
+      const appleOffsets = [
+        [0.08, 0.16, 0.06], [-0.07, 0.19, 0.05], [0.03, 0.22, -0.08],
+        [-0.05, 0.15, -0.06], [0.06, 0.20, 0.08],
+      ];
+      appleOffsets.forEach(([ax, ay, az]) => {
+        const apple = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), appleMat);
+        apple.position.set(ax, ay, az);
+        oTree.add(apple);
+      });
+
+      this.interactiveTrees.push(oTree);
+      this.orchardGroup.add(oTree);
+    });
+
+    // Striped Wooden Beehives with Sloped Roof
+    this.beehiveGroup = new THREE.Group();
+    this.beehiveGroup.position.set(0.15, 0.04, 0.32);
+
+    const hiveMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.6 });
+    const hiveRoofMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.5 });
+    const hiveBase = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.07, 0.065), hiveMat);
+    hiveBase.position.y = 0.035;
+    hiveBase.castShadow = true;
+    this.beehiveGroup.add(hiveBase);
+
+    const hiveRoof = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.035, 4), hiveRoofMat);
+    hiveRoof.position.y = 0.085;
+    hiveRoof.rotation.y = Math.PI * 0.25;
+    hiveRoof.castShadow = true;
+    this.beehiveGroup.add(hiveRoof);
+    this.orchardGroup.add(this.beehiveGroup);
+
+    // Buzzing Honey Bees
+    const beeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+    for (let b = 0; b < 4; b++) {
+      const bee = new THREE.Mesh(new THREE.SphereGeometry(0.005, 4, 4), beeMat);
+      bee.position.set(2.50, 0.12 + b * 0.02, 0.45);
+      this.sceneryGroup.add(bee);
+      this.bees.push({
+        mesh: bee,
+        baseX: 2.50,
+        baseY: 0.12 + b * 0.02,
+        baseZ: 0.47,
+        speed: 2.2 + b * 0.6,
+        phase: b * 1.57,
+        radius: 0.06 + (b % 2) * 0.03,
+      });
+    }
+
+    // Cozy Wooden Park Bench Overlooking Canal
+    const benchGroup = new THREE.Group();
+    benchGroup.position.set(-0.25, 0.04, -0.20);
+    benchGroup.rotation.y = -Math.PI * 0.4;
+    const benchSeat = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.008, 0.035), fenceWoodMat);
+    benchSeat.position.y = 0.024;
+    benchGroup.add(benchSeat);
+    const benchBack = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.032, 0.006), fenceWoodMat);
+    benchBack.position.set(0, 0.042, -0.015);
+    benchGroup.add(benchBack);
+    this.orchardGroup.add(benchGroup);
+
+    this.sceneryGroup.add(this.orchardGroup);
+
+    // Expanded Wildflower Meadows (96 dots across outer landscape, ZERO flowers on track)
+    const flowerColors = [0xef4444, 0xfacc15, 0xffffff, 0xa855f7, 0x38bdf8];
+    for (let f = 0; f < 96; f++) {
+      const lobe = f % 2 === 0 ? -1.85 : 1.85;
+      const rad = 0.35 + (f % 6) * 0.18;
       const ang = f * 1.35;
       const fx = lobe + Math.cos(ang) * rad;
       const fz = Math.sin(ang) * rad;
 
       // Absolute safety: flowers must never spawn on or near the track
-      if (this.getApproxDistanceToTrack(fx, fz) < 0.35) continue;
+      if (this.getApproxDistanceToTrack(fx, fz) < 0.42) continue;
 
       const col = flowerColors[f % flowerColors.length];
       const flMat = new THREE.MeshBasicMaterial({ color: col });
@@ -3981,6 +4166,15 @@ export class ThreeStage {
         }
       }
 
+      // Check Orchard Beehives
+      if (this.beehiveGroup) {
+        const hiveHits = this.raycaster.intersectObject(this.beehiveGroup, true);
+        if (hiveHits.length > 0) {
+          this.triggerBeehiveBoop();
+          return;
+        }
+      }
+
       // Check Water
       if (this.waterMesh) {
         const waterHits = this.raycaster.intersectObject(this.waterMesh, true);
@@ -4026,6 +4220,7 @@ export class ThreeStage {
         ...(this.hotAirBalloonGroup ? [this.hotAirBalloonGroup] : []),
         ...(this.townFountainGroup ? [this.townFountainGroup] : []),
         ...(this.farmBarnGroup ? [this.farmBarnGroup] : []),
+        ...(this.beehiveGroup ? [this.beehiveGroup] : []),
       ];
 
       const hits = this.raycaster.intersectObjects(interactiveTargets, true);
@@ -4125,22 +4320,47 @@ export class ThreeStage {
 
   public triggerSheepHop(sheep: THREE.Group): void {
     this.audio.playSheepBleat();
+    const origY = sheep.position.y;
     gsap.to(sheep.position, {
-      y: 0.14,
-      duration: 0.18,
+      y: origY + 0.18,
+      duration: 0.22,
       yoyo: true,
       repeat: 1,
       ease: 'power2.out',
       onComplete: () => {
-        sheep.position.y = 0.04;
+        sheep.position.y = origY;
       },
     });
     gsap.to(sheep.rotation, {
-      y: '+=0.6',
-      duration: 0.18,
+      y: '+=' + Math.PI * 2,
+      duration: 0.44,
+      ease: 'back.out(1.5)',
+    });
+    gsap.to(sheep.scale, {
+      x: 1.25,
+      y: 0.82,
+      z: 1.25,
+      duration: 0.12,
       yoyo: true,
       repeat: 1,
-      ease: 'sine.inOut',
+    });
+  }
+
+  public triggerBeehiveBoop(): void {
+    if (!this.beehiveGroup) return;
+    this.audio.playChime(783.99, 0.08); // G5 cheerful buzz chime
+    gsap.killTweensOf(this.beehiveGroup.scale);
+    gsap.to(this.beehiveGroup.scale, {
+      x: 1.25,
+      y: 0.85,
+      z: 1.25,
+      duration: 0.12,
+      yoyo: true,
+      repeat: 3,
+      ease: 'power1.inOut',
+      onComplete: () => {
+        if (this.beehiveGroup) this.beehiveGroup.scale.set(1, 1, 1);
+      },
     });
   }
 
@@ -4380,9 +4600,6 @@ export class ThreeStage {
     p.vx = -tangent.x * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
     p.vy = 0.014 + Math.random() * 0.007;
     p.vz = -tangent.z * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
-
-    const isInsideTunnel = this.isTrainInTunnel();
-    this.audio.playSteamChuff(isInsideTunnel);
   }
 
   public isTrainInTunnel(): boolean {
@@ -5272,7 +5489,29 @@ export class ThreeStage {
       });
     }
 
-    // 9f. Dynamic Cinematic, Cab, Director & Trackside Camera System
+    // 9f. Atmospheric God-Rays & Swarming Honey Bees
+    if (this.godRaysGroup && this.godRaysGroup.children.length > 0) {
+      const rTime = Date.now() * 0.001;
+      const baseOp = this.isNightMode ? 0 : 0.16;
+      this.godRaysGroup.children.forEach((ray, i) => {
+        const mat = (ray as THREE.Mesh).material as THREE.MeshBasicMaterial;
+        if (mat) {
+          const pulse = Math.sin(rTime * 1.1 + i * 1.3) * 0.04;
+          mat.opacity = Math.max(0, baseOp + pulse);
+        }
+      });
+    }
+
+    if (this.bees.length > 0) {
+      const beeTime = Date.now() * 0.003;
+      this.bees.forEach((b) => {
+        b.mesh.position.x = b.baseX + Math.sin(beeTime * b.speed + b.phase) * b.radius;
+        b.mesh.position.z = b.baseZ + Math.cos(beeTime * b.speed + b.phase) * b.radius;
+        b.mesh.position.y = b.baseY + Math.sin(beeTime * 4 + b.phase) * 0.02;
+      });
+    }
+
+    // 9g. Dynamic Cinematic, Cab, Director & Trackside Camera System
     if (this.currentViewMode === 'director') {
       const now = performance.now();
       const dt = this.lastAnimTime ? (now - this.lastAnimTime) * 0.001 : 0.016;
@@ -5342,22 +5581,25 @@ export class ThreeStage {
       const rumbleRoll = Math.sin(rumbleFreq * 0.8) * 0.0015;
 
       // 3. Dynamic Obstacle / Tunnel Adaptation:
-      // Over-the-cab chase vantage point showing full locomotive in frame with track ahead!
-      // When inside viaduct arch underpass, smoothly dip camera to clear barrel vault ceiling safely.
+      // High-action over-the-cab chase vantage point showing full locomotive in frame with track ahead!
+      // Positioned directly above/behind engineer cab (-0.28, 0.32, 0.10).
+      // ZERO clipping inside trailing coach cars (which are at x <= -0.45), and clear view of rails ahead!
       const inTunnel = this.isTrainInTunnel();
-      const targetCamX = inTunnel ? -0.50 : -0.88;
-      const targetCamY = (inTunnel ? 0.28 : 0.46) + rumbleY;
-      const targetCamZ = inTunnel ? 0.08 : 0.22;
+      const onViaduct = (this.progress >= 0.38 && this.progress <= 0.62);
+
+      const targetCamX = inTunnel ? -0.16 : -0.28;
+      const targetCamY = (inTunnel ? 0.22 : (onViaduct ? 0.36 : 0.32)) + rumbleY;
+      const targetCamZ = inTunnel ? 0.04 : 0.10;
 
       const localCamPos = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
       const worldCamPos = this.locoCar.localToWorld(localCamPos);
 
       // Safe floor limit: never dip below ground
-      worldCamPos.y = Math.max(worldCamPos.y, 0.18);
+      worldCamPos.y = Math.max(worldCamPos.y, 0.22);
 
       // 4. Look target across locomotive hood towards rails ahead (with pitch on viaduct grade)
-      const targetLookX = inTunnel ? 0.85 : 0.68;
-      const targetLookY = 0.16 + (tCurr.y * 0.35); // Incline pitch following grade!
+      const targetLookX = inTunnel ? 0.90 : 1.05;
+      const targetLookY = 0.12 + (tCurr.y * 0.35); // Incline pitch following grade!
       const localLookTarget = new THREE.Vector3(targetLookX, targetLookY, 0);
       const worldLookTarget = this.locoCar.localToWorld(localLookTarget);
 

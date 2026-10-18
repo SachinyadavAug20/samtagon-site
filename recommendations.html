@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="css/variables.css?v=8.0">
   <link rel="stylesheet" href="css/base.css?v=8.0">
   <link rel="stylesheet" href="css/components.css?v=8.0">
-  <link rel="stylesheet" href="css/recommendations.css?v=2.0">
+  <link rel="stylesheet" href="css/recommendations.css?v=3.0">
   <!-- Theme Initialization -->
   <script>
     (function() {
@@ -79,7 +79,46 @@
     <div class="container">
       <div class="rec-hero-intro">
         <h1 class="rec-title">Game Recommendations</h1>
-        <p class="rec-subtitle">Discover iconic titles and find similar experiences tailored to your taste.</p>
+        <p class="rec-subtitle">Discover your gamer archetype, tailored Samtagon studio titles, and 12,000+ curated games.</p>
+      </div>
+
+      <!-- Interactive 10-Question Gamified Archetype Form & Profile Section -->
+      <div class="rec-quiz-wrapper" id="quiz-wrapper">
+        
+        <!-- State 1: Active 10-Question Form -->
+        <div id="quiz-active-box" class="quiz-box">
+          <div class="quiz-meta-bar">
+            <div class="quiz-pill-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>10-QUESTION GAMER ARCHETYPE FINDER</span>
+            </div>
+            <div class="quiz-step-indicator" id="quiz-step-indicator">Question 1 of 10</div>
+          </div>
+
+          <div class="quiz-track">
+            <div class="quiz-track-fill" id="quiz-track-fill" style="width: 10%;"></div>
+          </div>
+
+          <!-- Dynamic Question Body -->
+          <div class="quiz-body" id="quiz-body">
+            <!-- Injected dynamically by TypeScript -->
+          </div>
+
+          <!-- Quiz Navigation & Accessibility Controls -->
+          <div class="quiz-footer-row">
+            <button id="quiz-back-btn" class="quiz-action-btn" style="visibility: hidden;">
+              &larr; Previous Question
+            </button>
+            <div class="quiz-keys-hint">Keyboard: press <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, <kbd>4</kbd></div>
+            <a href="#search-section" class="quiz-skip-link">Explore 12,000 Games &darr;</a>
+          </div>
+        </div>
+
+        <!-- State 2: Tailored Profile & Arranged Samtagon Games (Saved in Cookies) -->
+        <div id="quiz-profile-box" class="quiz-profile-box" style="display: none;">
+          <!-- Injected dynamically by TypeScript with Profile Hero and Arranged Games Grid -->
+        </div>
+
       </div>
 
       <!-- Minimal Single-Line Search Bar (Zero box border, pure underline) -->
@@ -152,6 +191,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script type="module" src="dist/js/recommendations.bundle.js?v=2.0"></script>
+  <script type="module" src="dist/js/recommendations.bundle.js?v=3.0"></script>
 </body>
 </html>

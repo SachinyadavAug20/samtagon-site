@@ -1032,6 +1032,67 @@ export class ProceduralAudio {
       // ignore
     }
   }
+
+  /**
+   * Crisp, Tactile Quiz Selection Pop
+   */
+  public playQuizSelection(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.06); // A5
+
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Triumphant Archetype Reveal Fanfare (Pentatonic C Major Ascending Chord)
+   */
+  public playArchetypeFanfare(): void {
+    if (this.isMuted || !this.ctx || !this.masterGain) return;
+    try {
+      const now = this.ctx.currentTime;
+      const chords = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+      chords.forEach((freq, idx) => {
+        if (!this.ctx || !this.masterGain) return;
+        const t = now + idx * 0.09;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = idx === 3 ? 'sine' : 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+
+        const dur = idx === 3 ? 0.65 : 0.32;
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(0.18, t + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(t);
+        osc.stop(t + dur + 0.05);
+      });
+    } catch {
+      // ignore
+    }
+  }
 }
 
 

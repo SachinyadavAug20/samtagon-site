@@ -159,6 +159,29 @@ function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio):
     audio.playChime(660, 0.1);
   });
 
+  // 5b. Smooth Page Transition to Game Recommendations
+  const recBtn = document.getElementById('game-rec-engine-btn') || document.querySelector('a[href="recommendations.html"]');
+  recBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    audio.playChime(523.25, 0.08);
+    setTimeout(() => audio.playChime(659.25, 0.12), 90);
+    const mainEl = document.querySelector('.zen-page') as HTMLElement;
+    if (mainEl) {
+      gsap.to(mainEl, {
+        opacity: 0,
+        y: -14,
+        scale: 0.985,
+        duration: 0.28,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          window.location.href = 'recommendations.html';
+        },
+      });
+    } else {
+      window.location.href = 'recommendations.html';
+    }
+  });
+
   // 6. Game pills acoustic feedback
   document.querySelectorAll<HTMLAnchorElement>('.game-pill').forEach((pill, idx) => {
     const notes = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5]; // Pentatonic C scale
