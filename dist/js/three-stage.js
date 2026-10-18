@@ -162,8 +162,8 @@ export class ThreeStage {
         const height = this.container.clientHeight || 520;
         this.camera = new THREE.PerspectiveCamera(38, width / height, 0.02, 100);
         // Heroic isometric viewpoint with comfortable framing, generous breathing room and zero edge clipping
-        this.camera.position.set(5.0, 3.85, 5.0);
-        this.camera.lookAt(0, 0.10, -0.20);
+        this.camera.position.set(5.2, 4.4, 5.6);
+        this.camera.lookAt(0, 0.20, -0.30);
         // 2. High-Fidelity WebGL Renderer with Soft Shadow Mapping
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
@@ -184,10 +184,10 @@ export class ThreeStage {
         this.controls.autoRotate = false; // Strictly stationary by default!
         this.controls.autoRotateSpeed = 0;
         this.controls.minPolarAngle = Math.PI * 0.18; // Don't look straight down
-        this.controls.maxPolarAngle = Math.PI * 0.44; // Never look from below ground
+        this.controls.maxPolarAngle = Math.PI * 0.42; // Elevated diorama isometric angle
         this.controls.minDistance = 1.6; // Deep close-up zoom
         this.controls.maxDistance = 12.5; // Wide panoramic zoom-out
-        this.controls.target.set(0, 0.10, -0.20);
+        this.controls.target.set(0, 0.20, -0.30);
         // 4. Assemble Group Hierarchies
         this.scene.add(this.rootGroup);
         this.scene.add(this.celestialGroup);
@@ -317,7 +317,7 @@ export class ThreeStage {
         const tex = new THREE.CanvasTexture(canvas);
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(3, 3);
+        tex.repeat.set(6, 6);
         return tex;
     }
     createVolumetricBeamTexture() {
@@ -479,11 +479,84 @@ export class ThreeStage {
         this.celestialGroup.add(this.sunMesh);
     }
     /* =========================================================================
-       3. SCULPTED FLOATING ISLAND & SOFT CONTACT SHADOW
+       3a. UNIFIED CONTINUOUS ISLAND BOUNDARY SHAPE (ZERO GLITCH / ZERO Z-FIGHTING)
+       ========================================================================= */
+    createIslandShape() {
+        // Star-convex radial sample around diorama center of mass
+        const center = { x: 0, z: -0.2 };
+        const lobes = [
+            { x: -1.75, z: 0.0, r: 2.20 },
+            { x: 1.75, z: 0.0, r: 2.20 },
+            { x: -2.35, z: 1.45, r: 1.40 },
+            { x: -2.35, z: -1.45, r: 1.40 },
+            { x: 2.35, z: 1.45, r: 1.40 },
+            { x: 2.35, z: -1.45, r: 1.40 },
+            { x: -3.35, z: 0.0, r: 1.25 },
+            { x: 3.35, z: 0.0, r: 1.25 },
+            { x: -1.20, z: -2.60, r: 2.35 },
+            { x: -1.35, z: -2.95, r: 1.85 },
+            { x: 1.60, z: -2.10, r: 1.90 },
+            { x: 0.00, z: 1.40, r: 1.30 },
+            { x: 0.00, z: -0.30, r: 1.85 },
+        ];
+        const isInside = (x, z) => {
+            for (let i = 0; i < lobes.length; i++) {
+                const l = lobes[i];
+                const dx = x - l.x;
+                const dz = z - l.z;
+                if (dx * dx + dz * dz <= l.r * l.r)
+                    return true;
+            }
+            return false;
+        };
+        const N_SAMPLES = 120;
+        let rads = [];
+        for (let i = 0; i < N_SAMPLES; i++) {
+            const theta = (i / N_SAMPLES) * Math.PI * 2;
+            const dirX = Math.cos(theta);
+            const dirZ = Math.sin(theta);
+            let maxR = 0;
+            for (let r = 0.1; r <= 6.5; r += 0.01) {
+                const px = center.x + dirX * r;
+                const pz = center.z + dirZ * r;
+                if (isInside(px, pz)) {
+                    maxR = r;
+                }
+            }
+            rads.push(maxR);
+        }
+        // 3 passes of circular moving average smoothing (Laplacian smoothing)
+        for (let pass = 0; pass < 3; pass++) {
+            const smoothed = [];
+            for (let i = 0; i < N_SAMPLES; i++) {
+                const prev = rads[(i - 1 + N_SAMPLES) % N_SAMPLES];
+                const curr = rads[i];
+                const next = rads[(i + 1) % N_SAMPLES];
+                smoothed.push(0.25 * prev + 0.50 * curr + 0.25 * next);
+            }
+            rads = smoothed;
+        }
+        const shape = new THREE.Shape();
+        for (let i = 0; i < N_SAMPLES; i++) {
+            const theta = (i / N_SAMPLES) * Math.PI * 2;
+            const px = center.x + Math.cos(theta) * rads[i];
+            const pz = center.z + Math.sin(theta) * rads[i];
+            if (i === 0) {
+                shape.moveTo(px, pz);
+            }
+            else {
+                shape.lineTo(px, pz);
+            }
+        }
+        shape.closePath();
+        return shape;
+    }
+    /* =========================================================================
+       3. SCULPTED FLOATING ISLAND & SOFT CONTACT SHADOW (SINGLE CONTINUOUS MESH)
        ========================================================================= */
     buildSculptedIsland() {
         // 1. Soft Diffused Contact Shadow on Ground Floor (Organic circular falloff, ZERO corners)
-        const shadowGeo = new THREE.CircleGeometry(5.4, 64);
+        const shadowGeo = new THREE.CircleGeometry(6.4, 64);
         const shadowCanvas = document.createElement('canvas');
         shadowCanvas.width = 256;
         shadowCanvas.height = 256;
@@ -503,7 +576,7 @@ export class ThreeStage {
         });
         const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
         shadowMesh.rotation.x = -Math.PI * 0.5;
-        shadowMesh.position.y = -0.22;
+        shadowMesh.position.y = -0.26;
         this.sceneryGroup.add(shadowMesh);
         // 2. Sculpted Solid Island Base: Cream Limestone Bedrock + Lush Textured Meadow Turf
         const bedrockMat = new THREE.MeshStandardMaterial({
@@ -518,93 +591,40 @@ export class ThreeStage {
             roughness: 0.65,
             metalness: 0.02,
         });
-        const alpineTurfMat = new THREE.MeshStandardMaterial({
-            color: 0x418a4d, // Slightly deeper alpine meadow green
-            map: meadowTex,
-            roughness: 0.70,
-            metalness: 0.02,
-        });
+        const islandShape = this.createIslandShape();
         const baseHeight = 0.22;
-        const baseRadius = 1.80;
-        const centerOffset = 1.85;
-        // A. Left Lowland Bedrock Disc (West wing countryside lobe)
-        const leftBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.08, baseHeight, 52), bedrockMat);
-        leftBase.position.set(-centerOffset, -baseHeight * 0.5, 0);
-        leftBase.scale.set(1.0, 1.0, 0.94);
-        leftBase.receiveShadow = true;
-        this.sceneryGroup.add(leftBase);
-        // Left Grass Turf Cap
-        const leftTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 52), turfMat);
-        leftTurf.position.set(-centerOffset, 0.015, 0);
-        leftTurf.scale.set(1.0, 1.0, 0.94);
-        leftTurf.receiveShadow = true;
-        this.sceneryGroup.add(leftTurf);
-        // B. Right Lowland Bedrock Disc (East wing alpine village lobe)
-        const rightBase = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius, baseRadius + 0.08, baseHeight, 52), bedrockMat);
-        rightBase.position.set(centerOffset, -baseHeight * 0.5, 0);
-        rightBase.scale.set(1.0, 1.0, 0.94);
-        rightBase.receiveShadow = true;
-        this.sceneryGroup.add(rightBase);
-        // Right Grass Turf Cap
-        const rightTurf = new THREE.Mesh(new THREE.CylinderGeometry(baseRadius - 0.02, baseRadius, 0.035, 52), turfMat);
-        rightTurf.position.set(centerOffset, 0.015, 0);
-        rightTurf.scale.set(1.0, 1.0, 0.94);
-        rightTurf.receiveShadow = true;
-        this.sceneryGroup.add(rightTurf);
-        // C. Center Connecting Valley Isthmus
-        const centerBase = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, baseHeight, 1.70), bedrockMat);
-        centerBase.position.set(0, -baseHeight * 0.5, 0);
-        centerBase.receiveShadow = true;
-        this.sceneryGroup.add(centerBase);
-        const centerTurf = new THREE.Mesh(new THREE.BoxGeometry(centerOffset * 2, 0.035, 1.68), turfMat);
-        centerTurf.position.set(0, 0.015, 0);
-        centerTurf.receiveShadow = true;
-        this.sceneryGroup.add(centerTurf);
-        // D. SCULPTED ALPINE HIGHLAND BEDROCK LOBE (North-West peak foundation)
-        const alpineBaseRadius = 2.10;
-        const alpineBaseX = -1.20;
-        const alpineBaseZ = -2.60;
-        const alpineBedrock = new THREE.Mesh(new THREE.CylinderGeometry(alpineBaseRadius, alpineBaseRadius + 0.06, baseHeight, 48), bedrockMat);
-        alpineBedrock.position.set(alpineBaseX, -baseHeight * 0.5, alpineBaseZ);
-        alpineBedrock.receiveShadow = true;
-        this.sceneryGroup.add(alpineBedrock);
-        const alpineTurf = new THREE.Mesh(new THREE.CylinderGeometry(alpineBaseRadius - 0.02, alpineBaseRadius, 0.035, 48), alpineTurfMat);
-        alpineTurf.position.set(alpineBaseX, 0.015, alpineBaseZ);
-        alpineTurf.receiveShadow = true;
-        this.sceneryGroup.add(alpineTurf);
-        // E. NORTH-EAST RAILWAY SERVICE DEPOT LOBE (Dedicated plateau safely outside track)
-        const depotLobeR = 1.70;
-        const depotLobeX = 1.60;
-        const depotLobeZ = -2.10;
-        const depotBedrock = new THREE.Mesh(new THREE.CylinderGeometry(depotLobeR, depotLobeR + 0.06, baseHeight, 40), bedrockMat);
-        depotBedrock.position.set(depotLobeX, -baseHeight * 0.5, depotLobeZ);
-        depotBedrock.receiveShadow = true;
-        this.sceneryGroup.add(depotBedrock);
-        const depotTurf = new THREE.Mesh(new THREE.CylinderGeometry(depotLobeR - 0.02, depotLobeR, 0.035, 40), alpineTurfMat);
-        depotTurf.position.set(depotLobeX, 0.015, depotLobeZ);
-        depotTurf.receiveShadow = true;
-        this.sceneryGroup.add(depotTurf);
-        // F. SOUTH STATION PROMENADE APRON (Hugs the station platform cleanly without protruding wasteland)
-        const southLobeR = 0.72;
-        const southLobeX = 0.00;
-        const southLobeZ = 1.20;
-        const southBedrock = new THREE.Mesh(new THREE.CylinderGeometry(southLobeR, southLobeR + 0.06, baseHeight, 40), bedrockMat);
-        southBedrock.position.set(southLobeX, -baseHeight * 0.5, southLobeZ);
-        southBedrock.receiveShadow = true;
-        this.sceneryGroup.add(southBedrock);
-        const southTurf = new THREE.Mesh(new THREE.CylinderGeometry(southLobeR - 0.02, southLobeR, 0.035, 40), turfMat);
-        southTurf.position.set(southLobeX, 0.015, southLobeZ);
-        southTurf.receiveShadow = true;
-        this.sceneryGroup.add(southTurf);
-        // G. Gentle Rolling Meadow Hillocks & Undulations (Spread out across all lobes)
+        // A. Single Unified Extruded Limestone Bedrock (No overlapping primitives = 0% z-fighting!)
+        const bedrockGeo = new THREE.ExtrudeGeometry(islandShape, {
+            depth: baseHeight,
+            bevelEnabled: true,
+            bevelThickness: 0.02,
+            bevelSize: 0.04,
+            bevelSegments: 3,
+        });
+        const bedrockMesh = new THREE.Mesh(bedrockGeo, bedrockMat);
+        bedrockMesh.rotation.x = Math.PI * 0.5;
+        bedrockMesh.position.y = -0.02;
+        bedrockMesh.receiveShadow = true;
+        this.sceneryGroup.add(bedrockMesh);
+        // B. Single Unified Extruded Meadow Turf (Continuous seamless cap, 100% glitch-free)
+        const turfGeo = new THREE.ExtrudeGeometry(islandShape, {
+            depth: 0.035,
+            bevelEnabled: false,
+        });
+        const turfMesh = new THREE.Mesh(turfGeo, turfMat);
+        turfMesh.rotation.x = Math.PI * 0.5;
+        turfMesh.position.y = 0.035;
+        turfMesh.receiveShadow = true;
+        this.sceneryGroup.add(turfMesh);
+        // C. Gentle Rolling Meadow Hillocks & Undulations (Spread out across all lobes)
         const hillMat = turfMat;
         const knolls = [
-            { x: -2.25, y: 0.025, z: -0.45, r: 0.70, h: 0.040 }, // West Windmill knoll
-            { x: -2.05, y: 0.025, z: 0.25, r: 0.65, h: 0.035 }, // West Farmstead barn mound
-            { x: 2.05, y: 0.020, z: 0.00, r: 0.75, h: 0.030 }, // East Village Plaza knoll
-            { x: 2.45, y: 0.020, z: 0.30, r: 0.60, h: 0.030 }, // East Bakery garden mound
-            { x: 1.60, y: 0.025, z: -2.10, r: 0.75, h: 0.035 }, // North Depot plateau knoll
-            { x: 0.00, y: 0.020, z: 1.20, r: 0.60, h: 0.030 }, // South Station apron mound
+            { x: -2.25, y: 0.038, z: -0.45, r: 0.70, h: 0.045 }, // West Windmill knoll
+            { x: -2.05, y: 0.038, z: 0.25, r: 0.65, h: 0.040 }, // West Farmstead barn mound
+            { x: 2.05, y: 0.038, z: 0.00, r: 0.75, h: 0.035 }, // East Village Plaza knoll
+            { x: 2.45, y: 0.038, z: 0.30, r: 0.60, h: 0.035 }, // East Bakery garden mound
+            { x: 1.60, y: 0.038, z: -2.10, r: 0.75, h: 0.040 }, // North Depot plateau knoll
+            { x: 0.00, y: 0.038, z: 1.20, r: 0.60, h: 0.035 }, // South Station apron mound
         ];
         knolls.forEach((k) => {
             const knoll = new THREE.Mesh(new THREE.CylinderGeometry(k.r * 0.45, k.r, k.h, 18), hillMat);
@@ -612,7 +632,7 @@ export class ThreeStage {
             knoll.receiveShadow = true;
             this.sceneryGroup.add(knoll);
         });
-        // H. Stepping Stones & Promenade Paths (Connecting Station to Farmstead & Village)
+        // D. Stepping Stones & Promenade Paths (Connecting Station to Farmstead & Village)
         const gravelMat = new THREE.MeshStandardMaterial({
             color: 0xc8b898,
             roughness: 0.9,
@@ -626,8 +646,8 @@ export class ThreeStage {
             [-0.14, 0.16], [-0.08, 0.10], [0.0, 0.0], [0.08, -0.10], [0.14, -0.16],
         ];
         pathCoords.forEach(([px, pz], idx) => {
-            const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.052, 0.008, 7), gravelMat);
-            stone.position.set(px, 0.034, pz);
+            const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.052, 0.010, 7), gravelMat);
+            stone.position.set(px, 0.038, pz);
             stone.rotation.y = idx * 0.7;
             stone.receiveShadow = true;
             this.sceneryGroup.add(stone);
@@ -3879,15 +3899,15 @@ export class ThreeStage {
             this.controls.enabled = false;
             gsap.to(this.controls.target, {
                 x: 0,
-                y: 0.10,
-                z: -0.20,
+                y: 0.20,
+                z: -0.30,
                 duration: 0.85,
                 ease: 'power2.inOut',
             });
             gsap.to(this.camera.position, {
-                x: 5.0,
-                y: 3.85,
-                z: 5.0,
+                x: 5.2,
+                y: 4.4,
+                z: 5.6,
                 duration: 0.85,
                 ease: 'power2.inOut',
                 onComplete: () => {
