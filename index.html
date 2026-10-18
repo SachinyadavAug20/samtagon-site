@@ -173,24 +173,34 @@
     <div class="zen-diorama-wrap">
       <div id="three-viewport" class="zen-canvas-holder" title="Drag to orbit • Click to hop"></div>
 
+      <!-- Floating Mobile Cinema Status Badge & Cut Controller -->
+      <div id="mobile-cinema-badge" class="mobile-cinema-badge" style="display: none;">
+        <span class="cinema-badge-pulse"></span>
+        <span class="cinema-badge-title">Cinema Showcase</span>
+        <button id="cinema-cut-btn" class="cinema-cut-btn" aria-label="Cut to Next Angle">
+          <span>Cut</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
       <!-- Modernized Minimalist SVG Control Toolbar -->
       <div class="zen-diorama-ctrls">
-        <!-- Camera Presets -->
-        <div class="ctrl-dock-group" role="group" aria-label="Camera Presets">
+        <!-- Camera Showcase Presets -->
+        <div class="ctrl-dock-group ctrl-dock-cameras" role="group" aria-label="Camera Showcase Presets">
           <button class="stage-icon-btn active" data-view="isometric" aria-label="Isometric Orbit [1]" title="Isometric Orbit [1]">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/>
               <path d="M12 11l8-4.5M12 11v9M12 11L4 6.5"/>
             </svg>
           </button>
-          <button class="stage-icon-btn" data-view="top" aria-label="Top-Down Plan [2]" title="Top-Down Plan [2]">
+          <button class="stage-icon-btn btn-desktop-only" data-view="top" aria-label="Top-Down Plan [2]" title="Top-Down Plan [2]">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="9"/>
               <line x1="12" y1="3" x2="12" y2="21"/>
               <line x1="3" y1="12" x2="21" y2="12"/>
             </svg>
           </button>
-          <button class="stage-icon-btn" data-view="engine" aria-label="Train Engine Mode [3]" title="Train Engine Mode [3]">
+          <button class="stage-icon-btn" data-view="engine" aria-label="Chase Ride Action [3]" title="Chase Ride Action [3]">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 15h16M3 11h11v4H3zM14 7h4v8h-4zM6 7v4M18 11h3l1 4h-4"/>
               <circle cx="7" cy="18" r="2.2"/>
@@ -198,7 +208,7 @@
               <path d="M7 18h8M9 4a1.5 1.5 0 0 1 2 1.5"/>
             </svg>
           </button>
-          <button class="stage-icon-btn" data-view="director" aria-label="Director Film Cuts [4]" title="Director Film Cuts [4]">
+          <button class="stage-icon-btn" data-view="director" aria-label="Cinema Director Film Cuts [4]" title="Cinema Director Cuts [4]">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3.5"/>
               <path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>
@@ -212,8 +222,8 @@
           </button>
         </div>
 
-        <!-- Speed Presets -->
-        <div class="ctrl-dock-group" role="group" aria-label="Train Speed">
+        <!-- Speed Presets (Desktop) -->
+        <div class="ctrl-dock-group ctrl-dock-speed" role="group" aria-label="Train Speed">
           <button class="stage-speed-btn active" data-speed="1" title="Cruising Speed (1x)">1&times;</button>
           <button class="stage-speed-btn" data-speed="2" title="Express Speed (2x)">2&times;</button>
           <button class="stage-speed-btn" data-speed="3.6" title="Fast Turbo (Wheee!)">
@@ -221,7 +231,7 @@
           </button>
         </div>
 
-        <!-- Whistle Button (Authentic Steam Whistle - distinct from audio volume toggle) -->
+        <!-- Whistle Button (Authentic Steam Whistle) -->
         <button id="whistle-btn" class="stage-icon-btn stage-whistle-btn" aria-label="Toot Steam Whistle [Space]" title="Toot Whistle [Space]">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 14a4 4 0 0 0 7.8 1.2L16 11V7h-4.8L9 8.2A4 4 0 0 0 4 14z"/>

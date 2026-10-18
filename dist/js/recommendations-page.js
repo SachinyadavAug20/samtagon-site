@@ -10,6 +10,7 @@
  */
 import { ProceduralAudio } from './audio-synth.js';
 import { CatalogEngine } from './catalog-engine.js';
+import { OpenRouterEmbedder } from './openrouter-embed.js';
 import gsap from 'gsap';
 const COOKIE_KEY = 'samtagon_gamer_profile';
 const ARCHETYPES = {
@@ -327,6 +328,8 @@ class RecommendationsApp {
     filterMultiplayerBtn;
     filterTopRatedBtn;
     filterRandomBtn;
+    filterNeuralBtn;
+    neuralStatusDot;
     // Quiz State
     currentQuestionIndex = 0;
     userAnswers = [];
@@ -372,6 +375,8 @@ class RecommendationsApp {
         this.filterMultiplayerBtn = document.getElementById('filter-multiplayer-btn');
         this.filterTopRatedBtn = document.getElementById('filter-toprated-btn');
         this.filterRandomBtn = document.getElementById('filter-random-btn');
+        this.filterNeuralBtn = document.getElementById('filter-neural-btn');
+        this.neuralStatusDot = document.getElementById('neural-status-dot');
         this.quizActiveBox = document.getElementById('quiz-active-box');
         this.quizProfileBox = document.getElementById('quiz-profile-box');
         this.quizStepIndicator = document.getElementById('quiz-step-indicator');
@@ -586,6 +591,50 @@ class RecommendationsApp {
             setTimeout(() => this.audio.playChime(1046.5, 0.08), 80);
             this.goToPage(randomTarget);
         });
+        // 5. Neural AI Vector Search Controller (OpenRouter)
+        this.updateNeuralUI();
+        this.filterNeuralBtn?.addEventListener('click', () => {
+            this.audio.playQuizSelection();
+            const existingKey = OpenRouterEmbedder.getApiKey();
+            if (existingKey) {
+                const change = confirm(`Neural AI Search is ACTIVE with OpenRouter.\nModel: ${OpenRouterEmbedder.getModel()}\n\nWould you like to clear or change your API key?`);
+                if (change) {
+                    const newKey = prompt('Enter new OpenRouter API Key (leave empty to reset):', existingKey);
+                    if (newKey !== null) {
+                        OpenRouterEmbedder.setApiKey(newKey);
+                        this.updateNeuralUI();
+                        this.loadCatalog();
+                    }
+                }
+            }
+            else {
+                const enteredKey = prompt('Connect OpenRouter Neural Vector Search:\n\n' +
+                    '1. Add OPENROUTER_API_KEY in your .env file, or\n' +
+                    '2. Paste your OpenRouter API Key below (stored locally in browser):\n\n' +
+                    'Get your API key at https://openrouter.ai/keys');
+                if (enteredKey && enteredKey.trim().length > 0) {
+                    OpenRouterEmbedder.setApiKey(enteredKey.trim());
+                    this.updateNeuralUI();
+                    this.loadCatalog();
+                }
+            }
+        });
+    }
+    updateNeuralUI() {
+        const hasKey = OpenRouterEmbedder.isAvailable();
+        if (this.neuralStatusDot) {
+            this.neuralStatusDot.style.display = hasKey ? 'block' : 'none';
+        }
+        if (this.filterNeuralBtn) {
+            if (hasKey) {
+                this.filterNeuralBtn.classList.add('neural-active');
+                this.filterNeuralBtn.title = `Neural AI Vector Search Active (OpenRouter / ${OpenRouterEmbedder.getModel()})`;
+            }
+            else {
+                this.filterNeuralBtn.classList.remove('neural-active');
+                this.filterNeuralBtn.title = 'Neural AI Vector Search (Click to connect OpenRouter API Key)';
+            }
+        }
     }
     setupSmoothPageTransitions() {
         // Page load gentle entrance
@@ -1030,8 +1079,9 @@ class RecommendationsApp {
     /**
      * Load and render the current page of games or search results
      */
-    loadCatalog() {
-        const isSearching = this.currentQuery.trim().length > 0;
+    async loadCatalog() {
+        const querySnapshot = this.currentQuery.trim();
+        const isSearching = querySnapshot.length > 0;
         const result = CatalogEngine.searchCatalog(this.currentQuery, this.currentPage);
         this.currentMatches = result.matches;
         this.totalPages = result.totalPages;
@@ -1052,6 +1102,21 @@ class RecommendationsApp {
         this.renderGamesGrid(this.currentMatches, isSearching);
         // Render Pagination Bar
         this.renderPaginationBar();
+        // Asynchronous Neural Vector re-ranking when OpenRouter is available
+        if (isSearching && OpenRouterEmbedder.isAvailable()) {
+            const neuralResult = await CatalogEngine.searchCatalogNeural(querySnapshot, this.currentPage);
+            // Only apply if user hasn't typed a different query during the request
+            if (neuralResult && this.currentQuery.trim() === querySnapshot) {
+                this.currentMatches = neuralResult.matches;
+                this.totalPages = neuralResult.totalPages;
+                this.totalCount = neuralResult.totalCount;
+                if (this.resultCountSpan) {
+                    this.resultCountSpan.innerHTML = `✨ Neural AI Match &bull; ${this.totalCount} titles &bull; Page ${this.currentPage} of ${this.totalPages}`;
+                }
+                this.renderGamesGrid(this.currentMatches, isSearching);
+                this.renderPaginationBar();
+            }
+        }
     }
     /**
      * Navigate to target page

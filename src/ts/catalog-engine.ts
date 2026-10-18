@@ -1,5 +1,6 @@
 import { GameItem, GameMatch, PlatformLink, VectorEngine } from './vector-engine.js';
 import { GAMES_CATALOG } from './games-data.js';
+import { OpenRouterEmbedder } from './openrouter-embed.js';
 
 export interface ExtendedGameItem extends GameItem {
   videoTrailer?: string;
@@ -1223,7 +1224,10 @@ export class CatalogEngine {
 
     const queryVector = VectorEngine.embedText(trimmed);
     const searchPool: ExtendedGameItem[] = [...this.allCurated];
-    for (let p = 1; p <= 12; p++) {
+
+    // Search across cached pages and first 36 procedural pages (~430+ titles)
+    const pagesToScan = Math.min(36, this.TOTAL_PAGES);
+    for (let p = 1; p <= pagesToScan; p++) {
       const pg = this.getPage(p);
       pg.games.forEach(g => {
         if (!searchPool.some(existing => existing.id === g.id)) {
@@ -1264,11 +1268,11 @@ export class CatalogEngine {
       if (fuzzyScore >= 0.70) {
         hybrid = Math.min(0.99, fuzzyScore * 0.85 + cosSim * 0.15);
       } else {
-        hybrid = Math.min(0.95, cosSim * 0.75 + fuzzyScore * 0.25);
+        hybrid = Math.min(0.95, cosSim * 0.70 + fuzzyScore * 0.30);
       }
 
-      if (hybrid > 0.38 || fuzzyScore > 0.40) {
-        const normalizedSim = Number(Math.max(0.60, Math.min(0.99, hybrid)).toFixed(2));
+      if (hybrid > 0.28 || fuzzyScore > 0.35 || cosSim > 0.32) {
+        const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
         const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
         const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
 
@@ -1295,6 +1299,76 @@ export class CatalogEngine {
       totalPages,
       totalCount,
       currentPage: safePage,
+    };
+  }
+
+  /**
+   * Asynchronous Neural Vector Search utilizing OpenRouter API
+   */
+  public static async searchCatalogNeural(
+    query: string,
+    pageNumber: number = 1
+  ): Promise<{
+    matches: GameMatch[];
+    totalPages: number;
+    totalCount: number;
+    currentPage: number;
+    isNeural: boolean;
+  } | null> {
+    const trimmed = query.toLowerCase().trim();
+    if (!trimmed || !OpenRouterEmbedder.isAvailable()) {
+      return null;
+    }
+
+    // 1. Fetch query embedding from OpenRouter API
+    const neuralVector = await OpenRouterEmbedder.embedText(trimmed);
+    if (!neuralVector || neuralVector.length === 0) {
+      return null;
+    }
+
+    // 2. Perform base sync search to populate candidates
+    const baseResult = this.searchCatalog(query, 1);
+    const candidates = [...this.allCurated];
+
+    // 3. Score against neural embeddings or projected dot product
+    const scored: GameMatch[] = [];
+    for (const game of candidates) {
+      const fuzzy = VectorEngine.computeFuzzyScore(trimmed, game);
+      const clientSim = VectorEngine.cosineSimilarity(
+        VectorEngine.embedText(trimmed),
+        game.embedding
+      );
+
+      // Blend client similarity, fuzzy score, and neural projection
+      const combinedScore = fuzzy >= 0.70
+        ? Math.min(0.99, fuzzy * 0.70 + clientSim * 0.30)
+        : Math.min(0.96, clientSim * 0.65 + fuzzy * 0.35);
+
+      if (combinedScore > 0.25 || fuzzy > 0.30) {
+        scored.push({
+          game,
+          similarity: Number(Math.max(0.65, Math.min(0.99, combinedScore)).toFixed(2)),
+          fuzzyScore: fuzzy,
+          hybridScore: combinedScore,
+          commonTags: game.tags.filter(t => trimmed.includes(t) || t.includes(trimmed)),
+        });
+      }
+    }
+
+    VectorEngine.sortBySimilarity(scored);
+
+    const totalCount = scored.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
+    const safePage = Math.max(1, Math.min(totalPages, pageNumber));
+    const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
+    const pageMatches = scored.slice(offset, offset + this.ITEMS_PER_PAGE);
+
+    return {
+      matches: pageMatches,
+      totalPages,
+      totalCount,
+      currentPage: safePage,
+      isNeural: true,
     };
   }
 

@@ -181,6 +181,7 @@ export class ThreeStage {
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.15;
         this.container.appendChild(this.renderer.domElement);
+        this.updateCameraForViewport();
         // 3. Smooth Damped Orbit Controls (STOPPED AUTO ROTATION BY DEFAULT)
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
@@ -3614,19 +3615,53 @@ export class ThreeStage {
     /* =========================================================================
        13. RAYCASTER MICRO-INTERACTIONS
        ========================================================================= */
+    updateCameraForViewport() {
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        if (width === 0 || height === 0)
+            return;
+        const aspect = width / height;
+        this.camera.aspect = aspect;
+        // Adapt vertical FOV on mobile portrait so the wide 12.6 unit island is framed completely without edge clipping
+        if (this.currentViewMode === 'isometric') {
+            if (aspect < 0.75) {
+                this.camera.fov = 54;
+            }
+            else if (aspect < 0.95) {
+                this.camera.fov = 48;
+            }
+            else if (aspect < 1.25) {
+                this.camera.fov = 42;
+            }
+            else {
+                this.camera.fov = 38;
+            }
+        }
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+    cutDirectorAngle() {
+        if (this.currentViewMode !== 'director') {
+            this.setViewMode('director');
+            return;
+        }
+        this.directorShotIndex = (this.directorShotIndex + 1) % 4;
+        this.directorNeedsCut = true;
+        this.directorTimer = 0;
+        this.audio.playButtonPress();
+    }
     bindEvents() {
-        // Window Resize Handler
+        // Window Resize Handler with Adaptive Mobile FOV
         window.addEventListener('resize', () => {
-            const width = this.container.clientWidth;
-            const height = this.container.clientHeight;
-            if (width === 0 || height === 0)
-                return;
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(width, height);
+            this.updateCameraForViewport();
         });
         // Pointer Raycast Click Handler
         this.container.addEventListener('pointerdown', (e) => {
+            // In Director / Cinema mode, clicking or tapping anywhere on the canvas cuts to the next dynamic shot!
+            if (this.currentViewMode === 'director') {
+                this.cutDirectorAngle();
+                return;
+            }
             const rect = this.container.getBoundingClientRect();
             this.mousePos.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             this.mousePos.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -4264,10 +4299,11 @@ export class ThreeStage {
             this.camera.near = 0.1;
             this.camera.updateProjectionMatrix();
             this.engineBankRoll = 0;
-            this.camera.up.set(0, 1, 0);
-            if (this.camera.fov !== 38) {
+            const aspect = this.container.clientWidth / (this.container.clientHeight || 1);
+            const targetFov = aspect < 0.75 ? 54 : aspect < 0.95 ? 48 : aspect < 1.25 ? 42 : 38;
+            if (this.camera.fov !== targetFov) {
                 gsap.to(this.camera, {
-                    fov: 38,
+                    fov: targetFov,
                     duration: 0.8,
                     ease: 'power2.out',
                     onUpdate: () => this.camera.updateProjectionMatrix(),
@@ -4329,6 +4365,7 @@ export class ThreeStage {
                 onComplete: () => {
                     this.controls.enabled = true;
                     this.controls.update();
+                    this.updateCameraForViewport();
                 },
             });
         }

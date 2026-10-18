@@ -94,6 +94,8 @@ function setupZenInteractions(stage, audio) {
     });
     // 2. Stage View Presets (Isometric, Top-Down, Cab, Cinematic, Director, Trackside)
     const viewBtns = document.querySelectorAll('[data-view]');
+    const cinemaBadge = document.getElementById('mobile-cinema-badge');
+    const cinemaCutBtn = document.getElementById('cinema-cut-btn');
     viewBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             viewBtns.forEach((b) => b.classList.remove('active'));
@@ -101,7 +103,14 @@ function setupZenInteractions(stage, audio) {
             const view = btn.dataset.view;
             stage?.setViewMode(view);
             audio.playButtonPress();
+            if (cinemaBadge) {
+                cinemaBadge.style.display = view === 'director' ? 'inline-flex' : 'none';
+            }
         });
+    });
+    cinemaCutBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        stage?.cutDirectorAngle();
     });
     // 3. Train Speed Presets (1x, 2x, Wheee!)
     const speedBtns = document.querySelectorAll('[data-speed]');

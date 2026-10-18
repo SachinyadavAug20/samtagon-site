@@ -1,37 +1,134 @@
-/* Responsive Styles for Zen Minimal Layout */
+/* Responsive Styles for Zen Minimal Layout & Native Mobile Showcase */
 
 @media (max-width: 640px) {
   .zen-page {
-    padding: 28px 18px 36px;
+    padding: 16px 16px 32px;
   }
 
+  /* Single-row native mobile top bar */
   .zen-header {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
+    padding: 0 2px;
   }
 
-  .zen-title {
-    font-size: 2.15rem;
-  }
-
-  .zen-desc {
-    font-size: 0.98rem;
-  }
-
-  .zen-canvas-holder {
-    height: 300px;
-  }
-
-  .zen-actions {
-    flex-direction: column;
-    width: 100%;
+  .zen-brand {
     gap: 10px;
   }
 
-  .zen-actions .btn {
+  .zen-logo-svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .zen-brand-name {
+    font-size: 1.05rem;
+  }
+
+  .zen-brand-sub {
+    font-size: 0.58rem;
+  }
+
+  .zen-theme-toggle {
+    width: 38px;
+    height: 38px;
+  }
+
+  .zen-title {
+    font-size: 1.85rem;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+
+  .zen-desc {
+    font-size: 0.92rem;
+  }
+
+  /* High-presence showcase diorama viewport */
+  .zen-canvas-holder {
+    height: clamp(380px, 48vh, 460px);
+    touch-action: none;
+  }
+
+  /* Mobile Showcase Dock: "Less control, more showcase" */
+  .zen-diorama-ctrls {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  /* Hide technical speed presets and 2D CAD plan on mobile */
+  .ctrl-dock-speed,
+  .btn-desktop-only {
+    display: none !important;
+  }
+
+  /* Frosted Glass Floating Showcase Pill Bar */
+  .ctrl-dock-cameras {
+    background: rgba(14, 17, 23, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    padding: 4px 6px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    gap: 4px;
+  }
+
+  .stage-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    transition: transform 0.15s ease, background-color var(--transition-fast);
+  }
+
+  .stage-icon-btn:active {
+    transform: scale(0.92);
+  }
+
+  .stage-whistle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    background: rgba(14, 17, 23, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Floating Cinema Badge on Mobile */
+  .mobile-cinema-badge {
+    top: 12px;
+    padding: 5px 12px 5px 10px;
+  }
+
+  /* Touch-optimized Full Width CTAs */
+  .zen-actions {
+    flex-direction: column;
     width: 100%;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .zen-actions .zen-btn {
+    width: 100%;
+    height: 50px;
+    border-radius: 12px;
+    font-size: 0.96rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    transition: transform 0.12s ease;
+  }
+
+  .zen-actions .zen-btn:active {
+    transform: scale(0.98);
   }
 
   .games-pill-list {

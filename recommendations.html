@@ -39,13 +39,15 @@
   <!-- Minimalist Top Navigation with Mode Tabs -->
   <div class="rec-top-bar">
     <div class="container top-nav-container">
-      <a href="index.html" class="rec-back-btn" aria-label="Home" title="Home">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        <span>Home</span>
-      </a>
+      <div class="top-nav-side-left">
+        <a href="index.html" class="rec-back-btn" aria-label="Home" title="Home">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Home</span>
+        </a>
+      </div>
 
       <!-- Central Mode Switcher Tabs -->
       <nav class="rec-nav-tabs" role="tablist" aria-label="Recommendation modes">
@@ -190,6 +192,13 @@
                   <circle cx="16" cy="8" r="1.5" fill="currentColor"></circle>
                   <circle cx="8" cy="16" r="1.5" fill="currentColor"></circle>
                 </svg>
+              </button>
+
+              <button id="filter-neural-btn" class="search-ctrl-btn" data-mode="neural" title="Neural AI Vector Search (OpenRouter API)" aria-label="Neural AI Vector Search">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                <span class="neural-badge-dot" id="neural-status-dot" style="display: none;"></span>
               </button>
 
               <button id="clear-search-btn" class="search-ctrl-btn clear-search-btn" title="Reset Search" aria-label="Clear search" style="display: none;">

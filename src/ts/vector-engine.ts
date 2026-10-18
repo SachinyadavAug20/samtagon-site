@@ -441,10 +441,39 @@ export class VectorEngine {
     // Exact match
     if (titleLower === queryLower) return 1.0;
 
+    // Compact alphanumeric match (e.g. "mine craft" -> "minecraft", "counter strike" -> "counterstrike")
+    const compactQuery = queryLower.replace(/[^a-z0-9]/g, '');
+    const compactTitle = titleLower.replace(/[^a-z0-9]/g, '');
+    if (compactQuery.length >= 3) {
+      if (compactTitle === compactQuery) return 0.99;
+      if (compactTitle.includes(compactQuery)) return 0.95;
+    }
+
     // Substring match
     if (titleLower.includes(queryLower)) return 0.92;
 
     const titleWords = titleLower.split(/[\s:,-]+/).filter(Boolean);
+    const queryTokens = queryLower.split(/[\s:,-]+/).filter(Boolean);
+
+    // Multi-token query matching (e.g. "red dead", "zelda tears", "action shooter")
+    if (queryTokens.length > 1) {
+      let matchedCount = 0;
+      for (const token of queryTokens) {
+        if (token.length < 2) continue;
+        const inTitle = titleWords.some(tw => tw.includes(token) || token.includes(tw));
+        const inTags = game.tags.some(t => t.toLowerCase().includes(token));
+        const inGenres = game.genres.some(g => g.toLowerCase().includes(token));
+        if (inTitle || inTags || inGenres) {
+          matchedCount++;
+        }
+      }
+      const tokenRatio = matchedCount / queryTokens.length;
+      if (tokenRatio === 1.0) {
+        return 0.93;
+      } else if (tokenRatio >= 0.5) {
+        return 0.72 * tokenRatio;
+      }
+    }
 
     // Acronym match (e.g. GTA -> Grand Theft Auto, LoL -> League of Legends, RDR -> Red Dead Redemption)
     const acronym = titleWords.map((w) => w[0]).join('');
