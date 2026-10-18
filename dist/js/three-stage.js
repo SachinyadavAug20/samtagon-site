@@ -138,7 +138,7 @@ export class ThreeStage {
     steamTimer = 0;
     // Track Curve & Physics
     trackCurve;
-    progress = 0;
+    progress = 0.62; // Starts prominently on scenic foreground meadow
     trainSpeed = 0.0016;
     speedMultiplier = 1.0;
     // Interactive Props
@@ -3823,21 +3823,23 @@ export class ThreeStage {
                 ease: 'power2.out',
                 onUpdate: () => this.camera.updateProjectionMatrix(),
             });
-            // Mount camera directly in front of the locomotive pilot looking forward down the rails (100% obstruction-free, zero clipping!)
-            const localCamPos = new THREE.Vector3(0.32, 0.20, 0);
+            // Over-the-cab chase vantage point showing full locomotive in frame with rails stretching ahead!
+            const localCamPos = new THREE.Vector3(-0.88, 0.46, 0.22);
             const initialCamPos = this.locoCar.localToWorld(localCamPos.clone());
-            const localLookTarget = new THREE.Vector3(1.8, 0.12, 0);
+            const localLookTarget = new THREE.Vector3(0.68, 0.16, 0.0);
             const initialLookTarget = this.locoCar.localToWorld(localLookTarget.clone());
             gsap.killTweensOf(this.camera.position);
             gsap.killTweensOf(this.controls.target);
             this.camera.position.copy(initialCamPos);
             this.camera.lookAt(initialLookTarget);
             this.controls.target.copy(initialLookTarget);
-            // In engine view, hide volumetric additive cylinders so they don't cover the camera lens in yellow fog!
-            if (this.headlampBeam)
-                this.headlampBeam.visible = false;
-            if (this.headlampCoreBeam)
-                this.headlampCoreBeam.visible = false;
+            // In chase view, headlamp beams project forward ahead of camera, so enable at night!
+            if (this.isNightMode) {
+                if (this.headlampBeam)
+                    this.headlampBeam.visible = true;
+                if (this.headlampCoreBeam)
+                    this.headlampCoreBeam.visible = true;
+            }
             if (this.headlampTrackPool)
                 this.headlampTrackPool.visible = true;
             if (this.headlampSpotLight)
@@ -4708,33 +4710,45 @@ export class ThreeStage {
             }
         }
         else if (this.currentViewMode === 'cinematic' || this.currentViewMode === 'engine') {
-            // 1. Subtle, gentle track curvature banking (strictly clamped to avoid nauseating tilts)
+            // 1. Realistic Curvature Banking & Dynamic Physics Tilt
             const uCurr = this.progress;
             const uAhead = (this.progress + 0.024) % 1.0;
             const tCurr = this.trackCurve.getTangentAt(uCurr).normalize();
             const tAhead = this.trackCurve.getTangentAt(uAhead).normalize();
+            // Signed 2D curvature rate (turning velocity into corner)
             const curveRate = (tCurr.x * tAhead.z - tCurr.z * tAhead.x);
-            // Gentle banking roll (maximum ±0.025 radians ~ 1.4 degrees)
-            const targetRoll = Math.max(-0.025, Math.min(0.025, -curveRate * 1.5));
-            this.engineBankRoll += (targetRoll - this.engineBankRoll) * 0.08;
-            // 2. High-speed mechanical rumble and track joint vibration
-            const rumbleY = Math.sin(Date.now() * 0.026 * this.speedMultiplier) * 0.0012;
-            // 3. Front Pilot Hood Camera (100% obstruction-free, zero clipping!)
-            // Mounted directly in front of pilot cowcatcher looking forward down the rails
-            const localCamPos = new THREE.Vector3(0.32, 0.20 + rumbleY, 0);
-            const worldCamPos = this.locoCar.localToWorld(localCamPos.clone());
-            // Safe floor limit: never dip below ground level
+            // Centrifugal physics tilt: rolls into the turn, responsive to speed multiplier
+            const bankStrength = 2.0 * Math.min(this.speedMultiplier, 2.5);
+            const targetRoll = Math.max(-0.09, Math.min(0.09, -curveRate * bankStrength));
+            this.engineBankRoll += (targetRoll - this.engineBankRoll) * 0.12;
+            // 2. High-speed mechanical suspension rumble & rail joint vibration
+            const rumbleFreq = Date.now() * 0.028 * this.speedMultiplier;
+            const rumbleY = (Math.sin(rumbleFreq) * 0.0016 + Math.cos(rumbleFreq * 0.5) * 0.0008);
+            const rumbleRoll = Math.sin(rumbleFreq * 0.8) * 0.0015;
+            // 3. Dynamic Obstacle / Tunnel Adaptation:
+            // Over-the-cab chase vantage point showing full locomotive in frame with track ahead!
+            // When inside viaduct arch underpass, smoothly dip camera to clear barrel vault ceiling safely.
+            const inTunnel = this.isTrainInTunnel();
+            const targetCamX = inTunnel ? -0.50 : -0.88;
+            const targetCamY = (inTunnel ? 0.28 : 0.46) + rumbleY;
+            const targetCamZ = inTunnel ? 0.08 : 0.22;
+            const localCamPos = new THREE.Vector3(targetCamX, targetCamY, targetCamZ);
+            const worldCamPos = this.locoCar.localToWorld(localCamPos);
+            // Safe floor limit: never dip below ground
             worldCamPos.y = Math.max(worldCamPos.y, 0.18);
-            // 4. Forward look target along locomotive's centerline ahead
-            const localLookTarget = new THREE.Vector3(1.8, 0.12, 0);
-            const worldLookTarget = this.locoCar.localToWorld(localLookTarget.clone());
-            // Smooth camera interpolation for fluid cinematic tracking
-            this.camera.position.lerp(worldCamPos, 0.25);
+            // 4. Look target across locomotive hood towards rails ahead (with pitch on viaduct grade)
+            const targetLookX = inTunnel ? 0.85 : 0.68;
+            const targetLookY = 0.16 + (tCurr.y * 0.35); // Incline pitch following grade!
+            const localLookTarget = new THREE.Vector3(targetLookX, targetLookY, 0);
+            const worldLookTarget = this.locoCar.localToWorld(localLookTarget);
+            // 5. Elastic Spring-Damper Follow Camera (Authentic vehicle mass & momentum)
+            this.camera.position.lerp(worldCamPos, 0.18);
             this.camera.up.set(0, 1, 0);
             this.camera.lookAt(worldLookTarget);
-            // Gentle banking roll along line of sight
-            if (Math.abs(this.engineBankRoll) > 0.001) {
-                this.camera.rotateZ(this.engineBankRoll);
+            // 6. Realistic Physics Tilt: Curvature Banking + Suspension Vibration
+            const effectiveRoll = this.engineBankRoll + rumbleRoll;
+            if (Math.abs(effectiveRoll) > 0.0005) {
+                this.camera.rotateZ(effectiveRoll);
             }
             this.controls.target.copy(worldLookTarget);
         }
@@ -4748,6 +4762,13 @@ export class ThreeStage {
         }
         else {
             this.controls.update();
+            // Subtle responsive 3D tilt towards mouse cursor in isometric view for physical tactile feel
+            if (this.currentViewMode === 'isometric') {
+                const targetRotZ = (this.mousePos.x || 0) * 0.015;
+                const targetRotX = -(this.mousePos.y || 0) * 0.015;
+                this.rootGroup.rotation.z += (targetRotZ - this.rootGroup.rotation.z) * 0.05;
+                this.rootGroup.rotation.x += (targetRotX - this.rootGroup.rotation.x) * 0.05;
+            }
         }
         this.lastAnimTime = performance.now();
         // 10. Subtle Diorama Floating Levitation
