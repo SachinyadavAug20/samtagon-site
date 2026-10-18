@@ -1234,9 +1234,31 @@ export class CatalogEngine {
 
     const scoredMatches: GameMatch[] = [];
 
+    const isControllerQuery = trimmed === 'controller' || trimmed === 'gamepad';
+    const isTopRatedQuery = trimmed === 'toprated' || trimmed === 'top rated' || trimmed === '99%' || trimmed === '100%';
+    const isMultiplayerQuery = trimmed === 'co-op' || trimmed === 'multiplayer';
+
     for (const game of searchPool) {
-      const cosSim = VectorEngine.cosineSimilarity(queryVector, game.embedding);
-      const fuzzyScore = VectorEngine.computeFuzzyScore(trimmed, game);
+      let cosSim = VectorEngine.cosineSimilarity(queryVector, game.embedding);
+      let fuzzyScore = VectorEngine.computeFuzzyScore(trimmed, game);
+
+      if (isControllerQuery) {
+        const hasAction = game.genres.some(g => /action|shooter|rpg|adventure|combat|platform/i.test(g)) ||
+                          game.tags.some(t => /action|controller|gamepad|fps|rpg|combat/i.test(t));
+        if (hasAction) {
+          fuzzyScore = Math.max(fuzzyScore, 0.92);
+        }
+      } else if (isTopRatedQuery) {
+        if (game.rating >= 4.90) {
+          fuzzyScore = Math.max(fuzzyScore, 0.95);
+        }
+      } else if (isMultiplayerQuery) {
+        const hasMultiplayer = game.genres.some(g => /multiplayer|co-op|pvp|mmo|online|sandbox/i.test(g)) ||
+                               game.tags.some(t => /multiplayer|co-op|coop|pvp|mmo|online/i.test(t));
+        if (hasMultiplayer) {
+          fuzzyScore = Math.max(fuzzyScore, 0.94);
+        }
+      }
 
       let hybrid = 0;
       if (fuzzyScore >= 0.70) {

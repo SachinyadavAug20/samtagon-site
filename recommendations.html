@@ -128,38 +128,68 @@
         <div class="container">
           <div class="rec-hero-intro">
             <h1 class="rec-title">Explore 12,000+ Games</h1>
-            <p class="rec-subtitle">Discover Minecraft, Grand Theft Auto V, Counter-Strike 2, Elden Ring, and thousands of curated titles.</p>
           </div>
 
-          <!-- Category Discovery Filter Pills -->
-          <div class="category-pills-wrap" id="category-pills-wrap">
-            <button class="cat-pill active" data-genre="">All (12,000)</button>
-            <button class="cat-pill" data-genre="minecraft">Minecraft & Sandbox</button>
-            <button class="cat-pill" data-genre="gta">Grand Theft Auto</button>
-            <button class="cat-pill" data-genre="Open World">Open World</button>
-            <button class="cat-pill" data-genre="RPG">Action RPG</button>
-            <button class="cat-pill" data-genre="FPS">FPS & Shooters</button>
-            <button class="cat-pill" data-genre="Automation">Automation & Base Building</button>
-            <button class="cat-pill" data-genre="Co-op">Multiplayer & Co-op</button>
-            <button class="cat-pill" data-genre="Cozy">Cozy & Relaxing</button>
-          </div>
-
-          <!-- Minimal Single-Line Search Bar -->
-          <div class="search-line-wrap">
-            <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
+          <!-- Modern SVG Search Control Bar -->
+          <div class="search-bar-unified">
+            <div class="search-input-prefix">
+              <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
             <input
               type="text"
               id="search-input"
               class="search-input-field"
-              placeholder="Search games, genres, or keywords... (e.g. 'Minecraft', 'GTA', 'Elden Ring', 'CS2', 'Zelda')"
+              placeholder="Search 12,000+ games..."
               autocomplete="off"
               spellcheck="false"
             />
-            <button id="clear-search-btn" class="clear-search-btn" aria-label="Clear search" title="Clear search">
-              &times;
-            </button>
+            <!-- Pure SVG Controllers & Tools -->
+            <div class="search-controllers-group">
+              <button id="filter-controller-btn" class="search-ctrl-btn" data-mode="controller" title="Controller / Gamepad Action" aria-label="Controller Supported Games">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="6" y1="12" x2="10" y2="12"></line>
+                  <line x1="8" y1="10" x2="8" y2="14"></line>
+                  <circle cx="15" cy="13" r="1" fill="currentColor"></circle>
+                  <circle cx="18" cy="11" r="1" fill="currentColor"></circle>
+                  <rect x="2" y="6" width="20" height="12" rx="6"></rect>
+                </svg>
+              </button>
+
+              <button id="filter-multiplayer-btn" class="search-ctrl-btn" data-mode="multiplayer" title="Multiplayer & Co-op" aria-label="Multiplayer Games">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </button>
+
+              <button id="filter-toprated-btn" class="search-ctrl-btn" data-mode="toprated" title="Top Rated (98%+)" aria-label="Top Rated Games">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+
+              <button id="filter-random-btn" class="search-ctrl-btn" data-mode="random" title="Surprise Me (Random Page)" aria-label="Random Discovery">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+                  <circle cx="8" cy="8" r="1.5" fill="currentColor"></circle>
+                  <circle cx="16" cy="16" r="1.5" fill="currentColor"></circle>
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+                  <circle cx="16" cy="8" r="1.5" fill="currentColor"></circle>
+                  <circle cx="8" cy="16" r="1.5" fill="currentColor"></circle>
+                </svg>
+              </button>
+
+              <button id="clear-search-btn" class="search-ctrl-btn clear-search-btn" title="Reset Search" aria-label="Clear search" style="display: none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -182,9 +212,10 @@
               <!-- Injected dynamically: First, Prev, Page numbers, Next, Last -->
             </div>
             <div class="pagination-jump">
-              <span class="jump-label">Jump to page</span>
-              <input type="number" id="page-jump-input" min="1" max="1000" placeholder="1" class="page-jump-input" />
-              <button id="page-jump-btn" class="page-jump-btn">Go</button>
+              <input type="number" id="page-jump-input" min="1" max="1000" placeholder="#" class="page-jump-input" title="Page number" />
+              <button id="page-jump-btn" class="page-jump-btn" title="Go" aria-label="Jump to page">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           </nav>
         </div>

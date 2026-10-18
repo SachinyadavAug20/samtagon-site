@@ -481,32 +481,8 @@ export class ThreeStage {
         sunGroup.position.set(1.3, 2.1, -1.8);
         this.sunMesh = sunGroup;
         this.celestialGroup.add(this.sunMesh);
-        // 4. Atmospheric Volumetric God-Rays / Sunbeams (Outside-the-box cinematic shafts)
+        // 4. Volumetric rays disabled to keep sky crystal clear and prevent flat transparent panel artifacts
         this.godRaysGroup = new THREE.Group();
-        const rayMat = new THREE.MeshBasicMaterial({
-            color: 0xfef08a,
-            transparent: true,
-            opacity: 0.16,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-        });
-        const rayOffsets = [
-            { x: 0.35, y: -0.2, rotY: -0.15, scaleX: 0.7, len: 4.8 },
-            { x: -0.10, y: 0.0, rotY: 0.05, scaleX: 0.9, len: 5.2 },
-            { x: -0.55, y: 0.15, rotY: 0.22, scaleX: 1.1, len: 5.5 },
-            { x: 0.80, y: -0.3, rotY: -0.32, scaleX: 0.6, len: 4.5 },
-        ];
-        rayOffsets.forEach(({ x, y, rotY, scaleX, len }) => {
-            const rayGeo = new THREE.PlaneGeometry(scaleX, len);
-            const ray = new THREE.Mesh(rayGeo, rayMat.clone());
-            // Anchor apex near the sun position (1.3, 2.1, -1.8) and angle down toward terrain
-            ray.position.set(1.3 + x, 1.2 + y, -1.8 + x * 0.4);
-            ray.rotation.x = Math.PI * 0.26;
-            ray.rotation.y = rotY;
-            ray.rotation.z = -0.35;
-            this.godRaysGroup.add(ray);
-        });
         this.celestialGroup.add(this.godRaysGroup);
     }
     /* =========================================================================

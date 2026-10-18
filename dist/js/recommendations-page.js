@@ -299,7 +299,10 @@ class RecommendationsApp {
     viewQuiz;
     viewExplore;
     skipToExploreBtn;
-    categoryPillsWrap;
+    filterControllerBtn;
+    filterMultiplayerBtn;
+    filterTopRatedBtn;
+    filterRandomBtn;
     // Quiz State
     currentQuestionIndex = 0;
     userAnswers = [];
@@ -328,7 +331,7 @@ class RecommendationsApp {
         this.initDOM();
         this.setupTheme();
         this.setupTabs();
-        this.setupCategoryPills();
+        this.setupSearchControllers();
         this.setupEventListeners();
         this.setupSmoothPageTransitions();
         this.initQuiz();
@@ -341,7 +344,10 @@ class RecommendationsApp {
         this.viewQuiz = document.getElementById('view-quiz');
         this.viewExplore = document.getElementById('view-explore');
         this.skipToExploreBtn = document.getElementById('skip-to-explore-btn');
-        this.categoryPillsWrap = document.getElementById('category-pills-wrap');
+        this.filterControllerBtn = document.getElementById('filter-controller-btn');
+        this.filterMultiplayerBtn = document.getElementById('filter-multiplayer-btn');
+        this.filterTopRatedBtn = document.getElementById('filter-toprated-btn');
+        this.filterRandomBtn = document.getElementById('filter-random-btn');
         this.quizActiveBox = document.getElementById('quiz-active-box');
         this.quizProfileBox = document.getElementById('quiz-profile-box');
         this.quizStepIndicator = document.getElementById('quiz-step-indicator');
@@ -464,54 +470,98 @@ class RecommendationsApp {
                 this.currentQuery = searchKeyword;
                 this.currentPage = 1;
                 this.loadCatalog();
-                this.updateCategoryPillActive(searchKeyword);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
-    setupCategoryPills() {
-        if (!this.categoryPillsWrap)
-            return;
-        const pills = this.categoryPillsWrap.querySelectorAll('.cat-pill');
-        pills.forEach((pill) => {
-            pill.addEventListener('click', () => {
-                pills.forEach((p) => p.classList.remove('active'));
-                pill.classList.add('active');
-                const genre = pill.getAttribute('data-genre') || '';
-                if (this.searchInput) {
-                    this.searchInput.value = genre;
-                    if (this.clearSearchBtn) {
-                        this.clearSearchBtn.style.display = genre ? 'inline-flex' : 'none';
-                    }
-                }
-                this.currentQuery = genre;
-                this.currentPage = 1;
-                this.audio.playQuizSelection();
-                this.loadCatalog();
-                const catalogHeading = document.getElementById('catalog-heading');
-                catalogHeading?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        });
+    resetControllerButtons() {
+        [
+            this.filterControllerBtn,
+            this.filterMultiplayerBtn,
+            this.filterTopRatedBtn,
+            this.filterRandomBtn,
+        ].forEach((btn) => btn?.classList.remove('active'));
     }
-    updateCategoryPillActive(keyword) {
-        if (!this.categoryPillsWrap)
-            return;
-        const pills = this.categoryPillsWrap.querySelectorAll('.cat-pill');
-        const lower = keyword.trim().toLowerCase();
-        let matched = false;
-        pills.forEach((pill) => {
-            const g = (pill.getAttribute('data-genre') || '').toLowerCase();
-            if ((lower === '' && g === '') || (lower && g && (lower.includes(g) || g.includes(lower)))) {
-                pill.classList.add('active');
-                matched = true;
+    setupSearchControllers() {
+        // 1. Controller / Gamepad Action Mode Toggle
+        this.filterControllerBtn?.addEventListener('click', () => {
+            const isCurrentlyActive = this.filterControllerBtn?.classList.contains('active');
+            this.resetControllerButtons();
+            if (isCurrentlyActive) {
+                this.currentQuery = '';
+                if (this.searchInput)
+                    this.searchInput.value = '';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'none';
             }
             else {
-                pill.classList.remove('active');
+                this.filterControllerBtn?.classList.add('active');
+                this.currentQuery = 'Controller';
+                if (this.searchInput)
+                    this.searchInput.value = 'Controller';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'inline-flex';
             }
+            this.currentPage = 1;
+            this.audio.playQuizSelection();
+            this.loadCatalog();
         });
-        if (!matched) {
-            pills.forEach((p) => p.classList.remove('active'));
-        }
+        // 2. Multiplayer / Co-op Mode Toggle
+        this.filterMultiplayerBtn?.addEventListener('click', () => {
+            const isCurrentlyActive = this.filterMultiplayerBtn?.classList.contains('active');
+            this.resetControllerButtons();
+            if (isCurrentlyActive) {
+                this.currentQuery = '';
+                if (this.searchInput)
+                    this.searchInput.value = '';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'none';
+            }
+            else {
+                this.filterMultiplayerBtn?.classList.add('active');
+                this.currentQuery = 'Co-op';
+                if (this.searchInput)
+                    this.searchInput.value = 'Co-op';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'inline-flex';
+            }
+            this.currentPage = 1;
+            this.audio.playQuizSelection();
+            this.loadCatalog();
+        });
+        // 3. Top Rated (98%+) Mode Toggle
+        this.filterTopRatedBtn?.addEventListener('click', () => {
+            const isCurrentlyActive = this.filterTopRatedBtn?.classList.contains('active');
+            this.resetControllerButtons();
+            if (isCurrentlyActive) {
+                this.currentQuery = '';
+                if (this.searchInput)
+                    this.searchInput.value = '';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'none';
+            }
+            else {
+                this.filterTopRatedBtn?.classList.add('active');
+                this.currentQuery = '99%';
+                if (this.searchInput)
+                    this.searchInput.value = '99%';
+                if (this.clearSearchBtn)
+                    this.clearSearchBtn.style.display = 'inline-flex';
+            }
+            this.currentPage = 1;
+            this.audio.playQuizSelection();
+            this.loadCatalog();
+        });
+        // 4. Random Discovery (Dice) Tool
+        this.filterRandomBtn?.addEventListener('click', () => {
+            this.resetControllerButtons();
+            this.filterRandomBtn?.classList.add('active');
+            setTimeout(() => this.filterRandomBtn?.classList.remove('active'), 350);
+            const randomTarget = Math.floor(Math.random() * Math.max(1, this.totalPages)) + 1;
+            this.audio.playChime(880, 0.08);
+            setTimeout(() => this.audio.playChime(1046.5, 0.08), 80);
+            this.goToPage(randomTarget);
+        });
     }
     setupSmoothPageTransitions() {
         // Page load gentle entrance
@@ -870,6 +920,7 @@ class RecommendationsApp {
         this.searchInput?.addEventListener('input', (e) => {
             const target = e.target;
             const val = target.value;
+            this.resetControllerButtons();
             if (this.clearSearchBtn) {
                 this.clearSearchBtn.style.display = val.length > 0 ? 'inline-flex' : 'none';
             }
@@ -884,6 +935,7 @@ class RecommendationsApp {
         this.clearSearchBtn?.addEventListener('click', () => {
             this.searchInput.value = '';
             this.clearSearchBtn.style.display = 'none';
+            this.resetControllerButtons();
             this.currentQuery = '';
             this.currentPage = 1;
             this.loadCatalog();
@@ -1091,9 +1143,13 @@ class RecommendationsApp {
             span.textContent = '...';
             return span;
         };
-        // First and Prev
-        this.paginationControls.appendChild(createBtn('&laquo; First', 1, current === 1));
-        this.paginationControls.appendChild(createBtn('&lsaquo; Prev', current - 1, current === 1));
+        // First and Prev with sleek SVGs
+        const svgFirst = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>`;
+        const svgPrev = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>`;
+        const svgNext = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>`;
+        const svgLast = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>`;
+        this.paginationControls.appendChild(createBtn(svgFirst, 1, current === 1));
+        this.paginationControls.appendChild(createBtn(svgPrev, current - 1, current === 1));
         // Dynamic numeric pages window
         const pagesToShow = new Set();
         pagesToShow.add(1);
@@ -1110,9 +1166,9 @@ class RecommendationsApp {
             this.paginationControls.appendChild(createBtn(p.toString(), p, false, p === current));
             prevPage = p;
         });
-        // Next and Last
-        this.paginationControls.appendChild(createBtn('Next &rsaquo;', current + 1, current === total));
-        this.paginationControls.appendChild(createBtn('Last &raquo;', total, current === total));
+        // Next and Last with sleek SVGs
+        this.paginationControls.appendChild(createBtn(svgNext, current + 1, current === total));
+        this.paginationControls.appendChild(createBtn(svgLast, total, current === total));
     }
     /**
      * Open full rich Game Detail Modal (less text, rich media, video trailers, store and studio links)
