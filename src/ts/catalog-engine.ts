@@ -1037,6 +1037,15 @@ export class CatalogEngine {
     this.allCurated = this.buildCuratedLibrary();
   }
 
+  public static getAllCurated(): ExtendedGameItem[] {
+    return this.allCurated;
+  }
+
+  public static getCuratedByTitle(title: string): ExtendedGameItem | undefined {
+    const clean = title.toLowerCase().trim();
+    return this.allCurated.find(g => g.title.toLowerCase().trim() === clean || g.title.toLowerCase().includes(clean));
+  }
+
   private static buildCuratedLibrary(): ExtendedGameItem[] {
     const list: ExtendedGameItem[] = [];
 

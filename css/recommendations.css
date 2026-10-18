@@ -1587,11 +1587,11 @@
 
 .arranged-games-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 18px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 680px) {
   .arranged-games-grid {
     grid-template-columns: 1fr;
   }
@@ -1600,12 +1600,13 @@
 .arranged-game-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: all var(--transition-fast);
   position: relative;
+  cursor: pointer;
 }
 
 .arranged-game-card.top-soulmate {
@@ -1619,11 +1620,31 @@
   transform: translateY(-2px);
 }
 
+.arranged-card-cover-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.arranged-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.arranged-game-card:hover .arranged-card-img {
+  transform: scale(1.04);
+}
+
 .game-top-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .game-match-score {
@@ -1647,25 +1668,53 @@
   letter-spacing: 0.05em;
 }
 
+.arranged-game-name-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
 .arranged-game-name {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arranged-card-year {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.arranged-game-studio {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
 .arranged-game-genre {
   font-family: var(--font-mono);
-  font-size: 0.76rem;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
 .arranged-game-desc {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   line-height: 1.5;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 14px;
 }
 
 .arranged-game-why {
@@ -1675,7 +1724,8 @@
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--text-primary);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+  border-radius: 0;
 }
 
 .arranged-game-actions {
@@ -1688,9 +1738,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 7px 14px;
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   background: var(--primary);
   color: #000;
@@ -1707,14 +1757,15 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 7px 12px;
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   text-decoration: none;
+  cursor: pointer;
   transition: all var(--transition-fast);
 }
 

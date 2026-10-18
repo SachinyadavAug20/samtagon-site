@@ -999,6 +999,13 @@ export class CatalogEngine {
     static {
         this.allCurated = this.buildCuratedLibrary();
     }
+    static getAllCurated() {
+        return this.allCurated;
+    }
+    static getCuratedByTitle(title) {
+        const clean = title.toLowerCase().trim();
+        return this.allCurated.find(g => g.title.toLowerCase().trim() === clean || g.title.toLowerCase().includes(clean));
+    }
     static buildCuratedLibrary() {
         const list = [];
         CURATED_GAMES.forEach((g) => {

@@ -39,16 +39,10 @@ export interface GamerProfile {
   completedAt: string;
 }
 
-export interface StudioGameItem {
-  id: string;
+export interface ArchetypeDatabaseRecommendation {
   title: string;
-  genre: string;
-  desc: string;
-  image: string;
-  url: string;
-  githubUrl?: string;
-  baseScore: Record<ArchetypeId, number>;
-  highlightNotes: Record<ArchetypeId, string>;
+  matchScore: number;
+  highlightNote: string;
 }
 
 const COOKIE_KEY = 'samtagon_gamer_profile';
@@ -203,72 +197,136 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   },
 ];
 
-const SAMTAGON_STUDIO_GAMES: StudioGameItem[] = [
-  {
-    id: 'conway',
-    title: "Conway's Game of Life",
-    genre: "Simulation & Cellular Automata Engine",
-    desc: "A tactile mathematical simulation engine where living cellular automata evolve according to deterministic algorithmic laws. Features glider synthesizers, high-performance tick generation, and tactile grid manipulation.",
-    image: "assets/images/games/conway.svg",
-    url: "https://sachinapr20.itch.io/",
-    githubUrl: "https://github.com/SachinyadavAug20",
-    baseScore: { architect: 99, tactician: 94, explorer: 86, speedster: 78 },
-    highlightNotes: {
-      architect: "Your #1 Soulmate: Pure emergent simulation beauty and infinite self-sustaining loops.",
-      tactician: "Calculated determinism: master cell lifecycles, oscillators, and glider guns.",
-      explorer: "Discover rare mathematical curiosities, pulsars, and spaceship patterns.",
-      speedster: "Crank simulation ticks to hyper-speed and witness rapid evolutionary bursts.",
+const ARCHETYPE_DATABASE_MATCHES: Record<ArchetypeId, ArchetypeDatabaseRecommendation[]> = {
+  architect: [
+    {
+      title: 'Factorio',
+      matchScore: 99,
+      highlightNote: 'Your #1 Soulmate: The undisputed monument to automation. Engineer infinite logistic train networks, self-balancing assembly lines, and factory blueprints running with clockwork precision.',
     },
-  },
-  {
-    id: 'alien-blaster',
-    title: "Alien Blaster",
-    genre: "Retro Arcade Action Platformer",
-    desc: "A high-octane 2D retro action shooter featuring fluid projectile velocity physics, momentum-conserving dash mechanics, screen-shake feedback, and frantic enemy wave survival.",
-    image: "assets/images/games/alien-blaster.svg",
-    url: "https://sachinapr20.itch.io/",
-    githubUrl: "https://github.com/SachinyadavAug20/AlienBlaster",
-    baseScore: { speedster: 99, tactician: 93, architect: 82, explorer: 76 },
-    highlightNotes: {
-      speedster: "Your #1 Soulmate: Unrelenting kinetic flow state, twitch reflexes, and bullet hell dodging.",
-      tactician: "Hitbox precision and frame-accurate threat prioritization.",
-      architect: "Engineered state machines and modular projectile physics.",
-      explorer: "Classic 16-bit arcade aesthetics with vibrant retro charm.",
+    {
+      title: 'Minecraft',
+      matchScore: 97,
+      highlightNote: 'Limitless procedural voxel engineering. Construct intricate redstone logic gates, automated sorting systems, and grand architectural empires block by block.',
     },
-  },
-  {
-    id: 'godot-quest',
-    title: "Godot Quest",
-    genre: "Pixel Art Adventure RPG",
-    desc: "A charming pixel-art exploration adventure engineered in Godot Engine. Features cozy hand-drawn environments, quirky NPC conversations, secret collectible lore, and a soothing ambient soundtrack.",
-    image: "assets/images/games/my-first-game.svg",
-    url: "https://sachinapr20.itch.io/",
-    githubUrl: "https://github.com/SachinyadavAug20",
-    baseScore: { explorer: 99, architect: 89, tactician: 84, speedster: 79 },
-    highlightNotes: {
-      explorer: "Your #1 Soulmate: Handcrafted lore, hidden paths, cozy fires, and whimsical secrets.",
-      architect: "Clean Godot scene-tree architecture and emergent RPG inventory systems.",
-      tactician: "Efficient quest routing, dialogue branch navigation, and secret hunting.",
-      speedster: "Agile 2D platforming navigation and responsive movement curves.",
+    {
+      title: 'Satisfactory',
+      matchScore: 95,
+      highlightNote: 'First-person 3D conveyor logistics, vertical mega-factory routing, and multi-tier nuclear power grid engineering across a majestic alien planet.',
     },
-  },
-  {
-    id: 'snake-pingpong',
-    title: "Snake & Ping Pong (Kinetic Physics)",
-    genre: "Reflex Arcade Physics",
-    desc: "Kinetic physics reinventions of timeless arcade mechanics with escalating velocity vectors, screen-shake haptic response, and frame-accurate paddle bounce physics.",
-    image: "assets/images/games/pingpong.svg",
-    url: "https://sachinapr20.itch.io/",
-    githubUrl: "https://github.com/SachinyadavAug20",
-    baseScore: { speedster: 96, tactician: 92, architect: 84, explorer: 80 },
-    highlightNotes: {
-      speedster: "Escalating speed multipliers that push your reaction thresholds to the absolute limit.",
-      tactician: "Geometric angle calculations and predictive paddle trajectories.",
-      architect: "Pure deterministic kinematic physics built from ground up.",
-      explorer: "Timeless nostalgic arcade purity with tactile sound feedback.",
+    {
+      title: 'Cities: Skylines',
+      matchScore: 92,
+      highlightNote: 'Macro-civil infrastructure at its most granular. Route complex highway interchanges, balance public transit arteries, and optimize living urban supply chains.',
     },
-  },
-];
+    {
+      title: 'RimWorld',
+      matchScore: 90,
+      highlightNote: 'Deep procedural systems simulation where temperature gradients, power conduit grids, and psychological causality generate infinite emergent stories.',
+    },
+    {
+      title: 'Sid Meier’s Civilization VI',
+      matchScore: 88,
+      highlightNote: 'Grand systematic 4X strategy. Optimize geographic district adjacency yields, plan centuries ahead, and steer an empire from antiquity to the space age.',
+    },
+  ],
+  speedster: [
+    {
+      title: 'DOOM Eternal',
+      matchScore: 99,
+      highlightNote: 'Your #1 Soulmate: Push-forward hyper-kinetic combat perfection. Switch weapons in split-seconds, grapple across arenas, and enter the absolute peak adrenaline flow state.',
+    },
+    {
+      title: 'Counter-Strike 2',
+      matchScore: 96,
+      highlightNote: 'Sub-millisecond reaction speeds, pinpoint recoil compensation, and the unforgettable high of clutch 1v4 defuses with zero margin for error.',
+    },
+    {
+      title: 'Fortnite',
+      matchScore: 94,
+      highlightNote: 'Lightning-fast building edits, split-second shotgun flick shots, and dynamic momentum rotations in high-stakes Battle Royale engagements.',
+    },
+    {
+      title: 'Hades',
+      matchScore: 92,
+      highlightNote: 'Instantaneous dash-strike reflexes, weaving through lethal bullet storms, and fluid muscle-memory mastery in the depths of the Underworld.',
+    },
+    {
+      title: 'Apex Legends',
+      matchScore: 90,
+      highlightNote: 'Peak velocity movement mechanics—slide-jumping down slopes, wall-bouncing into gunfights, and clutching fast-paced squad wipeouts.',
+    },
+    {
+      title: 'Rocket League',
+      matchScore: 88,
+      highlightNote: 'Supersonic 3D aerial acrobatics and split-second spatial physics predictions pushing your reflexes to the absolute peak.',
+    },
+  ],
+  explorer: [
+    {
+      title: 'The Legend of Zelda: Tears of the Kingdom',
+      matchScore: 99,
+      highlightNote: 'Your #1 Soulmate: The golden pinnacle of environmental wonder. Soar through sky islands, delve into mysterious depths, and experiment with boundless emergent Ultrahand physics.',
+    },
+    {
+      title: 'Stardew Valley',
+      matchScore: 97,
+      highlightNote: 'The warmest cozy escapism in gaming. Nurture an overgrown farmstead, listen to seasonal rain on the porch, and forge heartwarming relationships.',
+    },
+    {
+      title: 'Outer Wilds',
+      matchScore: 95,
+      highlightNote: 'A breathtaking campfire-roasted space mystery driven solely by your organic curiosity, uncovering forgotten ancient civilizations across a miniature solar system.',
+    },
+    {
+      title: 'Red Dead Redemption 2',
+      matchScore: 93,
+      highlightNote: 'The most detailed living natural ecosystem ever coded. Hunt across misty mountain valleys, sit by crackling campfires, and absorb peerless narrative depth.',
+    },
+    {
+      title: 'Hollow Knight',
+      matchScore: 90,
+      highlightNote: 'Atmospheric, melancholic subterranean wonder. Uncover the haunting history of ruined Hallownest through evocative environmental storytelling.',
+    },
+    {
+      title: 'Subnautica',
+      matchScore: 88,
+      highlightNote: 'Peerless oceanic immersion—dive from sunlit, vibrant coral shallows down into bioluminescent abyssal trenches teeming with awe-inspiring fauna.',
+    },
+  ],
+  tactician: [
+    {
+      title: 'Sekiro: Shadows Die Twice',
+      matchScore: 99,
+      highlightNote: 'Your #1 Soulmate: Frame-perfect rhythm deflections and posture destruction. Dissect enemy attack telegraphs with surgical precision and zero wasted movement.',
+    },
+    {
+      title: 'Baldur’s Gate 3',
+      matchScore: 97,
+      highlightNote: 'Unrivaled tactical turn-based freedom. Exploit high ground, ignite chemical surfaces, and calculate multi-turn spell synergies to outsmart overwhelming odds.',
+    },
+    {
+      title: 'Elden Ring',
+      matchScore: 95,
+      highlightNote: 'Meticulous boss pattern dissection, poise-break timing, and calculated build synergies that turn punishing adversity into triumph.',
+    },
+    {
+      title: 'Valorant',
+      matchScore: 93,
+      highlightNote: 'Pixel-accurate crosshair placement, tactical ability denial, utility lineups, and deep economy management in high-stakes tactical rounds.',
+    },
+    {
+      title: 'Black Myth: Wukong',
+      matchScore: 91,
+      highlightNote: 'Frame-tight perfect dodges, dynamic staff stance transitions, and calculated stamina/focus management against legendary mythic titans.',
+    },
+    {
+      title: 'Slay the Spire',
+      matchScore: 89,
+      highlightNote: 'Mathematical deckbuilding mastery. Calculate draw probabilities, construct game-breaking relic synergies, and out-think every turn.',
+    },
+  ],
+};
 
 class RecommendationsApp {
   private audio: ProceduralAudio;
@@ -719,39 +777,44 @@ class RecommendationsApp {
     const p = this.currentProfile;
     const archInfo = ARCHETYPES[p.archetypeId];
 
-    // Sort Samtagon Studio Games based on archetype alignment
-    const arrangedGames = [...SAMTAGON_STUDIO_GAMES].sort((a, b) => {
-      return b.baseScore[p.archetypeId] - a.baseScore[p.archetypeId];
-    });
+    // Curated recommendations from the 12,000+ database based on archetype alignment
+    const recList = ARCHETYPE_DATABASE_MATCHES[p.archetypeId] || [];
 
-    const gamesGridHtml = arrangedGames.map((game, idx) => {
-      const matchScore = game.baseScore[p.archetypeId];
+    const gamesGridHtml = recList.map((rec, idx) => {
+      const game = CatalogEngine.getCuratedByTitle(rec.title);
+      if (!game) return '';
+
       const isTop = idx === 0;
-      const highlightNote = game.highlightNotes[p.archetypeId];
+      const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
+      const storeName = game.platforms[0]?.name || 'Steam Store';
 
       return `
-        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}">
+        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${game.title}">
+          <div class="arranged-card-cover-wrap">
+            <img src="${game.image}" alt="${game.title}" class="arranged-card-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+          </div>
           <div>
             <div class="game-top-meta">
-              <span class="game-match-score">${matchScore}% MATCH</span>
+              <span class="game-match-score">${rec.matchScore}% MATCH</span>
               ${isTop ? '<span class="soulmate-flag-tag">#1 RECOMMENDED SOULMATE</span>' : ''}
             </div>
-            <h4 class="arranged-game-name">${game.title}</h4>
-            <div class="arranged-game-genre">${game.genre}</div>
-            <p class="arranged-game-desc">${game.desc}</p>
+            <div class="arranged-game-name-row">
+              <h4 class="arranged-game-name">${game.title}</h4>
+              <span class="arranged-card-year">${game.releaseYear}</span>
+            </div>
+            <div class="arranged-game-studio">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
+            <p class="arranged-game-desc">${game.description}</p>
             <div class="arranged-game-why">
-              <strong>Why you will love it:</strong> ${highlightNote}
+              <strong>Why it matches your profile:</strong> ${rec.highlightNote}
             </div>
           </div>
           <div class="arranged-game-actions">
-            <a href="${game.url}" target="_blank" rel="noopener noreferrer" class="game-play-btn">
-              <span>Play on itch.io</span> &nearr;
+            <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="game-play-btn" onclick="event.stopPropagation()">
+              <span>${storeName}</span> &nearr;
             </a>
-            ${game.githubUrl ? `
-              <a href="${game.githubUrl}" target="_blank" rel="noopener noreferrer" class="game-source-btn">
-                <span>GitHub</span>
-              </a>
-            ` : ''}
+            <button class="game-source-btn arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()">
+              <span>Details</span> &rarr;
+            </button>
           </div>
         </div>
       `;
@@ -786,15 +849,15 @@ class RecommendationsApp {
         </div>
       </div>
 
-      <!-- Tailored Samtagon Lineup Section -->
+      <!-- Tailored Database Recommendations Section -->
       <div class="studio-lineup-header">
         <div>
-          <h3 class="studio-lineup-title">Your Tailored Samtagon Studio Matches</h3>
-          <p class="studio-lineup-subtitle">Arranged dynamically based on your unique ${p.archetypeName} instincts</p>
+          <h3 class="studio-lineup-title">Top Database Matches for ${p.archetypeName}</h3>
+          <p class="studio-lineup-subtitle">Curated from the 12,000+ title database based on your psychological quiz instincts &amp; superpower</p>
         </div>
-        <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer" class="itch-browse-link">
-          <span>Play All on itch.io</span> &nearr;
-        </a>
+        <button id="profile-explore-all-btn" class="itch-browse-link" style="background: transparent; border: none; cursor: pointer;">
+          <span>Explore All 12,000+ Games</span> &rarr;
+        </button>
       </div>
 
       <div class="arranged-games-grid">
@@ -812,6 +875,31 @@ class RecommendationsApp {
     const unlockBtn = document.getElementById('unlock-explore-btn');
     unlockBtn?.addEventListener('click', () => {
       this.switchTab('explore', archInfo.catalogSearch);
+    });
+
+    // Hook Explore All Games Link
+    const exploreAllBtn = document.getElementById('profile-explore-all-btn');
+    exploreAllBtn?.addEventListener('click', () => {
+      this.switchTab('explore');
+    });
+
+    // Hook card clicks and Details buttons to open the rich Game Detail Modal
+    this.quizProfileBox.querySelectorAll<HTMLElement>('.arranged-game-card').forEach((card) => {
+      const title = card.getAttribute('data-game-title');
+      const game = title ? CatalogEngine.getCuratedByTitle(title) : null;
+      if (game) {
+        card.addEventListener('click', () => {
+          this.audio.playChime(783.99, 0.06);
+          this.openGameDetailModal(game);
+        });
+
+        const detailsBtn = card.querySelector<HTMLElement>('.arranged-details-btn');
+        detailsBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.audio.playChime(783.99, 0.06);
+          this.openGameDetailModal(game);
+        });
+      }
     });
 
     // Smooth reveal animation
