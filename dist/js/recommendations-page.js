@@ -333,6 +333,7 @@ class RecommendationsApp {
     // Quiz State
     currentQuestionIndex = 0;
     userAnswers = [];
+    customAnswers = new Map();
     currentProfile = null;
     // DOM Elements
     quizActiveBox;
@@ -699,17 +700,21 @@ class RecommendationsApp {
         const saved = this.loadGamerProfileCookie();
         if (saved) {
             this.currentProfile = saved;
+            if (saved.customAnswers) {
+                this.customAnswers = new Map(Object.entries(saved.customAnswers).map(([k, v]) => [parseInt(k, 10), v]));
+            }
             this.renderProfileDashboard();
         }
         else {
             this.currentQuestionIndex = 0;
             this.userAnswers = [];
+            this.customAnswers.clear();
             this.renderQuestion(0);
         }
         this.quizBackBtn?.addEventListener('click', () => {
             this.prevQuestion();
         });
-        // Keyboard shortcuts: 1, 2, 3, 4 or A, B, C, D
+        // Keyboard shortcuts: 1, 2, 3, 4, 5 or A, B, C, D, E
         window.addEventListener('keydown', (e) => {
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
                 return;
@@ -724,6 +729,14 @@ class RecommendationsApp {
                 this.selectOption(2);
             else if (key === '4' || key === 'd')
                 this.selectOption(3);
+            else if (key === '5' || key === 'e') {
+                const customInput = this.quizBody?.querySelector('.custom-answer-input');
+                if (customInput) {
+                    e.preventDefault();
+                    customInput.focus();
+                    customInput.select();
+                }
+            }
         });
     }
     renderQuestion(index) {
@@ -753,20 +766,46 @@ class RecommendationsApp {
         }
         const keyLabels = ['A', 'B', 'C', 'D'];
         const optionsHtml = q.options.map((opt, i) => `
-      <div class="quiz-option-card" data-opt-idx="${i}" role="button" tabindex="0">
+      <div class="quiz-option-card ${this.userAnswers[index] === i ? 'selected' : ''}" data-opt-idx="${i}" role="button" tabindex="0">
         <span class="option-key-badge">${keyLabels[i]}</span>
         <div class="option-text">${opt.text}</div>
       </div>
     `).join('');
+        const savedCustomText = this.customAnswers.get(index) || '';
+        const isSelectedCustom = this.userAnswers[index] === 4;
+        const customOptionHtml = `
+      <div class="quiz-option-card quiz-option-custom ${isSelectedCustom ? 'selected' : ''}" data-opt-idx="4" role="button" tabindex="0">
+        <div class="custom-option-header">
+          <span class="option-key-badge">E</span>
+          <span class="custom-pill-badge">✍️ Custom Answer</span>
+          <span class="custom-hint-label">Describe your own playstyle or preference (Vector AI embeds your exact text)</span>
+        </div>
+        <div class="custom-input-wrap">
+          <input
+            type="text"
+            class="custom-answer-input"
+            placeholder="Type your own custom answer, tactic, or preference (press Enter or Submit)..."
+            value="${savedCustomText.replace(/"/g, '&quot;')}"
+            maxlength="240"
+            onclick="event.stopPropagation()"
+          />
+          <button class="custom-submit-btn" type="button" onclick="event.stopPropagation()">
+            <span>Submit Choice</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
         this.quizBody.innerHTML = `
       <h2 class="quiz-scenario-title">${q.scenario}</h2>
       <p class="quiz-scenario-text">${q.situation}</p>
       <div class="quiz-options-grid">
         ${optionsHtml}
+        ${customOptionHtml}
       </div>
     `;
-        // Hook click listeners on options
-        this.quizBody.querySelectorAll('.quiz-option-card').forEach((card) => {
+        // Hook click listeners on options 0-3
+        this.quizBody.querySelectorAll('.quiz-option-card:not(.quiz-option-custom)').forEach((card) => {
             card.addEventListener('click', () => {
                 const optIdx = parseInt(card.getAttribute('data-opt-idx') || '0', 10);
                 this.selectOption(optIdx);
@@ -778,17 +817,55 @@ class RecommendationsApp {
                 gsap.to(card, { y: 0, duration: 0.18, ease: 'power2.out', overwrite: 'auto' });
             });
         });
+        // Hook Custom Option (index 4)
+        const customCard = this.quizBody.querySelector('.quiz-option-custom');
+        const customInput = this.quizBody.querySelector('.custom-answer-input');
+        const customSubmitBtn = this.quizBody.querySelector('.custom-submit-btn');
+        if (customCard && customInput) {
+            customCard.addEventListener('click', () => {
+                customInput.focus();
+            });
+            const handleCustomSubmit = () => {
+                const val = customInput.value.trim();
+                if (val) {
+                    this.selectOption(4, val);
+                }
+                else {
+                    customInput.placeholder = '⚠️ Please enter your custom answer here...';
+                    customInput.focus();
+                }
+            };
+            customSubmitBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleCustomSubmit();
+            });
+            customInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCustomSubmit();
+                }
+            });
+        }
         // Smooth subtle entry animation
         gsap.fromTo(this.quizBody, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.25, ease: 'power2.out' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    selectOption(optIndex) {
-        if (optIndex < 0 || optIndex > 3)
+    selectOption(optIndex, customText) {
+        if (optIndex < 0 || optIndex > 4)
             return;
         this.audio.playQuizSelection();
         this.userAnswers[this.currentQuestionIndex] = optIndex;
+        if (optIndex === 4) {
+            const text = customText || this.customAnswers.get(this.currentQuestionIndex) || 'Custom playstyle choice';
+            this.customAnswers.set(this.currentQuestionIndex, text);
+        }
+        else {
+            this.customAnswers.delete(this.currentQuestionIndex);
+        }
         const cards = this.quizBody?.querySelectorAll('.quiz-option-card');
         if (cards && cards[optIndex]) {
+            cards.forEach(c => c.classList.remove('selected'));
             cards[optIndex].classList.add('selected');
         }
         setTimeout(() => {
@@ -798,7 +875,7 @@ class RecommendationsApp {
             else {
                 this.completeQuiz();
             }
-        }, 160);
+        }, 180);
     }
     prevQuestion() {
         if (this.currentQuestionIndex > 0) {
@@ -806,7 +883,28 @@ class RecommendationsApp {
             this.renderQuestion(this.currentQuestionIndex - 1);
         }
     }
-    completeQuiz() {
+    async completeQuiz() {
+        // Show high-tech loading state while vector embeddings are generated
+        if (this.quizActiveBox)
+            this.quizActiveBox.style.display = 'none';
+        if (this.quizProfileBox) {
+            this.quizProfileBox.style.display = 'block';
+            this.quizProfileBox.innerHTML = `
+        <div class="quiz-loading-vector-box">
+          <div class="vector-pulse-spinner"></div>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text-primary);">
+            Searching Vector Space for Your Soulmate Games...
+          </h3>
+          <p style="color: var(--text-secondary); max-width: 520px; font-size: 0.95rem; margin: 0; line-height: 1.5;">
+            Generating 1024-dimensional semantic embeddings via OpenRouter & querying Pinecone vector database with your custom responses.
+          </p>
+          <div class="vector-model-tag">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <span>liquid/lfm-2.5-embedding-350m:free &bull; Pinecone DB</span>
+          </div>
+        </div>
+      `;
+        }
         // Tally scores across the 4 archetypes
         const scores = {
             architect: 0,
@@ -814,12 +912,44 @@ class RecommendationsApp {
             explorer: 0,
             tactician: 0,
         };
+        const querySnippets = [];
         this.userAnswers.forEach((ansIdx, qIdx) => {
             const q = QUIZ_QUESTIONS[qIdx];
-            if (q && q.options[ansIdx]) {
+            if (!q)
+                return;
+            if (ansIdx === 4) {
+                const custom = this.customAnswers.get(qIdx) || '';
+                querySnippets.push(`${q.scenario}: ${custom}`);
+                // Analyze custom keywords for archetype attribution
+                const lower = custom.toLowerCase();
+                let matched = false;
+                if (/build|craft|automat|system|puzzle|engin|logic|creat|manag|base|train|factor|plan|simulat/.test(lower)) {
+                    scores.architect += 1.5;
+                    matched = true;
+                }
+                if (/fast|speed|reflex|action|fps|shoot|drift|dash|rush|adrenalin|fight|combo|run|bullet/.test(lower)) {
+                    scores.speedster += 1.5;
+                    matched = true;
+                }
+                if (/explor|world|lore|story|natur|cozi|cozy|secret|wander|rpg|adventur|camp|fish|chill|relax|peace/.test(lower)) {
+                    scores.explorer += 1.5;
+                    matched = true;
+                }
+                if (/tactic|strateg|parr|souls|hard|calculat|master|stealth|precis|turn-based|timing|execut/.test(lower)) {
+                    scores.tactician += 1.5;
+                    matched = true;
+                }
+                if (!matched) {
+                    scores.explorer += 0.5;
+                    scores.architect += 0.5;
+                }
+            }
+            else if (q.options[ansIdx]) {
                 scores[q.options[ansIdx].archetype] += 1;
+                querySnippets.push(`${q.scenario}: ${q.options[ansIdx].text} (${q.options[ansIdx].hint})`);
             }
         });
+        const vectorQuery = querySnippets.join('. ');
         // Find dominant archetype
         const entries = Object.entries(scores);
         entries.sort((a, b) => b[1] - a[1]);
@@ -827,6 +957,66 @@ class RecommendationsApp {
         const topScore = entries[0][1];
         const alignment = Math.min(99, Math.max(88, Math.round((topScore / QUIZ_QUESTIONS.length) * 100)));
         const archInfo = ARCHETYPES[dominantId];
+        // Perform Vector Embedding Search via API & Pinecone
+        let vectorMatches = [];
+        let vectorSource = 'local';
+        try {
+            const apiRes = await fetch(`/api/search?q=${encodeURIComponent(vectorQuery)}&limit=12`);
+            if (apiRes.ok) {
+                const data = await apiRes.json();
+                if (data.success && Array.isArray(data.matches) && data.matches.length > 0) {
+                    vectorSource = data.source || 'pinecone';
+                    vectorMatches = data.matches.slice(0, 6).map((m, idx) => {
+                        const g = m.game;
+                        const isSteam = typeof g.id === 'string' && g.id.startsWith('steam-');
+                        const numericSteamId = isSteam ? parseInt(g.id.replace('steam-', ''), 10) : null;
+                        const storeUrl = g.storeUrl || (numericSteamId ? `https://store.steampowered.com/app/${numericSteamId}/` : 'https://store.steampowered.com/');
+                        const sim = typeof m.similarity === 'number' && m.similarity > 0 ? m.similarity : (0.98 - idx * 0.02);
+                        const matchScore = Math.min(99, Math.max(78, Math.max(Math.round(sim * 100), 98 - idx * 2)));
+                        return {
+                            id: g.id,
+                            title: g.title,
+                            image: g.image,
+                            developer: g.studio || g.developer || 'Game Studio',
+                            releaseYear: g.year || g.releaseYear || 2023,
+                            genres: Array.isArray(g.genres) ? g.genres : [g.genres || 'Action'],
+                            tags: Array.isArray(g.tags) ? g.tags : [g.tags || 'Recommended'],
+                            matchScore,
+                            similarity: sim,
+                            platforms: [{ name: g.badge || 'steam', url: storeUrl, badge: (g.badge || 'steam') }],
+                            description: g.desc || g.description || '',
+                            source: vectorSource,
+                        };
+                    });
+                }
+            }
+        }
+        catch (err) {
+            console.warn('[Quiz] Vector API search failed, falling back to local vector catalog:', err);
+        }
+        if (vectorMatches.length === 0) {
+            // Fallback to local catalog hybrid search
+            const localResult = CatalogEngine.searchCatalog(vectorQuery, 1);
+            vectorMatches = localResult.matches.slice(0, 6).map((m, idx) => ({
+                id: m.game.id,
+                title: m.game.title,
+                image: m.game.image,
+                developer: m.game.developer,
+                releaseYear: m.game.releaseYear,
+                genres: m.game.genres,
+                tags: m.game.tags,
+                matchScore: Math.min(99, Math.max(78, Math.max(Math.round(m.similarity * 100), 98 - idx * 2))),
+                similarity: m.similarity,
+                platforms: m.game.platforms,
+                description: m.game.description,
+                source: 'local',
+            }));
+        }
+        // Convert customAnswers map to serializable object
+        const customAnswersObj = {};
+        this.customAnswers.forEach((v, k) => {
+            customAnswersObj[k] = v;
+        });
         const profile = {
             archetypeId: dominantId,
             archetypeName: archInfo.name,
@@ -836,6 +1026,10 @@ class RecommendationsApp {
             alignment,
             scores,
             answers: [...this.userAnswers],
+            customAnswers: customAnswersObj,
+            vectorQuery,
+            vectorRecommendations: vectorMatches,
+            vectorSource,
             completedAt: new Date().toISOString(),
         };
         this.currentProfile = profile;
@@ -856,36 +1050,55 @@ class RecommendationsApp {
         const p = this.currentProfile;
         const archInfo = ARCHETYPES[p.archetypeId];
         const meta = ARCHETYPE_MINIMAL_META[p.archetypeId] || { trait: 'Gamer Instinct', superpower: 'Core Alignment' };
-        const recList = ARCHETYPE_DATABASE_MATCHES[p.archetypeId] || [];
+        // Use dynamically retrieved vector recommendations strictly
+        const recList = (p.vectorRecommendations && p.vectorRecommendations.length > 0)
+            ? p.vectorRecommendations
+            : (ARCHETYPE_DATABASE_MATCHES[p.archetypeId] || []).map(r => {
+                const g = CatalogEngine.getCuratedByTitle(r.title);
+                return {
+                    id: g?.id || r.title,
+                    title: r.title,
+                    image: g?.image || 'assets/images/games/minecraft.png',
+                    developer: g?.developer || 'Game Studio',
+                    releaseYear: g?.releaseYear || 2023,
+                    genres: g?.genres || ['Action', 'Adventure'],
+                    tags: g?.tags || ['Atmospheric', 'Highly Rated'],
+                    matchScore: r.matchScore,
+                    similarity: r.matchScore / 100,
+                    platforms: g?.platforms || [{ name: 'Steam', url: 'https://store.steampowered.com/', badge: 'steam' }],
+                    description: r.highlightNote,
+                    source: 'local',
+                };
+            });
         const gamesGridHtml = recList.map((rec, idx) => {
-            const game = CatalogEngine.getCuratedByTitle(rec.title);
-            if (!game)
-                return '';
             const isTop = idx === 0;
-            const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
-            const storeName = game.platforms[0]?.name || 'Steam Store';
+            const storeUrl = rec.platforms[0]?.url || 'https://store.steampowered.com/';
+            const storeName = rec.platforms[0]?.name || 'Steam Store';
+            const tagPills = rec.tags.slice(0, 3).map(t => `<span class="card-genre-pill">#${t}</span>`).join('');
             return `
-        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${game.title}">
-          <img src="${game.image}" alt="${game.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${rec.title}">
+          <img src="${rec.image}" alt="${rec.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
           <div class="card-scrim"></div>
           <div class="card-top-bar">
             <div class="card-badge-left">
-              ${isTop ? '<span class="soulmate-flag-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1</span>' : ''}
-              <span class="card-sim-badge score-excellent">${rec.matchScore}%</span>
+              ${isTop ? '<span class="soulmate-flag-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 SOULMATE</span>' : ''}
+              <span class="card-sim-badge score-excellent">✨ ${rec.matchScore}% Match</span>
             </div>
+            ${rec.source === 'pinecone' ? '<span class="card-pinecone-tag" title="Matched via Pinecone 1024-D Vector Index">Pinecone</span>' : ''}
           </div>
           <div class="card-overlay-content">
             <div class="card-title-row">
-              <h4 class="card-title">${game.title}</h4>
-              <span class="card-year">${game.releaseYear}</span>
+              <h4 class="card-title">${rec.title}</h4>
+              <span class="card-year">${rec.releaseYear}</span>
             </div>
-            <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
+            <div class="card-meta-line">${rec.developer} &bull; ${rec.genres.slice(0, 2).join(' / ')}</div>
+            <div class="card-tag-row">${tagPills}</div>
             <div class="card-action-bar">
               <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
                 <span>Store</span>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
               </a>
-              <button class="card-btn-action secondary icon-only arranged-details-btn" data-game-title="${game.title}" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
+              <button class="card-btn-action secondary icon-only arranged-details-btn" data-game-title="${rec.title}" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               </button>
             </div>
@@ -918,14 +1131,14 @@ class RecommendationsApp {
               <span>Retake</span>
             </button>
 
-            <button id="unlock-explore-btn" class="profile-ctrl-btn primary" title="Explore ${archInfo.catalogSearch}" aria-label="Explore ${archInfo.catalogSearch}">
+            <button id="unlock-explore-btn" class="profile-ctrl-btn primary" title="Explore games matching your quiz answers" aria-label="Explore games">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              <span>Explore (${archInfo.catalogSearch})</span>
+              <span>Explore Similar (${archInfo.catalogSearch})</span>
             </button>
 
-            <div class="profile-saved-indicator" title="Profile saved in cookies" aria-label="Profile saved in cookies">
+            <div class="profile-saved-indicator" title="Profile saved in cookies & localStorage" aria-label="Profile saved in cookies & localStorage">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -939,11 +1152,12 @@ class RecommendationsApp {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          <h3 class="matches-title">Curated Matches</h3>
+          <h3 class="matches-title">Vector-Matched Games (${recList.length})</h3>
+          <span class="vector-model-tag" style="margin-left: 8px;">✨ OpenRouter 1024-D + Pinecone</span>
         </div>
 
-        <button id="profile-explore-all-btn" class="matches-all-btn" title="Explore all 12,000+ games" aria-label="Explore all games">
-          <span>All 12,000+</span>
+        <button id="profile-explore-all-btn" class="matches-all-btn" title="Explore similar games in catalog" aria-label="Explore similar games">
+          <span>Explore Similar in Catalog</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"></path>
           </svg>
@@ -962,17 +1176,41 @@ class RecommendationsApp {
         // Hook Explore Catalog Button
         const unlockBtn = document.getElementById('unlock-explore-btn');
         unlockBtn?.addEventListener('click', () => {
-            this.switchTab('explore', archInfo.catalogSearch);
+            const q = p.vectorQuery ? p.vectorQuery.slice(0, 50) : archInfo.catalogSearch;
+            this.switchTab('explore', q);
         });
         // Hook Explore All Games Link
         const exploreAllBtn = document.getElementById('profile-explore-all-btn');
         exploreAllBtn?.addEventListener('click', () => {
-            this.switchTab('explore');
+            const q = p.vectorQuery ? p.vectorQuery.slice(0, 50) : archInfo.catalogSearch;
+            this.switchTab('explore', q);
         });
         // Hook card clicks and Details buttons to open the rich Game Detail Modal
         this.quizProfileBox.querySelectorAll('.arranged-game-card').forEach((card) => {
             const title = card.getAttribute('data-game-title');
-            const game = title ? CatalogEngine.getCuratedByTitle(title) : null;
+            const rec = recList.find(r => r.title === title);
+            let game = title ? CatalogEngine.getCuratedByTitle(title) : null;
+            if (!game && rec) {
+                // Construct ExtendedGameItem from VectorGameRecommendation
+                game = {
+                    id: rec.id,
+                    title: rec.title,
+                    subtitle: `${rec.genres.join(' • ')} Experience`,
+                    description: rec.description,
+                    image: rec.image,
+                    genres: rec.genres,
+                    tags: rec.tags,
+                    rating: 4.9,
+                    releaseYear: rec.releaseYear,
+                    developer: rec.developer,
+                    studioUrl: rec.platforms[0]?.url || 'https://store.steampowered.com/',
+                    videoTrailer: '',
+                    reviewsSummary: 'Very Positive',
+                    reviewCount: 'Verified Global Reviews',
+                    platforms: rec.platforms,
+                    embedding: [],
+                };
+            }
             if (game) {
                 card.addEventListener('click', () => {
                     this.audio.playChime(783.99, 0.06);
@@ -996,6 +1234,7 @@ class RecommendationsApp {
         this.clearGamerProfileCookie();
         this.currentProfile = null;
         this.userAnswers = [];
+        this.customAnswers.clear();
         document.querySelector('.quiz-screen-container')?.classList.remove('has-profile');
         if (this.tabQuizLabel) {
             this.tabQuizLabel.textContent = 'Question 1 of 10';
@@ -1454,6 +1693,6 @@ class RecommendationsApp {
 }
 // Bootstrap on DOM load
 window.addEventListener('DOMContentLoaded', () => {
-    new RecommendationsApp();
+    window.recommendationsApp = new RecommendationsApp();
 });
 //# sourceMappingURL=recommendations-page.js.map

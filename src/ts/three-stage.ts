@@ -602,7 +602,8 @@ export class ThreeStage {
       { x:  2.20, z:  0.00, r: 2.80 },
       { x: -3.00, z:  1.85, r: 2.20 },
       { x: -3.00, z: -1.85, r: 2.20 },
-      { x:  3.00, z:  1.85, r: 2.20 },
+      { x:  3.50, z:  1.85, r: 2.40 },
+      { x:  4.40, z:  2.20, r: 2.00 },
       { x:  3.00, z: -1.85, r: 2.20 },
       { x: -1.60, z:  2.30, r: 2.00 },
       { x:  1.60, z:  2.30, r: 2.00 },
@@ -611,6 +612,7 @@ export class ThreeStage {
       { x:  4.30, z:  0.00, r: 2.00 },
       { x: -1.40, z: -3.10, r: 2.80 },
       { x: -1.60, z: -3.50, r: 2.30 },
+      { x: -4.00, z: -3.10, r: 2.00 },
       { x:  2.00, z: -2.60, r: 2.50 },
       { x:  0.00, z: -0.30, r: 2.60 },
     ];
@@ -3520,8 +3522,8 @@ export class ThreeStage {
      ========================================================================= */
   private buildRailwayWaterTower(): void {
     const tower = new THREE.Group();
-    // Positioned safely on the northeast railway depot lobe (track distance > 0.60)
-    tower.position.set(1.45, 0.04, -2.60);
+    // Positioned safely on the northeast railway depot lobe (track distance > 0.80)
+    tower.position.set(1.30, 0.04, -2.75);
 
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
     const staveMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.65 });
@@ -4056,14 +4058,15 @@ export class ThreeStage {
     const birchTrunkMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.5 });
 
     const outerPines = [
-      { x: -3.85, z: -1.35, s: 1.15 },
-      { x: -3.55, z: -1.75, s: 1.30 },
-      { x: -3.20, z: -2.35, s: 1.05 },
-      { x: -2.85, z: -2.80, s: 1.25 },
-      // Eastern Pines
-      { x: 3.55, z: -0.85, s: 1.10 },
-      { x: 3.75, z: -1.35, s: 1.25 },
-      { x: 3.35, z: -1.75, s: 1.00 },
+      // Northwest Highland Pines (Safely tucked outside NW track loop, clearance > 0.95)
+      { x: -5.25, z: -1.50, s: 1.15 },
+      { x: -4.85, z: -2.35, s: 1.30 },
+      { x: -4.60, z: -3.00, s: 1.05 },
+      { x: -3.60, z: -3.55, s: 1.25 },
+      // Northeast Mountain Pines (Safely tucked outside NE track loop, clearance > 0.95)
+      { x: 5.10, z: -1.50, s: 1.10 },
+      { x: 4.80, z: -2.40, s: 1.25 },
+      { x: 3.60, z: -3.50, s: 1.00 },
     ];
 
     outerPines.forEach(({ x, z, s }) => {
@@ -4822,9 +4825,9 @@ export class ThreeStage {
   private buildSunflowerFarmAndWheatPrairie(): void {
     const farmGroup = new THREE.Group();
 
-    // 1. Classic Falu-Red Country Barn (4.4, 1.6)
-    const barnX = 4.4;
-    const barnZ = 1.6;
+    // 1. Classic Falu-Red Country Barn (4.95, 2.60) - safely placed outside track loop with > 0.90 clearance
+    const barnX = 4.95;
+    const barnZ = 2.60;
     const barnBaseY = 0.04;
 
     const redBarnMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.75 });
@@ -4837,7 +4840,7 @@ export class ThreeStage {
 
     const barnSubGroup = new THREE.Group();
     barnSubGroup.position.set(barnX, barnBaseY, barnZ);
-    barnSubGroup.rotation.y = -0.22;
+    barnSubGroup.rotation.y = -0.15;
 
     // Main Barn Hall
     const barnBody = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.28, 0.38), redBarnMat);
@@ -4893,9 +4896,9 @@ export class ThreeStage {
 
     farmGroup.add(barnSubGroup);
 
-    // 2. Corrugated Galvanized Metal Grain Silo (4.95, 1.4)
+    // 2. Corrugated Galvanized Metal Grain Silo (5.10, 2.30) - Clearance > 1.10
     const siloGroup = new THREE.Group();
-    siloGroup.position.set(4.95, barnBaseY, 1.4);
+    siloGroup.position.set(5.10, barnBaseY, 2.30);
 
     const siloBody = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.52, 16), metalMat);
     siloBody.position.y = 0.26;
@@ -4920,28 +4923,28 @@ export class ThreeStage {
     }
     farmGroup.add(siloGroup);
 
-    // 3. Golden Wheat Field with Furrow Crop Rows (4.25, 2.5)
+    // 3. Golden Wheat Field with Furrow Crop Rows (4.30, 2.85) - Clearance > 1.00
     const wheatBed = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.025, 0.85), soilMat);
-    wheatBed.position.set(4.25, barnBaseY + 0.01, 2.5);
+    wheatBed.position.set(4.30, barnBaseY + 0.01, 2.85);
     wheatBed.receiveShadow = true;
     farmGroup.add(wheatBed);
 
     // 7 Rows of Golden Wheat Stalks
     for (let row = 0; row < 7; row++) {
-      const rz = 2.15 + row * 0.11;
+      const rz = 2.50 + row * 0.11;
       const wheatRow = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.07, 0.05), wheatGoldMat);
-      wheatRow.position.set(4.25, barnBaseY + 0.045, rz);
+      wheatRow.position.set(4.30, barnBaseY + 0.045, rz);
       wheatRow.castShadow = true;
       farmGroup.add(wheatRow);
     }
 
     // 4. Cylindrical Rolled Golden Hay Bales
     const hayCoords = [
-      { x: 3.90, z: 2.25, rotY: 0.3 },
-      { x: 4.55, z: 2.15, rotY: -0.6 },
-      { x: 4.25, z: 2.95, rotY: 0.8 },
-      { x: 3.70, z: 2.70, rotY: -0.2 },
-      { x: 4.75, z: 2.85, rotY: 0.5 },
+      { x: 4.20, z: 2.70, rotY: 0.3 },
+      { x: 4.60, z: 2.90, rotY: -0.6 },
+      { x: 4.80, z: 3.10, rotY: 0.8 },
+      { x: 3.90, z: 2.80, rotY: -0.2 },
+      { x: 4.70, z: 2.60, rotY: 0.5 },
     ];
     hayCoords.forEach((hc) => {
       const bale = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 10), hayMat);
@@ -4952,9 +4955,9 @@ export class ThreeStage {
       farmGroup.add(bale);
     });
 
-    // 5. Pastoral Horse Paddock (3.6, 1.5)
+    // 5. Pastoral Horse Paddock (2.90, 1.10) - Safely inside loop with > 1.0 clearance
     const horsePaddock = new THREE.Group();
-    horsePaddock.position.set(3.6, barnBaseY, 1.5);
+    horsePaddock.position.set(2.90, barnBaseY, 1.10);
 
     const fenceWoodMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.8 });
     const pCorners = [
@@ -5014,9 +5017,9 @@ export class ThreeStage {
     horsePaddock.add(horse);
     farmGroup.add(horsePaddock);
 
-    // 6. Vintage Farm Tractor (3.95, 1.25)
+    // 6. Vintage Farm Tractor (3.40, 0.80) - Safely inside loop with > 1.0 clearance
     const tractorGroup = new THREE.Group();
-    tractorGroup.position.set(3.95, barnBaseY, 1.25);
+    tractorGroup.position.set(3.40, barnBaseY, 0.80);
     tractorGroup.rotation.y = -0.7;
 
     const tractorGreenMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
@@ -5251,9 +5254,9 @@ export class ThreeStage {
   private buildHighlandWindmillAndOrchard(): void {
     const nwGroup = new THREE.Group();
 
-    // 1. Prominent Dutch Windmill on Raised Earth Knoll (-3.5, -2.5)
-    const millX = -3.5;
-    const millZ = -2.5;
+    // 1. Prominent Dutch Windmill on Raised Earth Knoll (-4.20, -3.20) - Clearance > 1.20
+    const millX = -4.20;
+    const millZ = -3.20;
     const millBaseY = 0.04;
 
     const stoneMat = new THREE.MeshStandardMaterial({ color: 0xd6cbb8, roughness: 0.7, flatShading: true });
@@ -5321,20 +5324,20 @@ export class ThreeStage {
     }
     nwGroup.add(this.grandWindmillSails);
 
-    // Miller's Cottage beside Windmill
+    // Miller's Cottage beside Windmill (Safely offset with clearance > 0.90)
     const mCottage = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.16, 0.22), stoneMat);
-    mCottage.position.set(millX + 0.38, millBaseY + 0.08, millZ + 0.18);
+    mCottage.position.set(millX + 0.35, millBaseY + 0.08, millZ + 0.22);
     mCottage.castShadow = true;
     nwGroup.add(mCottage);
 
     const mRoof = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.12, 4), slateCapMat);
-    mRoof.position.set(millX + 0.38, millBaseY + 0.22, millZ + 0.18);
+    mRoof.position.set(millX + 0.35, millBaseY + 0.22, millZ + 0.22);
     mRoof.rotation.y = Math.PI * 0.25;
     nwGroup.add(mRoof);
 
-    // 2. Terraced Apple Orchard (-2.35, -2.45)
+    // 2. Terraced Apple Orchard (-2.20, -3.25) - Clearance > 1.20
     const orchardGroup = new THREE.Group();
-    orchardGroup.position.set(-2.35, 0.04, -2.45);
+    orchardGroup.position.set(-2.20, 0.04, -3.25);
 
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.85 });
     const leafMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.6, flatShading: true });
@@ -5612,10 +5615,10 @@ export class ThreeStage {
   private buildMountainMineAndLoggingCamp(): void {
     const neGroup = new THREE.Group();
 
-    // 1. "Gold Creek" Mountain Mine Portal (2.8, -2.6)
+    // 1. "Gold Creek" Mountain Mine Portal (2.0, -3.4) - Clearance > 1.00
     const mineGroup = new THREE.Group();
-    mineGroup.position.set(2.8, 0.04, -2.6);
-    mineGroup.rotation.y = 0.25;
+    mineGroup.position.set(2.0, 0.04, -3.4);
+    mineGroup.rotation.y = -Math.PI * 0.45;
 
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85, flatShading: true });
     const timberBeamMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.85 });
@@ -5737,9 +5740,9 @@ export class ThreeStage {
 
     neGroup.add(mineGroup);
 
-    // 2. Lumberjack Log Cabin & Timber Yard (3.95, -1.8)
+    // 2. Lumberjack Log Cabin & Timber Yard (4.65, -2.55) - Clearance > 1.10
     const logCabinGroup = new THREE.Group();
-    logCabinGroup.position.set(3.95, 0.04, -1.8);
+    logCabinGroup.position.set(4.65, 0.04, -2.55);
     logCabinGroup.rotation.y = -0.55;
 
     const logCabinMat = new THREE.MeshStandardMaterial({ color: 0x582f0e, roughness: 0.85 });
@@ -5804,8 +5807,8 @@ export class ThreeStage {
     const antlerMat = new THREE.MeshStandardMaterial({ color: 0xd4b996, roughness: 0.6 });
 
     const deerSpawns = [
-      { x: 3.5, z: -1.2, rotY: 0.6, hasAntlers: true },
-      { x: 3.8, z: -1.0, rotY: -0.8, hasAntlers: false },
+      { x: 3.8, z: -2.8, rotY: 0.6, hasAntlers: true },
+      { x: 4.1, z: -3.0, rotY: -0.8, hasAntlers: false },
     ];
     deerSpawns.forEach((d) => {
       const deer = new THREE.Group();
@@ -5878,19 +5881,19 @@ export class ThreeStage {
       ],
       // Central Station to NW Windmill
       [
-        [-0.3, -0.4], [-0.9, -0.9], [-1.6, -1.5], [-2.4, -2.0], [-3.1, -2.3]
+        [-0.3, -0.4], [-0.9, -0.9], [-1.6, -1.5], [-2.4, -2.0], [-3.3, -2.6], [-4.0, -3.1]
       ],
       // Central Station to NE Mine & Logging Camp
       [
-        [0.3, -0.4], [0.9, -0.9], [1.6, -1.5], [2.2, -2.1], [2.7, -2.5]
+        [0.3, -0.4], [0.9, -0.9], [1.5, -1.5], [1.9, -2.3], [2.0, -3.3]
       ],
       // SE Lake to Sunflower Farm & Wheat Prairie
       [
-        [2.9, 2.5], [3.5, 2.3], [4.0, 2.0], [4.4, 1.6]
+        [2.9, 2.5], [3.5, 2.6], [4.2, 2.7], [4.8, 2.6]
       ],
       // Sunflower Farm to East Apiary & Lavender Garden
       [
-        [4.4, 1.6], [4.55, 1.0], [4.65, 0.3]
+        [4.8, 2.6], [4.9, 1.5], [4.8, 0.8], [4.65, 0.3]
       ],
       // East Apiary to East Village Plaza
       [
@@ -5898,11 +5901,11 @@ export class ThreeStage {
       ],
       // NE Mine to North Castle Ruins (Mountain Pass)
       [
-        [2.7, -2.5], [1.5, -3.2], [0.0, -3.5], [-1.2, -3.6], [-2.3, -3.5]
+        [2.0, -3.3], [1.2, -3.4], [0.0, -3.5], [-1.2, -3.6], [-2.3, -3.5]
       ],
       // Castle Ruins to NW Windmill & Terrace
       [
-        [-2.3, -3.5], [-2.9, -3.0], [-3.1, -2.3]
+        [-2.3, -3.5], [-3.1, -3.4], [-4.0, -3.1]
       ],
     ];
 
