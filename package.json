@@ -5,7 +5,10 @@
   "scripts": {
     "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && bun build src/ts/recommendations-page.ts --outfile dist/js/recommendations.bundle.js --minify && tsc",
     "watch": "bun build src/ts/main.ts --outfile dist/js/bundle.js --watch",
-    "serve": "bunx serve . || npx serve ."
+    "dev": "bun run server.ts",
+    "start": "bun run server.ts",
+    "serve": "bun run server.ts",
+    "index-vectors": "bun run scripts/index-pinecone.ts"
   },
   "keywords": [
     "samtagon",
@@ -22,11 +25,13 @@
   "license": "MIT",
   "packageManager": "bun@1.3.14",
   "dependencies": {
+    "@pinecone-database/pinecone": "^9.0.0",
     "gsap": "^3.12.5",
     "three": "^0.160.0"
   },
   "devDependencies": {
     "@types/gsap": "^3.0.0",
+    "@types/node": "^26.6.5",
     "@types/three": "^0.160.0",
     "typescript": "^5.7.0"
   }

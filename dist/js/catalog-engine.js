@@ -1,5 +1,4 @@
 import { VectorEngine } from './vector-engine.js';
-import { OpenRouterEmbedder } from './openrouter-embed.js';
 // Comprehensive library of the most popular, iconic, and legendary video games in history
 export const CURATED_GAMES = [
     // --- PAGE 1: THE BIGGEST GLOBAL ICONS (Minecraft, GTA, CS2, Elden Ring, Fortnite, Zelda) ---
@@ -1167,6 +1166,7 @@ export class CatalogEngine {
             });
         }
         const scoredMatches = [];
+        const allScored = [];
         const isControllerQuery = trimmed === 'controller' || trimmed === 'gamepad';
         const isTopRatedQuery = trimmed === 'toprated' || trimmed === 'top rated' || trimmed === '99%' || trimmed === '100%';
         const isMultiplayerQuery = trimmed === 'co-op' || trimmed === 'multiplayer';
@@ -1199,25 +1199,29 @@ export class CatalogEngine {
             else {
                 hybrid = Math.min(0.95, cosSim * 0.70 + fuzzyScore * 0.30);
             }
-            if (hybrid > 0.28 || fuzzyScore > 0.35 || cosSim > 0.32) {
-                const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
-                const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
-                const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
-                scoredMatches.push({
-                    game,
-                    similarity: normalizedSim,
-                    fuzzyScore,
-                    hybridScore: hybrid,
-                    commonTags,
-                });
+            const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
+            const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
+            const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
+            const matchObj = {
+                game,
+                similarity: normalizedSim,
+                fuzzyScore,
+                hybridScore: hybrid,
+                commonTags,
+            };
+            allScored.push(matchObj);
+            if (hybrid > 0.22 || fuzzyScore > 0.25 || cosSim > 0.25) {
+                scoredMatches.push(matchObj);
             }
         }
-        VectorEngine.sortBySimilarity(scoredMatches);
-        const totalCount = scoredMatches.length;
+        // Guaranteed results: if no game met the threshold, fallback to best ranked candidates
+        const candidateList = scoredMatches.length > 0 ? scoredMatches : allScored;
+        VectorEngine.sortBySimilarity(candidateList);
+        const totalCount = candidateList.length;
         const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
         const safePage = Math.max(1, Math.min(totalPages, pageNumber));
         const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
-        const pageMatches = scoredMatches.slice(offset, offset + this.ITEMS_PER_PAGE);
+        const pageMatches = candidateList.slice(offset, offset + this.ITEMS_PER_PAGE);
         return {
             matches: pageMatches,
             totalPages,
@@ -1226,52 +1230,74 @@ export class CatalogEngine {
         };
     }
     /**
-     * Asynchronous Neural Vector Search utilizing OpenRouter API
+     * Vector Search API integration querying Pinecone Vector DB with OpenRouter embeddings
      */
-    static async searchCatalogNeural(query, pageNumber = 1) {
-        const trimmed = query.toLowerCase().trim();
-        if (!trimmed || !OpenRouterEmbedder.isAvailable()) {
-            return null;
+    static async searchCatalogVectorAPI(query, pageNumber = 1) {
+        const trimmed = query.trim();
+        if (!trimmed) {
+            const base = this.searchCatalog('', pageNumber);
+            return { ...base, source: 'local' };
         }
-        // 1. Fetch query embedding from OpenRouter API
-        const neuralVector = await OpenRouterEmbedder.embedText(trimmed);
-        if (!neuralVector || neuralVector.length === 0) {
-            return null;
-        }
-        // 2. Perform base sync search to populate candidates
-        const baseResult = this.searchCatalog(query, 1);
-        const candidates = [...this.allCurated];
-        // 3. Score against neural embeddings or projected dot product
-        const scored = [];
-        for (const game of candidates) {
-            const fuzzy = VectorEngine.computeFuzzyScore(trimmed, game);
-            const clientSim = VectorEngine.cosineSimilarity(VectorEngine.embedText(trimmed), game.embedding);
-            // Blend client similarity, fuzzy score, and neural projection
-            const combinedScore = fuzzy >= 0.70
-                ? Math.min(0.99, fuzzy * 0.70 + clientSim * 0.30)
-                : Math.min(0.96, clientSim * 0.65 + fuzzy * 0.35);
-            if (combinedScore > 0.25 || fuzzy > 0.30) {
-                scored.push({
-                    game,
-                    similarity: Number(Math.max(0.65, Math.min(0.99, combinedScore)).toFixed(2)),
-                    fuzzyScore: fuzzy,
-                    hybridScore: combinedScore,
-                    commonTags: game.tags.filter(t => trimmed.includes(t) || t.includes(trimmed)),
-                });
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&limit=72`);
+            if (response.ok) {
+                const json = await response.json();
+                if (json.success && Array.isArray(json.matches) && json.matches.length > 0) {
+                    const allMatches = json.matches.map((m) => {
+                        const rawGame = m.game;
+                        const isSteam = typeof rawGame.id === 'string' && rawGame.id.startsWith('steam-');
+                        const numericSteamId = isSteam ? parseInt(rawGame.id.replace('steam-', ''), 10) : null;
+                        const steamUrl = rawGame.storeUrl || (numericSteamId ? `https://store.steampowered.com/app/${numericSteamId}/` : 'https://samtagon.com');
+                        const extendedGame = {
+                            id: rawGame.id,
+                            title: rawGame.title,
+                            subtitle: rawGame.subtitle || `${rawGame.genres ? (Array.isArray(rawGame.genres) ? rawGame.genres.join(' • ') : rawGame.genres) : 'Action'} Experience`,
+                            description: rawGame.desc,
+                            image: rawGame.image,
+                            genres: Array.isArray(rawGame.genres) ? rawGame.genres : (rawGame.genres ? rawGame.genres.split(', ') : []),
+                            tags: Array.isArray(rawGame.tags) ? rawGame.tags : (rawGame.tags ? rawGame.tags.split(', ') : []),
+                            rating: rawGame.rating || 4.9,
+                            releaseYear: rawGame.year || 2023,
+                            developer: rawGame.studio || 'Game Studio',
+                            studioUrl: steamUrl,
+                            videoTrailer: rawGame.trailer,
+                            reviewsSummary: rawGame.rating >= 4.95 ? 'Overwhelmingly Positive' : 'Very Positive',
+                            reviewCount: 'Verified Global Reviews',
+                            platforms: [{ name: rawGame.badge || 'steam', url: steamUrl, badge: rawGame.badge || 'steam' }],
+                            embedding: [],
+                        };
+                        return {
+                            game: extendedGame,
+                            similarity: m.similarity,
+                            fuzzyScore: m.fuzzyScore,
+                            hybridScore: m.hybridScore,
+                            commonTags: m.commonTags || [],
+                        };
+                    });
+                    const totalCount = allMatches.length;
+                    const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
+                    const safePage = Math.max(1, Math.min(totalPages, pageNumber));
+                    const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
+                    const pageMatches = allMatches.slice(offset, offset + this.ITEMS_PER_PAGE);
+                    return {
+                        matches: pageMatches,
+                        totalPages,
+                        totalCount,
+                        currentPage: safePage,
+                        source: json.source || 'pinecone',
+                        model: json.model,
+                    };
+                }
             }
         }
-        VectorEngine.sortBySimilarity(scored);
-        const totalCount = scored.length;
-        const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
-        const safePage = Math.max(1, Math.min(totalPages, pageNumber));
-        const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
-        const pageMatches = scored.slice(offset, offset + this.ITEMS_PER_PAGE);
+        catch (e) {
+            console.warn('[CatalogEngine] Vector search API unavailable; using local engine:', e);
+        }
+        const localResult = this.searchCatalog(query, pageNumber);
         return {
-            matches: pageMatches,
-            totalPages,
-            totalCount,
-            currentPage: safePage,
-            isNeural: true,
+            ...localResult,
+            source: 'local',
+            model: 'Local Hybrid',
         };
     }
     static getSimilarGames(targetGame, count = 3) {

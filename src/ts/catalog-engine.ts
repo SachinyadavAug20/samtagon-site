@@ -1237,6 +1237,7 @@ export class CatalogEngine {
     }
 
     const scoredMatches: GameMatch[] = [];
+    const allScored: GameMatch[] = [];
 
     const isControllerQuery = trimmed === 'controller' || trimmed === 'gamepad';
     const isTopRatedQuery = trimmed === 'toprated' || trimmed === 'top rated' || trimmed === '99%' || trimmed === '100%';
@@ -1271,28 +1272,33 @@ export class CatalogEngine {
         hybrid = Math.min(0.95, cosSim * 0.70 + fuzzyScore * 0.30);
       }
 
-      if (hybrid > 0.28 || fuzzyScore > 0.35 || cosSim > 0.32) {
-        const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
-        const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
-        const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
+      const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
+      const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
+      const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
 
-        scoredMatches.push({
-          game,
-          similarity: normalizedSim,
-          fuzzyScore,
-          hybridScore: hybrid,
-          commonTags,
-        });
+      const matchObj: GameMatch = {
+        game,
+        similarity: normalizedSim,
+        fuzzyScore,
+        hybridScore: hybrid,
+        commonTags,
+      };
+
+      allScored.push(matchObj);
+      if (hybrid > 0.22 || fuzzyScore > 0.25 || cosSim > 0.25) {
+        scoredMatches.push(matchObj);
       }
     }
 
-    VectorEngine.sortBySimilarity(scoredMatches);
+    // Guaranteed results: if no game met the threshold, fallback to best ranked candidates
+    const candidateList = scoredMatches.length > 0 ? scoredMatches : allScored;
+    VectorEngine.sortBySimilarity(candidateList);
 
-    const totalCount = scoredMatches.length;
+    const totalCount = candidateList.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
     const safePage = Math.max(1, Math.min(totalPages, pageNumber));
     const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
-    const pageMatches = scoredMatches.slice(offset, offset + this.ITEMS_PER_PAGE);
+    const pageMatches = candidateList.slice(offset, offset + this.ITEMS_PER_PAGE);
 
     return {
       matches: pageMatches,
@@ -1303,9 +1309,9 @@ export class CatalogEngine {
   }
 
   /**
-   * Asynchronous Neural Vector Search utilizing OpenRouter API
+   * Vector Search API integration querying Pinecone Vector DB with OpenRouter embeddings
    */
-  public static async searchCatalogNeural(
+  public static async searchCatalogVectorAPI(
     query: string,
     pageNumber: number = 1
   ): Promise<{
@@ -1313,62 +1319,78 @@ export class CatalogEngine {
     totalPages: number;
     totalCount: number;
     currentPage: number;
-    isNeural: boolean;
-  } | null> {
-    const trimmed = query.toLowerCase().trim();
-    if (!trimmed || !OpenRouterEmbedder.isAvailable()) {
-      return null;
+    source: 'pinecone' | 'local';
+    model?: string;
+  }> {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      const base = this.searchCatalog('', pageNumber);
+      return { ...base, source: 'local' };
     }
 
-    // 1. Fetch query embedding from OpenRouter API
-    const neuralVector = await OpenRouterEmbedder.embedText(trimmed);
-    if (!neuralVector || neuralVector.length === 0) {
-      return null;
-    }
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}&limit=72`);
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && Array.isArray(json.matches) && json.matches.length > 0) {
+          const allMatches: GameMatch[] = json.matches.map((m: any) => {
+            const rawGame = m.game;
+            const isSteam = typeof rawGame.id === 'string' && rawGame.id.startsWith('steam-');
+            const numericSteamId = isSteam ? parseInt(rawGame.id.replace('steam-', ''), 10) : null;
+            const steamUrl = rawGame.storeUrl || (numericSteamId ? `https://store.steampowered.com/app/${numericSteamId}/` : 'https://samtagon.com');
+            const extendedGame: ExtendedGameItem = {
+              id: rawGame.id,
+              title: rawGame.title,
+              subtitle: rawGame.subtitle || `${rawGame.genres ? (Array.isArray(rawGame.genres) ? rawGame.genres.join(' • ') : rawGame.genres) : 'Action'} Experience`,
+              description: rawGame.desc,
+              image: rawGame.image,
+              genres: Array.isArray(rawGame.genres) ? rawGame.genres : (rawGame.genres ? rawGame.genres.split(', ') : []),
+              tags: Array.isArray(rawGame.tags) ? rawGame.tags : (rawGame.tags ? rawGame.tags.split(', ') : []),
+              rating: rawGame.rating || 4.9,
+              releaseYear: rawGame.year || 2023,
+              developer: rawGame.studio || 'Game Studio',
+              studioUrl: steamUrl,
+              videoTrailer: rawGame.trailer,
+              reviewsSummary: rawGame.rating >= 4.95 ? 'Overwhelmingly Positive' : 'Very Positive',
+              reviewCount: 'Verified Global Reviews',
+              platforms: [{ name: rawGame.badge || 'steam', url: steamUrl, badge: rawGame.badge || 'steam' }],
+              embedding: [],
+            };
 
-    // 2. Perform base sync search to populate candidates
-    const baseResult = this.searchCatalog(query, 1);
-    const candidates = [...this.allCurated];
+            return {
+              game: extendedGame,
+              similarity: m.similarity,
+              fuzzyScore: m.fuzzyScore,
+              hybridScore: m.hybridScore,
+              commonTags: m.commonTags || [],
+            };
+          });
 
-    // 3. Score against neural embeddings or projected dot product
-    const scored: GameMatch[] = [];
-    for (const game of candidates) {
-      const fuzzy = VectorEngine.computeFuzzyScore(trimmed, game);
-      const clientSim = VectorEngine.cosineSimilarity(
-        VectorEngine.embedText(trimmed),
-        game.embedding
-      );
+          const totalCount = allMatches.length;
+          const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
+          const safePage = Math.max(1, Math.min(totalPages, pageNumber));
+          const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
+          const pageMatches = allMatches.slice(offset, offset + this.ITEMS_PER_PAGE);
 
-      // Blend client similarity, fuzzy score, and neural projection
-      const combinedScore = fuzzy >= 0.70
-        ? Math.min(0.99, fuzzy * 0.70 + clientSim * 0.30)
-        : Math.min(0.96, clientSim * 0.65 + fuzzy * 0.35);
-
-      if (combinedScore > 0.25 || fuzzy > 0.30) {
-        scored.push({
-          game,
-          similarity: Number(Math.max(0.65, Math.min(0.99, combinedScore)).toFixed(2)),
-          fuzzyScore: fuzzy,
-          hybridScore: combinedScore,
-          commonTags: game.tags.filter(t => trimmed.includes(t) || t.includes(trimmed)),
-        });
+          return {
+            matches: pageMatches,
+            totalPages,
+            totalCount,
+            currentPage: safePage,
+            source: json.source || 'pinecone',
+            model: json.model,
+          };
+        }
       }
+    } catch (e) {
+      console.warn('[CatalogEngine] Vector search API unavailable; using local engine:', e);
     }
 
-    VectorEngine.sortBySimilarity(scored);
-
-    const totalCount = scored.length;
-    const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
-    const safePage = Math.max(1, Math.min(totalPages, pageNumber));
-    const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
-    const pageMatches = scored.slice(offset, offset + this.ITEMS_PER_PAGE);
-
+    const localResult = this.searchCatalog(query, pageNumber);
     return {
-      matches: pageMatches,
-      totalPages,
-      totalCount,
-      currentPage: safePage,
-      isNeural: true,
+      ...localResult,
+      source: 'local',
+      model: 'Local Hybrid',
     };
   }
 

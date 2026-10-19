@@ -362,7 +362,23 @@ class RecommendationsApp {
         this.setupEventListeners();
         this.setupSmoothPageTransitions();
         this.initQuiz();
+        this.checkInitialRoute();
         this.loadCatalog();
+        window.addEventListener('hashchange', () => {
+            this.checkInitialRoute();
+        });
+    }
+    checkInitialRoute() {
+        const hash = window.location.hash.toLowerCase();
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab')?.toLowerCase();
+        const queryParam = urlParams.get('q') || urlParams.get('search') || urlParams.get('query');
+        if (hash === '#explore' || tabParam === 'explore' || queryParam) {
+            this.switchTab('explore', queryParam || undefined);
+            setTimeout(() => {
+                this.searchInput?.focus();
+            }, 150);
+        }
     }
     initDOM() {
         this.tabQuizBtn = document.getElementById('tab-quiz-btn');
@@ -621,20 +637,40 @@ class RecommendationsApp {
         });
     }
     updateNeuralUI() {
-        const hasKey = OpenRouterEmbedder.isAvailable();
+        const hasClientKey = OpenRouterEmbedder.isAvailable();
         if (this.neuralStatusDot) {
-            this.neuralStatusDot.style.display = hasKey ? 'block' : 'none';
+            this.neuralStatusDot.style.display = hasClientKey ? 'block' : 'none';
         }
-        if (this.filterNeuralBtn) {
-            if (hasKey) {
+        fetch('/api/status')
+            .then((res) => res.json())
+            .then((data) => {
+            if (data && data.success) {
+                const isPinecone = data.pinecone?.configured;
+                const isOpenRouter = data.openrouter?.configured;
+                const isLive = isPinecone || isOpenRouter || hasClientKey;
+                if (this.neuralStatusDot) {
+                    this.neuralStatusDot.style.display = isLive ? 'block' : 'none';
+                }
+                if (this.filterNeuralBtn) {
+                    if (isLive) {
+                        this.filterNeuralBtn.classList.add('neural-active');
+                        this.filterNeuralBtn.title = isPinecone
+                            ? `⚡ Pinecone Vector Search Active (${data.openrouter?.model || 'OpenRouter'})`
+                            : `⚡ OpenRouter Neural Search Active (${data.openrouter?.model || 'OpenRouter'})`;
+                    }
+                    else {
+                        this.filterNeuralBtn.classList.remove('neural-active');
+                        this.filterNeuralBtn.title = 'Neural Vector Search (Configure .env with OPENROUTER_API_KEY & PINECONE_API_KEY)';
+                    }
+                }
+            }
+        })
+            .catch(() => {
+            if (this.filterNeuralBtn && hasClientKey) {
                 this.filterNeuralBtn.classList.add('neural-active');
                 this.filterNeuralBtn.title = `Neural AI Vector Search Active (OpenRouter / ${OpenRouterEmbedder.getModel()})`;
             }
-            else {
-                this.filterNeuralBtn.classList.remove('neural-active');
-                this.filterNeuralBtn.title = 'Neural AI Vector Search (Click to connect OpenRouter API Key)';
-            }
-        }
+        });
     }
     setupSmoothPageTransitions() {
         // Page load gentle entrance
@@ -1082,41 +1118,47 @@ class RecommendationsApp {
     async loadCatalog() {
         const querySnapshot = this.currentQuery.trim();
         const isSearching = querySnapshot.length > 0;
-        const result = CatalogEngine.searchCatalog(this.currentQuery, this.currentPage);
+        if (isSearching) {
+            if (this.catalogHeading) {
+                this.catalogHeading.textContent = `Search Results for "${this.currentQuery}"`;
+            }
+            if (this.resultCountSpan) {
+                this.resultCountSpan.innerHTML = `🔍 Searching vectors...`;
+            }
+            const vectorResult = await CatalogEngine.searchCatalogVectorAPI(querySnapshot, this.currentPage);
+            // Guard against race conditions if query changed while fetching
+            if (this.currentQuery.trim() !== querySnapshot)
+                return;
+            this.currentMatches = vectorResult.matches;
+            this.totalPages = vectorResult.totalPages;
+            this.totalCount = vectorResult.totalCount;
+            this.currentPage = vectorResult.currentPage;
+            if (this.resultCountSpan) {
+                if (vectorResult.source === 'pinecone') {
+                    this.resultCountSpan.innerHTML = `⚡ Pinecone Vector Search &bull; ${this.totalCount} matches &bull; Page ${this.currentPage} of ${this.totalPages}`;
+                }
+                else {
+                    this.resultCountSpan.innerHTML = `${this.totalCount} matching titles &bull; Page ${this.currentPage} of ${this.totalPages}`;
+                }
+            }
+            this.renderGamesGrid(this.currentMatches, true);
+            this.renderPaginationBar();
+            return;
+        }
+        // Default browse mode (empty search query)
+        const result = CatalogEngine.searchCatalog('', this.currentPage);
         this.currentMatches = result.matches;
         this.totalPages = result.totalPages;
         this.totalCount = result.totalCount;
         this.currentPage = result.currentPage;
-        // Update Header
         if (this.catalogHeading) {
-            this.catalogHeading.textContent = isSearching
-                ? `Search Results for "${this.currentQuery}"`
-                : 'Explore Catalog';
+            this.catalogHeading.textContent = 'Explore Catalog';
         }
         if (this.resultCountSpan) {
-            this.resultCountSpan.innerHTML = isSearching
-                ? `${this.totalCount} matching titles &bull; Page ${this.currentPage} of ${this.totalPages}`
-                : `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 12,000 titles`;
+            this.resultCountSpan.innerHTML = `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 12,000 titles`;
         }
-        // Render Grid
-        this.renderGamesGrid(this.currentMatches, isSearching);
-        // Render Pagination Bar
+        this.renderGamesGrid(this.currentMatches, false);
         this.renderPaginationBar();
-        // Asynchronous Neural Vector re-ranking when OpenRouter is available
-        if (isSearching && OpenRouterEmbedder.isAvailable()) {
-            const neuralResult = await CatalogEngine.searchCatalogNeural(querySnapshot, this.currentPage);
-            // Only apply if user hasn't typed a different query during the request
-            if (neuralResult && this.currentQuery.trim() === querySnapshot) {
-                this.currentMatches = neuralResult.matches;
-                this.totalPages = neuralResult.totalPages;
-                this.totalCount = neuralResult.totalCount;
-                if (this.resultCountSpan) {
-                    this.resultCountSpan.innerHTML = `✨ Neural AI Match &bull; ${this.totalCount} titles &bull; Page ${this.currentPage} of ${this.totalPages}`;
-                }
-                this.renderGamesGrid(this.currentMatches, isSearching);
-                this.renderPaginationBar();
-            }
-        }
     }
     /**
      * Navigate to target page
