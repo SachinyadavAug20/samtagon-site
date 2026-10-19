@@ -5490,6 +5490,7 @@ export class ThreeStage {
         });
         // Pointer Raycast Click Handler
         this.container.addEventListener('pointerdown', (e) => {
+            this.container.classList.add('is-dragging');
             // In Director / Cinema mode, clicking or tapping anywhere on the canvas cuts to the next dynamic shot!
             if (this.currentViewMode === 'director') {
                 this.cutDirectorAngle();
@@ -5694,13 +5695,13 @@ export class ThreeStage {
             ];
             const hits = this.raycaster.intersectObjects(interactiveTargets, true);
             if (hits.length > 0) {
-                this.container.style.cursor = 'pointer';
+                this.container.style.cursor = 'var(--cursor-pointer, url("/assets/cursors/funky-pointer.svg") 12 3, pointer)';
             }
             else {
                 if (this.waterMesh) {
                     const waterHits = this.raycaster.intersectObject(this.waterMesh, true);
                     if (waterHits.length > 0) {
-                        this.container.style.cursor = 'cell';
+                        this.container.style.cursor = 'var(--cursor-zoom-in, url("/assets/cursors/funky-zoom-in.svg") 18 18, crosshair)';
                         const now = performance.now();
                         if (now - this.lastHoverRippleTime > 160) {
                             this.lastHoverRippleTime = now;
@@ -5710,8 +5711,14 @@ export class ThreeStage {
                         return;
                     }
                 }
-                this.container.style.cursor = 'grab';
+                this.container.style.cursor = 'var(--cursor-grab, url("/assets/cursors/funky-grab.svg") 24 22, grab)';
             }
+        });
+        window.addEventListener('pointerup', () => {
+            this.container.classList.remove('is-dragging');
+        });
+        window.addEventListener('pointercancel', () => {
+            this.container.classList.remove('is-dragging');
         });
         // Keyboard Shortcuts (Space: Toot, R: Rain, T: Theme, 1-5: Views)
         window.addEventListener('keydown', (e) => {

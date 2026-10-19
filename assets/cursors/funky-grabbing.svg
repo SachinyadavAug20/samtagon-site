@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <filter id="gb-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="3.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.42" />
+    </filter>
+    <linearGradient id="gb-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#2dd4bf" stop-opacity="0.9" />
+      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+    </linearGradient>
+    <linearGradient id="gb-face" x1="15%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="35%" stop-color="#e0f2fe" stop-opacity="0.45" />
+      <stop offset="70%" stop-color="#fdf4ff" stop-opacity="0.40" />
+      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.60" />
+    </linearGradient>
+    <linearGradient id="gb-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="#a5f3fc" stop-opacity="0.92" />
+      <stop offset="65%" stop-color="#f472b6" stop-opacity="0.88" />
+      <stop offset="100%" stop-color="#e879f9" stop-opacity="0.92" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#gb-shadow)">
+    <!-- 3D Under-Bevel -->
+    <path 
+      d="M 15 14 C 15 11.5 17 9.5 19.5 9.5 L 30 9.5 C 33.5 9.5 36.5 12.5 36.5 16 L 36.5 26 C 36.5 32 32 37 26 37 L 22 37 C 16 37 12 32.5 12 27 L 12 21 C 12 17 14 15 15 14 Z M 16 19 L 32 19 M 16 25 L 33 25"
+      fill="url(#gb-edge)"
+      stroke="url(#gb-edge)"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+      transform="translate(2.5, 3.0)"
+    />
+    <!-- Dark Contour -->
+    <path 
+      d="M 15 14 C 15 11.5 17 9.5 19.5 9.5 L 30 9.5 C 33.5 9.5 36.5 12.5 36.5 16 L 36.5 26 C 36.5 32 32 37 26 37 L 22 37 C 16 37 12 32.5 12 27 L 12 21 C 12 17 14 15 15 14 Z"
+      fill="none"
+      stroke="#0f172a"
+      stroke-width="1.6"
+      stroke-opacity="0.25"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+    <!-- Glass Surface -->
+    <path 
+      d="M 15 14 C 15 11.5 17 9.5 19.5 9.5 L 30 9.5 C 33.5 9.5 36.5 12.5 36.5 16 L 36.5 26 C 36.5 32 32 37 26 37 L 22 37 C 16 37 12 32.5 12 27 L 12 21 C 12 17 14 15 15 14 Z"
+      fill="url(#gb-face)"
+      stroke="url(#gb-rim)"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+    <!-- Knuckle creases and highlights -->
+    <path 
+      d="M 16 18 C 19 16 27 16 32 18 M 15 24 C 19 22 28 22 33 24 M 18 11.5 L 29 11.5"
+      stroke="#ffffff"
+      stroke-width="1.4"
+      stroke-linecap="round"
+      stroke-opacity="0.85"
+    />
+    <circle cx="20" cy="11.5" r="1.1" fill="#ffffff" opacity="0.95" />
+    <circle cx="26" cy="11.5" r="1.1" fill="#ffffff" opacity="0.95" />
+  </g>
+</svg>

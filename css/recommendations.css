@@ -845,7 +845,7 @@
 
 .page-btn:disabled {
   opacity: 0.35;
-  cursor: not-allowed;
+  cursor: var(--cursor-not-allowed, url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed);
   pointer-events: none;
 }
 

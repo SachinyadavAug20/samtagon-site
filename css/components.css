@@ -173,7 +173,7 @@
   width: 100%;
   height: clamp(560px, 66vh, 760px);
   display: block;
-  cursor: grab;
+  cursor: var(--cursor-grab, url('/assets/cursors/funky-grab.svg') 24 22, grab);
   outline: none;
   position: relative;
   z-index: 1;
@@ -182,8 +182,8 @@
   -webkit-mask-image: radial-gradient(ellipse 96% 92% at 50% 50%, #000 82%, transparent 100%);
 }
 
-.zen-canvas-holder:active {
-  cursor: grabbing;
+.zen-canvas-holder:active, .zen-canvas-holder.is-dragging {
+  cursor: var(--cursor-grabbing, url('/assets/cursors/funky-grabbing.svg') 24 23, grabbing) !important;
 }
 
 /* Modern Minimalist SVG Controls Toolbar (Zero blur, zero harsh borders) */

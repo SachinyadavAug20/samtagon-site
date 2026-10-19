@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <filter id="t-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+    <linearGradient id="t-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#2dd4bf" stop-opacity="0.9" />
+      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+    </linearGradient>
+    <linearGradient id="t-face" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#e0f2fe" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.7" />
+    </linearGradient>
+    <linearGradient id="t-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#a5f3fc" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#f472b6" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#t-shadow)">
+    <!-- 3D Under-Bevel -->
+    <path 
+      d="M 16 8 L 32 8 M 24 8 L 24 40 M 16 40 L 32 40"
+      stroke="url(#t-edge)"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      transform="translate(2.2, 2.8)"
+    />
+    <!-- Dark Contour -->
+    <path 
+      d="M 16 8 L 32 8 M 24 8 L 24 40 M 16 40 L 32 40"
+      stroke="#0f172a"
+      stroke-width="4.2"
+      stroke-linecap="round"
+      stroke-opacity="0.3"
+    />
+    <!-- Glass Surface -->
+    <path 
+      d="M 16 8 L 32 8 M 24 8 L 24 40 M 16 40 L 32 40"
+      stroke="url(#t-face)"
+      stroke-width="3.2"
+      stroke-linecap="round"
+    />
+    <path 
+      d="M 16 8 L 32 8 M 24 8 L 24 40 M 16 40 L 32 40"
+      stroke="url(#t-rim)"
+      stroke-width="1.6"
+      stroke-linecap="round"
+    />
+    <!-- Specular Center Line -->
+    <line x1="24" y1="9" x2="24" y2="39" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.9" />
+  </g>
+</svg>

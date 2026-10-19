@@ -11,7 +11,7 @@ html {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  cursor: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
+  cursor: var(--cursor-arrow, url('/assets/cursors/funky-arrow.svg') 5 4, auto);
   transition: background-color 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -22,7 +22,7 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  cursor: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
+  cursor: var(--cursor-arrow, url('/assets/cursors/funky-arrow.svg') 5 4, auto);
   transition: background-color 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -31,22 +31,36 @@ body {
   color: var(--accent-emerald);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+/* Universal Point Cursors */
+a, button, [role="button"], [role="tab"], select, summary,
+input[type="button"], input[type="submit"], input[type="reset"],
+.clickable, .nav-link, .card, .pill, .btn {
+  cursor: var(--cursor-pointer, url('/assets/cursors/funky-pointer.svg') 12 3, pointer);
 }
 
 button {
   font-family: inherit;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   border: none;
   background: none;
 }
 
-[role="button"], [role="tab"], select, summary,
-input[type="button"], input[type="submit"], input[type="reset"] {
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+/* Universal Text / I-Beam Cursors */
+input[type="text"], input[type="search"], input[type="email"], input[type="password"],
+input[type="number"], input[type="tel"], input[type="url"], textarea, [contenteditable="true"] {
+  cursor: var(--cursor-text, url('/assets/cursors/funky-text.svg') 24 24, text);
+}
+
+/* Universal Disabled / Not-Allowed Cursors */
+:disabled, [disabled], [aria-disabled="true"], .disabled, button:disabled {
+  cursor: var(--cursor-not-allowed, url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed) !important;
+}
+
+/* Universal View / Drag / Orbit Cursors */
+.grab, [data-draggable="true"], .draggable, .view-orbit, .orbit-control {
+  cursor: var(--cursor-grab, url('/assets/cursors/funky-grab.svg') 24 22, grab);
+}
+.grabbing, .is-dragging, .is-orbiting, .grab:active, [data-draggable="true"]:active {
+  cursor: var(--cursor-grabbing, url('/assets/cursors/funky-grabbing.svg') 24 23, grabbing) !important;
 }
 
 .container {

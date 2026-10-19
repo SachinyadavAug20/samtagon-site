@@ -21,9 +21,15 @@
 
   --highlight: #F59E0B;
 
-  /* Funky Meta Cursors (Hardware-accelerated) */
+  /* Universal 3D Iridescent Frosted Glass Cursors (Hardware-accelerated) */
   --cursor-arrow: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
   --cursor-pointer: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  --cursor-grab: url('/assets/cursors/funky-grab.svg') 24 22, grab;
+  --cursor-grabbing: url('/assets/cursors/funky-grabbing.svg') 24 23, grabbing;
+  --cursor-text: url('/assets/cursors/funky-text.svg') 24 24, text;
+  --cursor-zoom-in: url('/assets/cursors/funky-zoom-in.svg') 18 18, zoom-in;
+  --cursor-zoom-out: url('/assets/cursors/funky-zoom-out.svg') 18 18, zoom-out;
+  --cursor-not-allowed: url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed;
 
   /* Backward Compatibility Mapping */
   --accent-emerald: var(--primary);
