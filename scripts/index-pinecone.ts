@@ -85,12 +85,12 @@ async function main() {
   const games = PineconeService.getAllGames();
   console.log(`✅ Loaded ${games.length} total unique games from catalog.\n`);
 
-  // Batch embedding & upserting
-  const BATCH_SIZE = 10;
+  // Batch embedding & upserting (Pinecone efficiently ingests 100 vectors per request)
+  const BATCH_SIZE = 100;
   const totalBatches = Math.ceil(games.length / BATCH_SIZE);
   let totalUpserted = 0;
 
-  console.log(`🚀 Starting vector embedding via OpenRouter (${env.openrouterModel})...`);
+  console.log(`🚀 Starting vector embedding & indexing into Pinecone (${env.openrouterModel} + 1024-dim neural engine)...`);
 
   for (let b = 0; b < totalBatches; b++) {
     const startIdx = b * BATCH_SIZE;
@@ -118,7 +118,7 @@ async function main() {
           genres: game.genres.join(', '),
           year: game.year,
           rating: game.rating,
-          desc: game.desc.slice(0, 1000), // metadata limit safety
+          desc: PineconeService.generateDetailedSemanticDescription(game).slice(0, 1000), // Detailed description in Vector DB
           image: game.image,
           trailer: game.trailer,
           storeUrl: game.storeUrl,
@@ -136,9 +136,9 @@ async function main() {
       console.log(`❌ Upsert failed!`);
     }
 
-    // Brief pause between batches to respect rate limits
+    // Brief pause between batches
     if (b < totalBatches - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 80));
     }
   }
 

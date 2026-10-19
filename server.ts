@@ -243,9 +243,10 @@ Bun.serve({
       if (stats.isFile()) {
         const file = Bun.file(safePath);
         const contentType = getContentType(safePath);
-        const cacheControl = safePath.endsWith('.html')
-          ? 'public, max-age=0, must-revalidate'
-          : 'public, max-age=31536000, immutable';
+        const isDynamicDev = safePath.endsWith('.html') || safePath.endsWith('.js') || safePath.endsWith('.css') || safePath.endsWith('.json');
+        const cacheControl = isDynamicDev
+          ? 'no-cache, no-store, must-revalidate'
+          : 'public, max-age=86400';
 
         return new Response(file, {
           headers: {

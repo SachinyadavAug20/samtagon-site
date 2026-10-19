@@ -21,6 +21,10 @@
 
   --highlight: #F59E0B;
 
+  /* Funky Meta Cursors (Hardware-accelerated) */
+  --cursor-arrow: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
+  --cursor-pointer: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+
   /* Backward Compatibility Mapping */
   --accent-emerald: var(--primary);
   --accent-emerald-hover: var(--primary-hover);

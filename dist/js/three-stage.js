@@ -151,6 +151,7 @@ export class ThreeStage {
     steamTimer = 0;
     // Track Curve & Physics
     trackCurve;
+    trackSamplePoints = [];
     progress = 0.62; // Starts prominently on scenic foreground meadow
     trainSpeed = 0.00085;
     speedMultiplier = 1.0;
@@ -669,8 +670,8 @@ export class ThreeStage {
             [-0.18, 0.82], [-0.36, 0.76], [-0.55, 0.68], [-0.74, 0.58], [-0.95, 0.46], [-1.15, 0.35],
             // Promenade from Station (0.00, 0.85) heading east towards village plaza
             [0.18, 0.82], [0.36, 0.76], [0.55, 0.68], [0.74, 0.58], [0.95, 0.46], [1.15, 0.32], [1.32, 0.18],
-            // Stepping stones approaching canal bridge
-            [-0.14, 0.16], [-0.08, 0.10], [0.0, 0.0], [0.08, -0.10], [0.14, -0.16],
+            // Stepping stones approaching canal bridge (flanking the rails without sitting on ties)
+            [-0.14, 0.16], [-0.09, 0.11], [0.09, -0.11], [0.14, -0.16],
         ];
         pathCoords.forEach(([px, pz], idx) => {
             const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.052, 0.010, 7), gravelMat);
@@ -981,6 +982,7 @@ export class ThreeStage {
             new THREE.Vector3(-0.49, 0.055, -0.51),
         ];
         this.trackCurve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+        this.trackSamplePoints = this.trackCurve.getPoints(300);
     }
     /* =========================================================================
        6. PHYSICAL 3D WOODEN TIES WITH GRAIN TEXTURE & EXTRUDED STEEL RAILS
@@ -2017,7 +2019,7 @@ export class ThreeStage {
         // 1. Railroad Level Crossing with Alternating Red Beacons
         const crossingGroup = new THREE.Group();
         // Positioned safely beside the rails with generous train clearance
-        crossingGroup.position.set(-0.45, 0, 0.82);
+        crossingGroup.position.set(-0.32, 0, 0.96);
         const post = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.38, 8), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6 }));
         post.position.y = 0.19;
         post.castShadow = true;
@@ -2047,12 +2049,12 @@ export class ThreeStage {
         this.crossingLight2.position.copy(this.crossingLamp2.position);
         crossingGroup.add(this.crossingLight2);
         this.sceneryGroup.add(crossingGroup);
-        // 2. Trackside Telegraph Poles (Positioned on the scenic perimeter with min clearance > 0.41)
+        // 2. Trackside Telegraph Poles (Positioned on the scenic perimeter with min clearance > 0.58)
         const poleCoords = [
-            [-1.20, 1.45],
-            [-0.45, 1.35],
-            [0.45, -1.35],
-            [1.20, -1.45],
+            [-1.65, 1.25],
+            [-0.45, 1.85],
+            [0.45, -1.85],
+            [1.65, -1.25],
         ];
         const poleWood = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
         poleCoords.forEach(([px, pz]) => {
@@ -2080,13 +2082,18 @@ export class ThreeStage {
        10. LUSH NATURE, FLUFFY TREES & GRAZING SHEEP MEEPLES
        ========================================================================= */
     getApproxDistanceToTrack(x, z) {
+        if (!this.trackSamplePoints || this.trackSamplePoints.length === 0) {
+            if (this.trackCurve) {
+                this.trackSamplePoints = this.trackCurve.getPoints(300);
+            }
+            else {
+                return 1.0;
+            }
+        }
         let minD = Infinity;
-        const N = 140;
-        for (let i = 0; i < N; i++) {
-            const t = (i / N) * Math.PI * 2;
-            const tx = Math.sin(t) * 3.30;
-            const tz = Math.sin(2 * t) * 1.60;
-            const d = Math.hypot(tx - x, tz - z);
+        for (let i = 0; i < this.trackSamplePoints.length; i++) {
+            const p = this.trackSamplePoints[i];
+            const d = Math.hypot(p.x - x, p.z - z);
             if (d < minD)
                 minD = d;
         }
@@ -3095,8 +3102,8 @@ export class ThreeStage {
        ========================================================================= */
     buildRailwayServiceDepot() {
         const depotGroup = new THREE.Group();
-        // Safely positioned on the North-East Railway Plateau (clearance > 0.85)
-        depotGroup.position.set(1.70, 0.04, -2.10);
+        // Safely positioned on the North-East Railway Plateau (clearance > 1.05)
+        depotGroup.position.set(1.00, 0.04, -2.85);
         const stoneMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.7 });
         const corrugatedMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.35 });
@@ -3922,9 +3929,9 @@ export class ThreeStage {
        ========================================================================= */
     buildForestLakeAndCampsite() {
         const seGroup = new THREE.Group();
-        // 1. Pristine Mountain Lake / Reflection Pond (3.2, 2.7)
+        // 1. Pristine Mountain Lake / Reflection Pond (3.20, 3.65) - Safe clearance > 0.58 from rails
         const lakeGroup = new THREE.Group();
-        lakeGroup.position.set(3.2, 0.04, 2.7);
+        lakeGroup.position.set(3.20, 0.04, 3.65);
         // Sandy Shore Ring
         const sandMat = new THREE.MeshStandardMaterial({ color: 0xd4b996, roughness: 0.8 });
         const shoreRing = new THREE.Mesh(new THREE.RingGeometry(0.55, 0.82, 24), sandMat);
@@ -4021,9 +4028,9 @@ export class ThreeStage {
         this.lakeRowboat = rowboat;
         lakeGroup.add(rowboat);
         seGroup.add(lakeGroup);
-        // 2. Cozy Backpacker / Explorer Campsite (2.15, 2.25)
+        // 2. Cozy Backpacker / Explorer Campsite (1.90, 3.25) - Safe clearance > 1.25 from rails
         const campGroup = new THREE.Group();
-        campGroup.position.set(2.15, 0.04, 2.25);
+        campGroup.position.set(1.90, 0.04, 3.25);
         campGroup.rotation.y = -0.3;
         const tentMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.7, side: THREE.DoubleSide });
         const tentFrameMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
@@ -4103,9 +4110,9 @@ export class ThreeStage {
         guitarNeck.rotation.z = -0.3;
         campGroup.add(guitarNeck);
         seGroup.add(campGroup);
-        // 3. Stone Wishing Well & Sunflower Garden (3.7, 1.3)
+        // 3. Stone Wishing Well & Sunflower Garden (3.40, 0.90) - Safe clearance 1.00 from rails
         const wellGroup = new THREE.Group();
-        wellGroup.position.set(3.7, 0.04, 1.3);
+        wellGroup.position.set(3.40, 0.04, 0.90);
         const wellCobbleMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8, flatShading: true });
         const wellBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.12, 8), wellCobbleMat);
         wellBase.position.y = 0.06;
@@ -4465,9 +4472,9 @@ export class ThreeStage {
         const heatherMat = new THREE.MeshStandardMaterial({ color: 0xec4899, roughness: 0.6 });
         const wisteriaMat = new THREE.MeshStandardMaterial({ color: 0xc084fc, roughness: 0.5 });
         const foliageMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.6 });
-        // 1. Beekeeper's Wooden Apiary (4.75, 0.3)
+        // 1. Beekeeper's Wooden Apiary (5.65, 0.3) - Safe clearance > 1.10 from rails
         const apiaryGroup = new THREE.Group();
-        apiaryGroup.position.set(4.75, gBaseY, 0.3);
+        apiaryGroup.position.set(5.65, gBaseY, 0.3);
         apiaryGroup.rotation.y = -0.3;
         // Trestle Stand
         const trestle = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.02, 0.12), woodMat);
@@ -4503,11 +4510,11 @@ export class ThreeStage {
             apiaryGroup.add(lid);
         });
         gardenGroup.add(apiaryGroup);
-        // 2. Raised Lavender & Heather Garden Beds (4.8, -0.35)
+        // 2. Raised Lavender & Heather Garden Beds (5.65, -0.35) - Safe clearance > 1.15 from rails
         for (let b = 0; b < 3; b++) {
             const bz = -0.22 - b * 0.16;
             const bed = new THREE.Group();
-            bed.position.set(4.8, gBaseY, bz);
+            bed.position.set(5.65, gBaseY, bz);
             // Stone Border Bed
             const border = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.035, 0.12), stoneMat);
             border.position.y = 0.018;
@@ -4527,9 +4534,9 @@ export class ThreeStage {
             }
             gardenGroup.add(bed);
         }
-        // 3. Rustic Timber Pergola & Stone Sundial (4.3, -0.1)
+        // 3. Rustic Timber Pergola & Stone Sundial (5.45, -0.1) - Safe clearance > 0.93 from rails
         const pergola = new THREE.Group();
-        pergola.position.set(4.3, gBaseY, -0.1);
+        pergola.position.set(5.45, gBaseY, -0.1);
         [-0.14, 0.14].forEach((px) => {
             [-0.14, 0.14].forEach((pz) => {
                 const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.24, 0.022), woodMat);
@@ -4566,12 +4573,12 @@ export class ThreeStage {
         pLantern.position.set(0, 0.22, 0);
         pergola.add(pLantern);
         const pergolaLight = new THREE.PointLight(0xfef08a, 0, 1.8);
-        pergolaLight.position.set(4.3, gBaseY + 0.22, -0.1);
+        pergolaLight.position.set(5.45, gBaseY + 0.22, -0.1);
         this.v13NightLights.push(pergolaLight);
         gardenGroup.add(pergolaLight);
-        // Stone Sundial on Pedestal (4.45, 0.15)
+        // Stone Sundial on Pedestal (5.45, 0.15) - Safe clearance > 0.92 from rails
         const sundialGroup = new THREE.Group();
-        sundialGroup.position.set(4.45, gBaseY, 0.15);
+        sundialGroup.position.set(5.45, gBaseY, 0.15);
         const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.09, 8), stoneMat);
         pedestal.position.y = 0.045;
         sundialGroup.add(pedestal);
@@ -5353,7 +5360,7 @@ export class ThreeStage {
         const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
         const signpostCoords = [
             { x: 0.15, z: 0.65, rotY: 0.2 }, // Central station fork
-            { x: 2.90, z: 2.40, rotY: -0.6 }, // Lake / Farm fork
+            { x: 2.60, z: 2.70, rotY: -0.6 }, // Lake / Farm fork
             { x: -2.30, z: -3.20, rotY: 0.8 }, // Castle / Mountain ridge fork
         ];
         signpostCoords.forEach((sp) => {

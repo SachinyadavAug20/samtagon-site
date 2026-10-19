@@ -25,8 +25,8 @@ export const CURATED_GAMES = [
         year: 2013,
         rating: 4.96,
         trailer: 'https://www.youtube.com/embed/QkkoHAzjnUs',
-        desc: 'Pull off high-stakes heists across the sprawling, sun-soaked metropolis of Los Santos as Michael, Trevor, and Franklin in one of the most successful entertainment products in human history.',
-        tags: ['gta', 'gta 5', 'gta v', 'grand theft auto', 'open world', 'crime', 'multiplayer', 'los santos', 'rockstar', 'action']
+        desc: 'Sprawling open-world gangster and crime epic set across the sun-soaked metropolis of Los Santos and Blaine County. Plan and execute multi-part high-stakes heists, engage in intense street shootouts, outrun aggressive police pursuits, steal getaway vehicles, and navigate criminal underworld syndicates as Michael, Trevor, and Franklin in the definitive open-world action masterpiece.',
+        tags: ['gta', 'gta 5', 'gta v', 'grand theft auto', 'open world', 'crime', 'gangster', 'gangsters', 'gang', 'heist', 'heists', 'car theft', 'carjacking', 'police chase', 'multiplayer', 'los santos', 'rockstar', 'action', 'sandbox', 'underworld']
     },
     {
         id: 730,
@@ -301,8 +301,8 @@ export const CURATED_GAMES = [
         year: 2004,
         rating: 4.94,
         trailer: 'https://www.youtube.com/embed/V9TXEI582YQ',
-        desc: 'CJ returns home to Los Santos in early 90s California to save his family and take control of the streets across San Andreas in one of the most beloved open-world games ever.',
-        tags: ['gta', 'san andreas', 'gta san andreas', 'cj', 'rockstar', 'open world', 'classic', 'crime']
+        desc: 'Iconic 90s open-world gangster and street gang saga. Carl CJ Johnson returns to Grove Street in Los Santos, battling corrupt cops, rival Ballas gangs, and betrayal across the entire state of San Andreas. Seize gang turf, customize lowriders, execute drive-bys, and build an unstoppable criminal empire in gaming history most beloved open-world crime epic.',
+        tags: ['gta', 'san andreas', 'gta san andreas', 'cj', 'grove street', 'rockstar', 'open world', 'classic', 'crime', 'gangster', 'gangsters', 'gang', 'gang wars', 'drive by', 'car theft', 'los santos']
     },
     {
         id: 2215430,
@@ -1035,6 +1035,38 @@ export class CatalogEngine {
         });
         return list;
     }
+    static generateEnrichedDescription(title, studio, genres, year, sentiment, positiveReviews) {
+        const genreSnippets = {
+            Shooter: 'Engage in fast-paced tactical firefights with precision weapon handling, ballistic recoil control, and intense combat engagements.',
+            Multiplayer: 'Team up with allies or battle rivals in dynamic online lobbies featuring competitive squad coordination and community matchmaking.',
+            Survival: 'Overcome harsh environmental hazards, manage hunger and vital resources, craft essential gear, and withstand deadly hostile threats.',
+            'Open World': 'Explore a sprawling open world filled with nonlinear quests, dynamic weather events, hidden secrets, and total player autonomy.',
+            Crafting: 'Harvest raw materials and assemble advanced tools, weaponry, fortifications, and technological upgrades through extensive crafting trees.',
+            RPG: 'Customize your character build, unlock specialized skill trees, collect rare equipment, and embark on epic narrative questlines.',
+            'Action RPG': 'Deliver fluid combat combos, master dodge and parry timing, and develop unique class archetypes against formidable bosses.',
+            Action: 'Experience high-octane set-pieces, fluid movement mechanics, and thrilling combat encounters that test your reflexes.',
+            Adventure: 'Unravel immersive lore, navigate perilous landscapes, interact with intriguing characters, and solve environmental obstacles.',
+            Strategy: 'Formulate grand tactical doctrines, command armies, manage supply chains, and outmaneuver opponent factions on the grand map.',
+            'City Builder': 'Architect urban zones, balance infrastructure networks, manage citizen needs, and expand a bustling civilization.',
+            Simulation: 'Master realistic mechanical systems, authentic physics simulations, and true-to-life operational management.',
+            Management: 'Optimize complex logistics, balance fiscal budgets, supervise personnel, and scale efficient operational workflows.',
+            Roguelike: 'Embark on permadeath procedural runs where discovering synergistic relic combinations is key to conquering escalating danger.',
+            'Survival Horror': 'Endure psychological dread, scarce resources, claustrophobic corridors, and terrifying adversaries in an eerie, unsettling atmosphere.',
+            Atmospheric: 'Immerse yourself in haunting ambient audio design, evocative environmental storytelling, and breathtaking visual moods.',
+            Automation: 'Design intricate automated conveyor systems, optimize factory production pipelines, and scale continuous manufacturing loops.',
+            'Base Building': 'Construct defensive perimeters, automate power grids, and engineer modular bases to support growing industrial operations.',
+            Racing: 'Push high-performance vehicles to their limits with realistic drift physics, vehicle tuning, and razor-sharp cornering.',
+            Driving: 'Navigate rugged terrains, heavy transport machinery, and detailed vehicle cabins across challenging vehicular routes.',
+            Puzzle: 'Exercise lateral thinking to solve intricate spatial mechanisms, logic puzzles, and mind-bending environmental challenges.',
+            'Co-op': 'Coordinate strategies with friends in drop-in cooperative play where communication and teamwork decide victory.',
+        };
+        const highlights = genres
+            .map((g) => genreSnippets[g])
+            .filter(Boolean)
+            .slice(0, 3)
+            .join(' ');
+        return `${title} is an acclaimed ${genres.join(' / ')} experience developed by ${studio}. ${highlights} Released in ${year}, the game holds a ${sentiment} status on Steam with over ${positiveReviews.toLocaleString()} verified positive reviews.`;
+    }
     static buildFullLibrary() {
         const list = [...this.allCurated];
         const seenTitles = new Set();
@@ -1063,13 +1095,14 @@ export class CatalogEngine {
                 'pc gaming',
             ];
             const steamUrl = `https://store.steampowered.com/app/${appid}/`;
-            const capsule = `https://shared.steamstatic.com/store_item_assets/steam/apps/${appid}/capsule_616x353.jpg`;
+            const capsule = `https://shared.steamstatic.com/store_item_assets/steam/apps/${appid}/header.jpg`;
             const sentiment = rating >= 4.8 ? 'Overwhelmingly Positive' : rating >= 4.5 ? 'Very Positive' : 'Positive';
+            const richDesc = this.generateEnrichedDescription(title, studio, genres, year, sentiment, positiveReviews);
             list.push({
                 id: `steam-${appid}`,
                 title,
                 subtitle: `${genres.slice(0, 2).join(' • ')} Experience`,
-                description: `${title} is a renowned ${genres.join(' / ')} title crafted by ${studio}. Experience captivating gameplay mechanics, rich atmosphere, and positive community praise on Steam.`,
+                description: richDesc,
                 image: capsule,
                 genres: genres.length > 0 ? genres : ['Action', 'Adventure'],
                 tags,
@@ -1083,7 +1116,7 @@ export class CatalogEngine {
                 platforms: [
                     { name: 'Steam Store', url: steamUrl, badge: 'steam' },
                 ],
-                embedding: VectorEngine.embedText(`${title} ${genres.join(' ')} ${studio}`),
+                embedding: VectorEngine.embedText(`${title} ${genres.join(' ')} ${studio} ${richDesc.slice(0, 200)}`),
             });
         }
         return list;
@@ -1148,12 +1181,14 @@ export class CatalogEngine {
             }
             let hybrid = 0;
             if (fuzzyScore >= 0.70) {
-                hybrid = Math.min(0.99, fuzzyScore * 0.85 + cosSim * 0.15);
+                hybrid = Math.min(0.9945, fuzzyScore * 0.90 + cosSim * 0.10);
             }
             else {
-                hybrid = Math.min(0.95, cosSim * 0.70 + fuzzyScore * 0.30);
+                hybrid = Math.min(0.95, cosSim * 0.65 + fuzzyScore * 0.35);
             }
-            const normalizedSim = Number(Math.max(0.60, Math.min(0.99, Math.max(hybrid, fuzzyScore))).toFixed(2));
+            // Format clean two-decimal similarity
+            const finalSim = fuzzyScore >= 0.70 ? Math.max(hybrid, fuzzyScore) : hybrid;
+            const normalizedSim = Number(Math.min(0.9945, Math.max(0.35, finalSim)).toFixed(4));
             const queryTokens = trimmed.split(/\s+/).filter(t => t.length > 2);
             const commonTags = game.tags.filter(t => queryTokens.some(tok => t.includes(tok) || tok.includes(t)));
             const matchObj = {
@@ -1164,13 +1199,26 @@ export class CatalogEngine {
                 commonTags,
             };
             allScored.push(matchObj);
-            if (hybrid > 0.22 || fuzzyScore > 0.25 || cosSim > 0.25) {
+            if (fuzzyScore >= 0.60 || hybrid > 0.30 || cosSim > 0.35) {
                 scoredMatches.push(matchObj);
             }
         }
-        // Guaranteed results: if no game met the threshold, fallback to best ranked candidates
-        const candidateList = scoredMatches.length > 0 ? scoredMatches : allScored;
-        VectorEngine.sortBySimilarity(candidateList);
+        // Direct matches filter: when direct title/tag/acronym matches exist, show ONLY them!
+        const directMatches = scoredMatches.filter((m) => m.fuzzyScore >= 0.70);
+        const candidateList = directMatches.length > 0
+            ? directMatches
+            : scoredMatches.filter((m) => m.fuzzyScore >= 0.50 || m.hybridScore >= 0.30);
+        // If still empty, fall back to best candidates
+        const finalList = candidateList.length > 0 ? candidateList : allScored.slice(0, 36);
+        // Precise descending sort: direct fuzzy title hits rank at top, then hybrid similarity
+        finalList.sort((a, b) => {
+            if (a.fuzzyScore >= 0.70 || b.fuzzyScore >= 0.70) {
+                if (Math.abs(b.fuzzyScore - a.fuzzyScore) > 0.001) {
+                    return b.fuzzyScore - a.fuzzyScore;
+                }
+            }
+            return b.hybridScore - a.hybridScore;
+        });
         const totalCount = candidateList.length;
         const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
         const safePage = Math.max(1, Math.min(totalPages, pageNumber));

@@ -1,28 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 54" width="280" height="54" fill="none">
-  <!-- Bespoke Solid Faceted S-Polygon Studio Mark (Light Mode) -->
+  <!-- Bespoke Solid Faceted S-Polygon Studio Mark -->
   <g transform="translate(6, 4)">
     <!-- Base Hex-Shield Silhouette Plate -->
-    <polygon points="23,1 42,12 42,34 23,45 4,34 4,12" fill="#0F172A" stroke="#334155" stroke-width="1.5" />
+    <polygon points="23,1 42,12 42,34 23,45 4,34 4,12" fill="#090A0C" stroke="#2E3138" stroke-width="1.5" />
 
-    <!-- Isometric Faceted "S" Form - Vibrant Jewel Emeralds -->
-    <polygon points="23,5 38,13.5 38,21 23,13" fill="#10B981" />
-    <polygon points="12,14 23,8 23,13 12,19" fill="#059669" />
-    <polygon points="12,19 23,13 34,26 23,32" fill="#10B981" />
-    <polygon points="34,26 23,32 23,37 34,31" fill="#1E293B" stroke="#334155" stroke-width="0.5" />
-    <polygon points="23,32 8,24.5 8,32 23,40" fill="#047857" />
+    <!-- Isometric Faceted "S" Form - Solar Amber Palette -->
+    <polygon points="23,5 38,13.5 38,21 23,13" fill="#FBBF24" />
+    <polygon points="12,14 23,8 23,13 12,19" fill="#D97706" />
+    <polygon points="12,19 23,13 34,26 23,32" fill="#F59E0B" />
+    <polygon points="34,26 23,32 23,37 34,31" fill="#141B29" stroke="#1E293B" stroke-width="0.5" />
+    <polygon points="23,32 8,24.5 8,32 23,40" fill="#B45309" />
 
     <!-- Core Nexus Diamond Node -->
     <polygon points="23,20 26,23 23,26 20,23" fill="#FFFFFF" />
-    <circle cx="23" cy="23" r="1.2" fill="#10B981" />
+    <circle cx="23" cy="23" r="1.2" fill="#F59E0B" />
   </g>
 
-  <!-- Typography (Crisp Rich Ink for Light Canvas) -->
+  <!-- Typography -->
   <text x="64" y="29"
         font-family="'Inter', -apple-system, sans-serif"
         font-weight="900"
         font-size="24"
         letter-spacing="4"
-        fill="#0F172A">SAMTAGON</text>
+        fill="#090A0C">SAMTAGON</text>
 
   <text x="66" y="44"
         font-family="'JetBrains Mono', monospace"
@@ -32,5 +32,5 @@
         fill="#64748B">GAME STUDIOS &bull; SYSTEMS</text>
 
   <!-- Status Jewel -->
-  <circle cx="244" cy="24" r="3.5" fill="#10B981" />
+  <circle cx="244" cy="24" r="3.5" fill="#F59E0B" />
 </svg>

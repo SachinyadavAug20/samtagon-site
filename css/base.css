@@ -11,6 +11,7 @@ html {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  cursor: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
   transition: background-color 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -21,6 +22,7 @@ body {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  cursor: url('/assets/cursors/funky-arrow.svg') 5 4, auto;
   transition: background-color 1.2s cubic-bezier(0.16, 1, 0.3, 1), color 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -32,13 +34,19 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
 }
 
 button {
   font-family: inherit;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   border: none;
   background: none;
+}
+
+[role="button"], [role="tab"], select, summary,
+input[type="button"], input[type="submit"], input[type="reset"] {
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
 }
 
 .container {

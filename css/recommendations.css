@@ -49,7 +49,7 @@
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid transparent;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -126,7 +126,7 @@
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -251,7 +251,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   border-radius: 0;
   transition: all var(--transition-fast);
   padding: 0;
@@ -319,7 +319,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: 0;
   padding: 4px 12px;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -523,7 +523,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -723,7 +723,7 @@
   padding: 5px 12px;
   text-decoration: none;
   border-radius: 0;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
   line-height: 1.2;
 }
@@ -825,7 +825,7 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -894,7 +894,7 @@
   background: var(--primary);
   color: #000;
   border-radius: 0;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -960,7 +960,7 @@
   color: #ffffff;
   font-size: 1.5rem;
   border-radius: 0;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   z-index: 10;
   transition: all var(--transition-fast);
 }
@@ -1136,7 +1136,7 @@
   font-weight: 700;
   font-size: 0.92rem;
   text-decoration: none;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(217, 119, 6, 0.28);
   transition: all var(--transition-fast);
 }
@@ -1197,7 +1197,7 @@
 .modal-similar-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   overflow: hidden;
   transition: all var(--transition-fast);
   display: flex;
@@ -1362,7 +1362,7 @@
   border: 1px solid var(--border-medium);
   padding: 16px 20px;
   text-align: left;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -1419,148 +1419,176 @@
   flex: 1;
 }
 
-/* 5th Option: Custom Answer */
-.quiz-option-card.quiz-option-custom {
+/* ==========================================================================
+   Full-Width Custom Answer Input (Option E) - Clean, Roomy & Tactile
+   ========================================================================== */
+
+.quiz-option-card-e {
   grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgba(30, 41, 59, 0.45);
-  border: 1px dashed rgba(245, 158, 11, 0.4);
-  padding: 16px 20px;
-  min-height: auto;
-  border-radius: 4px;
-}
-
-.quiz-option-card.quiz-option-custom:hover,
-.quiz-option-card.quiz-option-custom:focus-within {
-  border-color: var(--primary);
-  border-style: solid;
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
-}
-
-.quiz-option-card.quiz-option-custom.selected {
-  border-color: var(--primary);
-  border-style: solid;
-  background: rgba(245, 158, 11, 0.14);
-}
-
-.custom-option-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
   width: 100%;
-}
-
-.custom-pill-badge {
-  display: inline-flex;
+  box-sizing: border-box;
   align-items: center;
-  gap: 6px;
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  padding: 3px 10px;
-  letter-spacing: 0.02em;
-}
-
-.custom-hint-label {
-  font-size: 0.86rem;
-  color: var(--text-secondary);
-  font-weight: 400;
-}
-
-.custom-input-wrap {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.custom-answer-input {
-  flex: 1;
-  background: rgba(15, 23, 42, 0.8);
+  min-height: 60px;
+  padding: 12px 18px;
+  background: var(--bg-subtle);
   border: 1px solid var(--border-medium);
-  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.quiz-option-card-e:focus-within,
+.quiz-option-card-e:hover {
+  border-color: var(--primary);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.12);
+}
+
+.quiz-option-card-e.selected {
+  border-color: var(--primary);
+  background: rgba(245, 158, 11, 0.09);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.quiz-option-card-e.selected .option-key-badge {
+  background: var(--primary);
+  color: #0f172a;
+  border-color: var(--primary);
+  font-weight: 800;
+}
+
+.option-custom-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.quiz-custom-input-simple {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: rgba(2, 6, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: #f8fafc;
   font-family: var(--font-sans);
-  font-size: 0.96rem;
-  padding: 10px 14px;
+  font-size: 0.95rem;
+  padding: 10px 36px 10px 14px;
   outline: none;
   transition: all var(--transition-fast);
 }
 
-.custom-answer-input:focus {
+.quiz-custom-input-simple::placeholder {
+  color: rgba(148, 163, 184, 0.65);
+  font-size: 0.90rem;
+}
+
+.quiz-custom-input-simple:focus {
   border-color: var(--primary);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(2, 6, 23, 0.95);
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
 }
 
-.custom-submit-btn {
+.quiz-custom-clear-simple {
+  position: absolute;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.quiz-custom-clear-simple:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.quiz-custom-submit-simple {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 44px;
+  height: 42px;
   background: var(--primary);
   color: #0f172a;
   border: none;
-  padding: 10px 18px;
-  font-family: var(--font-sans);
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
+  border-radius: 4px;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  flex-shrink: 0;
   transition: all var(--transition-fast);
-  white-space: nowrap;
+  padding: 0;
 }
 
-.custom-submit-btn:hover {
+.quiz-custom-submit-simple:hover {
   background: #fbbf24;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
 }
 
-.custom-submit-btn:active {
+.quiz-custom-submit-simple:active {
   transform: translateY(0);
 }
 
-/* Vector Search Loading State */
+.quiz-custom-submit-simple.saved {
+  background: #10b981;
+  color: #ffffff;
+}
+
+@media (max-width: 680px) {
+  .quiz-option-card-e {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* Minimalist SVG Loading State */
 .quiz-loading-vector-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 70px 20px;
-  gap: 18px;
+  padding: 90px 20px;
+  gap: 14px;
   text-align: center;
 }
 
-.vector-pulse-spinner {
+.loading-svg-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 52px;
   height: 52px;
-  border: 3px solid rgba(245, 158, 11, 0.18);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: vectorSpin 0.75s linear infinite;
 }
 
-@keyframes vectorSpin {
+.loading-svg-spinner .spin-svg {
+  animation: loadingSpin 0.85s linear infinite;
+}
+
+@keyframes loadingSpin {
   to { transform: rotate(360deg); }
 }
 
-.vector-model-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: #38bdf8;
+.loading-simple-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.loading-simple-sub {
+  font-size: 0.90rem;
+  color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 0.76rem;
-  font-weight: 600;
-  padding: 4px 10px;
 }
 
 .quiz-footer-row {
@@ -1583,7 +1611,7 @@
   border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--text-secondary);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -1613,7 +1641,7 @@
   color: var(--primary);
   background: transparent;
   border: none;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -1723,7 +1751,7 @@
   background: var(--bg-subtle);
   border: 1px solid var(--border-medium);
   color: var(--text-primary);
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
 }
 
@@ -1791,7 +1819,7 @@
   color: var(--primary);
   background: transparent;
   border: none;
-  cursor: pointer;
+  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
   transition: all var(--transition-fast);
   padding: 4px 8px;
 }

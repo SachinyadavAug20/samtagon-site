@@ -16,10 +16,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=8.0">
-  <link rel="stylesheet" href="css/base.css?v=8.0">
-  <link rel="stylesheet" href="css/components.css?v=8.0">
-  <link rel="stylesheet" href="css/recommendations.css?v=3.0">
+  <link rel="stylesheet" href="css/variables.css?v=12.0">
+  <link rel="stylesheet" href="css/base.css?v=12.0">
+  <link rel="stylesheet" href="css/components.css?v=12.0">
+  <link rel="stylesheet" href="css/recommendations.css?v=12.0">
   <!-- Theme Initialization -->
   <script>
     (function() {
@@ -67,7 +67,7 @@
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <span>Fuzzy Find</span>
-          <span class="tab-badge-pill">5,000 Real Games</span>
+          <span class="tab-badge-pill">5,000 Games</span>
         </button>
       </nav>
 
@@ -138,7 +138,7 @@
       <section class="rec-hero-clean">
         <div class="container">
           <div class="rec-hero-intro">
-            <h1 class="rec-title">Fuzzy Find 5,000 Real Games</h1>
+            <h1 class="rec-title">Fuzzy Find 5,000 Games</h1>
           </div>
 
           <!-- Modern SVG Search Control Bar -->
@@ -152,7 +152,7 @@
               type="text"
               id="search-input"
               class="search-input-field"
-              placeholder="Fuzzy find 5,000 real games (e.g. Minecraft, CS2, Cyberpunk)..."
+              placeholder="Fuzzy find: &quot;open world gangster&quot;, &quot;cozy farm builder&quot;, &quot;cyber ninja katana&quot;..."
               autocomplete="off"
               spellcheck="false"
             />
@@ -194,7 +194,7 @@
                 </svg>
               </button>
 
-              <button id="filter-neural-btn" class="search-ctrl-btn" data-mode="neural" title="Neural AI Vector Search (OpenRouter API)" aria-label="Neural AI Vector Search">
+              <button id="filter-neural-btn" class="search-ctrl-btn" data-mode="neural" title="Neural AI Vector Search" aria-label="Neural AI Vector Search">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                 </svg>
@@ -217,7 +217,7 @@
         <div class="container">
           <div class="search-results-header">
             <h2 class="search-results-heading" id="catalog-heading">Game Catalog</h2>
-            <span class="results-count-tag" id="result-count">Page 1 of 417 &bull; 5,000 real titles</span>
+            <span class="results-count-tag" id="result-count">Page 1 of 417 &bull; 5,000 titles</span>
           </div>
 
           <div class="games-grid" id="search-results-grid">
@@ -265,7 +265,6 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="js/vendor/hls.min.js"></script>
-  <script type="module" src="dist/js/recommendations.bundle.js?v=4.0"></script>
+  <script type="module" src="dist/js/recommendations.bundle.js?v=13.0"></script>
 </body>
 </html>

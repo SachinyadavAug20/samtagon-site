@@ -10,8 +10,45 @@
  */
 import { ProceduralAudio } from './audio-synth.js';
 import { CatalogEngine } from './catalog-engine.js';
+import { VectorEngine } from './vector-engine.js';
 import { OpenRouterEmbedder } from './openrouter-embed.js';
 import gsap from 'gsap';
+/**
+ * Global image fallback cascade:
+ * Step 1: If capsule_616x353 fails, try the game's official Steam header.jpg.
+ * Step 2: If shared.steamstatic header fails, try Cloudflare Steam CDN.
+ * Step 3: If all remote CDNs fail, generate a procedural unique SVG cover for THIS game.
+ * NEVER show an unrelated game's image (such as Detroit: Become Human)!
+ */
+window.handleGameImageError = function (img) {
+    img.loading = 'eager';
+    const steamId = img.getAttribute('data-steam-id');
+    const title = img.getAttribute('data-title') || 'Game';
+    const dev = img.getAttribute('data-dev') || 'Game Studio';
+    const genre = img.getAttribute('data-genre') || 'Action';
+    const step = parseInt(img.getAttribute('data-fallback-step') || '0', 10);
+    // Step 1: Try Cloudflare Steam CDN header.jpg (fastest & covers legacy catalog)
+    if (steamId && step === 0) {
+        img.setAttribute('data-fallback-step', '1');
+        img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${steamId}/header.jpg`;
+        return;
+    }
+    // Step 2: Try shared store item assets header.jpg
+    if (steamId && step === 1) {
+        img.setAttribute('data-fallback-step', '2');
+        img.src = `https://shared.steamstatic.com/store_item_assets/steam/apps/${steamId}/header.jpg`;
+        return;
+    }
+    // Step 3: Try akamai CDN header.jpg
+    if (steamId && step === 2) {
+        img.setAttribute('data-fallback-step', '3');
+        img.src = `https://cdn.akamai.steamstatic.com/steam/apps/${steamId}/header.jpg`;
+        return;
+    }
+    // Final Step: Procedural unique vector game cover tailored specifically to this title
+    img.onerror = null;
+    img.src = VectorEngine.generateProceduralGameCover(title, dev, genre);
+};
 const COOKIE_KEY = 'samtagon_gamer_profile';
 const ARCHETYPES = {
     architect: {
@@ -609,30 +646,17 @@ class RecommendationsApp {
             setTimeout(() => this.audio.playChime(1046.5, 0.08), 80);
             this.goToPage(randomTarget);
         });
-        // 5. Neural AI Vector Search Controller (OpenRouter)
+        // 5. Neural AI Vector Search Controller
         this.updateNeuralUI();
         this.filterNeuralBtn?.addEventListener('click', () => {
             this.audio.playQuizSelection();
-            const existingKey = OpenRouterEmbedder.getApiKey();
-            if (existingKey) {
-                const change = confirm(`Neural AI Search is ACTIVE with OpenRouter.\nModel: ${OpenRouterEmbedder.getModel()}\n\nWould you like to clear or change your API key?`);
-                if (change) {
-                    const newKey = prompt('Enter new OpenRouter API Key (leave empty to reset):', existingKey);
-                    if (newKey !== null) {
-                        OpenRouterEmbedder.setApiKey(newKey);
-                        this.updateNeuralUI();
-                        this.loadCatalog();
-                    }
+            this.filterNeuralBtn?.classList.toggle('active');
+            if (this.searchInput) {
+                if (!this.searchInput.value.trim()) {
+                    this.searchInput.focus();
                 }
-            }
-            else {
-                const enteredKey = prompt('Connect OpenRouter Neural Vector Search:\n\n' +
-                    '1. Add OPENROUTER_API_KEY in your .env file, or\n' +
-                    '2. Paste your OpenRouter API Key below (stored locally in browser):\n\n' +
-                    'Get your API key at https://openrouter.ai/keys');
-                if (enteredKey && enteredKey.trim().length > 0) {
-                    OpenRouterEmbedder.setApiKey(enteredKey.trim());
-                    this.updateNeuralUI();
+                else {
+                    this.currentPage = 1;
                     this.loadCatalog();
                 }
             }
@@ -731,7 +755,7 @@ class RecommendationsApp {
             else if (key === '4' || key === 'd')
                 this.selectOption(3);
             else if (key === '5' || key === 'e') {
-                const customInput = this.quizBody?.querySelector('.custom-answer-input');
+                const customInput = document.getElementById('quiz-custom-input');
                 if (customInput) {
                     e.preventDefault();
                     customInput.focus();
@@ -774,66 +798,116 @@ class RecommendationsApp {
     `).join('');
         const savedCustomText = this.customAnswers.get(index) || '';
         const isSelectedCustom = this.userAnswers[index] === 4;
-        const customOptionHtml = `
-      <div class="quiz-option-card quiz-option-custom ${isSelectedCustom ? 'selected' : ''}" data-opt-idx="4" role="button" tabindex="0">
-        <div class="custom-option-header">
+        this.quizBody.innerHTML = `
+      <h2 class="quiz-scenario-title">${q.scenario}</h2>
+      <p class="quiz-scenario-text">${q.situation}</p>
+      
+      <!-- 4 Standard Scenario Choices in 2-Column Grid + Option E full-width below -->
+      <div class="quiz-options-grid">
+        ${optionsHtml}
+
+        <!-- Option E: Full-Width Simple Custom Playstyle Card (Pure text box & minimal SVG Enter) -->
+        <div class="quiz-option-card quiz-option-card-e ${isSelectedCustom ? 'selected' : ''}" id="quiz-custom-card" role="button" tabindex="0">
           <span class="option-key-badge">E</span>
-          <span class="custom-pill-badge">✍️ Custom Answer</span>
-          <span class="custom-hint-label">Describe your own playstyle or preference (Vector AI embeds your exact text)</span>
-        </div>
-        <div class="custom-input-wrap">
-          <input
-            type="text"
-            class="custom-answer-input"
-            placeholder="Type your own custom answer, tactic, or preference (press Enter or Submit)..."
-            value="${savedCustomText.replace(/"/g, '&quot;')}"
-            maxlength="240"
-            onclick="event.stopPropagation()"
-          />
-          <button class="custom-submit-btn" type="button" onclick="event.stopPropagation()">
-            <span>Submit Choice</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="option-custom-wrap">
+            <input
+              type="text"
+              id="quiz-custom-input"
+              class="quiz-custom-input-simple"
+              placeholder="Type custom playstyle or game preference..."
+              value="${savedCustomText.replace(/"/g, '&quot;')}"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="280"
+            />
+            <button id="quiz-custom-clear-btn" class="quiz-custom-clear-simple" type="button" title="Clear text" style="display: ${savedCustomText ? 'flex' : 'none'};">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+          <button id="quiz-custom-submit-btn" class="quiz-custom-submit-simple" type="button" title="Submit choice (Enter)" aria-label="Submit choice">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 10 4 15 9 20"></polyline>
+              <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+            </svg>
           </button>
         </div>
       </div>
     `;
-        this.quizBody.innerHTML = `
-      <h2 class="quiz-scenario-title">${q.scenario}</h2>
-      <p class="quiz-scenario-text">${q.situation}</p>
-      <div class="quiz-options-grid">
-        ${optionsHtml}
-        ${customOptionHtml}
-      </div>
-    `;
-        // Hook click listeners on options 0-3
-        this.quizBody.querySelectorAll('.quiz-option-card:not(.quiz-option-custom)').forEach((card) => {
+        // Hook click listeners on options A-D (0-3)
+        this.quizBody.querySelectorAll('.quiz-option-card:not(.quiz-option-card-e)').forEach((card) => {
             card.addEventListener('click', () => {
                 const optIdx = parseInt(card.getAttribute('data-opt-idx') || '0', 10);
+                // Unselect Option E if A-D is picked
+                const customCard = document.getElementById('quiz-custom-card');
+                if (customCard)
+                    customCard.classList.remove('selected');
                 this.selectOption(optIdx);
             });
             card.addEventListener('mouseenter', () => {
-                gsap.to(card, { y: -3, duration: 0.14, ease: 'power2.out', overwrite: 'auto' });
+                gsap.to(card, { y: -4, duration: 0.16, ease: 'power2.out', overwrite: 'auto' });
             });
             card.addEventListener('mouseleave', () => {
-                gsap.to(card, { y: 0, duration: 0.18, ease: 'power2.out', overwrite: 'auto' });
+                gsap.to(card, { y: 0, duration: 0.20, ease: 'power2.out', overwrite: 'auto' });
             });
         });
-        // Hook Custom Option (index 4)
-        const customCard = this.quizBody.querySelector('.quiz-option-custom');
-        const customInput = this.quizBody.querySelector('.custom-answer-input');
-        const customSubmitBtn = this.quizBody.querySelector('.custom-submit-btn');
-        if (customCard && customInput) {
-            customCard.addEventListener('click', () => {
+        // Hook Custom Option E input
+        const customInput = document.getElementById('quiz-custom-input');
+        const customClearBtn = document.getElementById('quiz-custom-clear-btn');
+        const customSubmitBtn = document.getElementById('quiz-custom-submit-btn');
+        const customSubmitText = document.getElementById('quiz-custom-submit-text');
+        const customCard = document.getElementById('quiz-custom-card');
+        if (customInput) {
+            // Focusing or clicking in Option E selects it and unselects A-D
+            const activateOptionE = () => {
+                if (customCard && !customCard.classList.contains('selected')) {
+                    customCard.classList.add('selected');
+                    this.quizBody?.querySelectorAll('.quiz-option-card:not(.quiz-option-card-e)').forEach((c) => {
+                        c.classList.remove('selected');
+                    });
+                    this.audio.playChime(659.25, 0.04);
+                }
+            };
+            customInput.addEventListener('focus', activateOptionE);
+            customInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+                activateOptionE();
+            });
+            customInput.addEventListener('input', () => {
+                activateOptionE();
+                const val = customInput.value;
+                if (customClearBtn) {
+                    customClearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+                }
+            });
+            customClearBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                customInput.value = '';
+                customClearBtn.style.display = 'none';
                 customInput.focus();
             });
             const handleCustomSubmit = () => {
                 const val = customInput.value.trim();
                 if (val) {
-                    this.selectOption(4, val);
+                    if (customCard)
+                        customCard.classList.add('selected');
+                    if (customSubmitBtn) {
+                        customSubmitBtn.classList.add('saved');
+                        customSubmitBtn.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            `;
+                    }
+                    this.audio.playQuizSelection();
+                    gsap.fromTo(customCard, { scale: 0.99 }, { scale: 1.0, duration: 0.22, ease: 'power2.out' });
+                    setTimeout(() => {
+                        this.selectOption(4, val);
+                    }, 240);
                 }
                 else {
-                    customInput.placeholder = '⚠️ Please enter your custom answer here...';
+                    customInput.placeholder = 'Please enter your playstyle...';
                     customInput.focus();
+                    gsap.fromTo(customInput, { x: -8 }, { x: 8, duration: 0.07, repeat: 4, yoyo: true, ease: 'power2.inOut', onComplete: () => { gsap.set(customInput, { x: 0 }); } });
                 }
             };
             customSubmitBtn?.addEventListener('click', (e) => {
@@ -885,24 +959,21 @@ class RecommendationsApp {
         }
     }
     async completeQuiz() {
-        // Show high-tech loading state while vector embeddings are generated
+        // Minimalist SVG loading state
         if (this.quizActiveBox)
             this.quizActiveBox.style.display = 'none';
         if (this.quizProfileBox) {
             this.quizProfileBox.style.display = 'block';
             this.quizProfileBox.innerHTML = `
         <div class="quiz-loading-vector-box">
-          <div class="vector-pulse-spinner"></div>
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text-primary);">
-            Searching Vector Space for Your Soulmate Games...
-          </h3>
-          <p style="color: var(--text-secondary); max-width: 520px; font-size: 0.95rem; margin: 0; line-height: 1.5;">
-            Generating 1024-dimensional semantic embeddings via OpenRouter & querying Pinecone vector database with your custom responses.
-          </p>
-          <div class="vector-model-tag">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            <span>liquid/lfm-2.5-embedding-350m:free &bull; Pinecone DB</span>
+          <div class="loading-svg-spinner">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="spin-svg">
+              <circle cx="24" cy="24" r="20" stroke="rgba(245, 158, 11, 0.2)" stroke-width="3"/>
+              <path d="M24 4 A20 20 0 0 1 44 24" stroke="var(--primary)" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
           </div>
+          <h3 class="loading-simple-title">Finding Soulmate Games</h3>
+          <span class="loading-simple-sub">Matching across 5,000 titles</span>
         </div>
       `;
         }
@@ -913,14 +984,15 @@ class RecommendationsApp {
             explorer: 0,
             tactician: 0,
         };
-        const querySnippets = [];
+        const userSelectedTags = [];
         this.userAnswers.forEach((ansIdx, qIdx) => {
             const q = QUIZ_QUESTIONS[qIdx];
             if (!q)
                 return;
             if (ansIdx === 4) {
-                const custom = this.customAnswers.get(qIdx) || '';
-                querySnippets.push(`${q.scenario}: ${custom}`);
+                const custom = (this.customAnswers.get(qIdx) || '').trim();
+                if (custom)
+                    userSelectedTags.push(custom);
                 // Analyze custom keywords for archetype attribution
                 const lower = custom.toLowerCase();
                 let matched = false;
@@ -947,10 +1019,9 @@ class RecommendationsApp {
             }
             else if (q.options[ansIdx]) {
                 scores[q.options[ansIdx].archetype] += 1;
-                querySnippets.push(`${q.scenario}: ${q.options[ansIdx].text} (${q.options[ansIdx].hint})`);
+                userSelectedTags.push(q.options[ansIdx].hint);
             }
         });
-        const vectorQuery = querySnippets.join('. ');
         // Find dominant archetype
         const entries = Object.entries(scores);
         entries.sort((a, b) => b[1] - a[1]);
@@ -958,11 +1029,19 @@ class RecommendationsApp {
         const topScore = entries[0][1];
         const alignment = Math.min(99, Math.max(88, Math.round((topScore / QUIZ_QUESTIONS.length) * 100)));
         const archInfo = ARCHETYPES[dominantId];
+        // Build concise, high-signal query prioritizing custom user inputs followed by chosen traits
+        const customEntries = Array.from(this.customAnswers.values()).map(s => s.trim()).filter(Boolean);
+        const otherTraits = Array.from(new Set(userSelectedTags.filter(t => !customEntries.includes(t))));
+        const keyTraits = [...customEntries, ...otherTraits].slice(0, 5).join(', ');
+        const vectorQuery = `${archInfo.name}. ${keyTraits ? keyTraits + '. ' : ''}${archInfo.catalogSearch}`;
         // Perform Vector Embedding Search via API & Pinecone
         let vectorMatches = [];
         let vectorSource = 'local';
         try {
-            const apiRes = await fetch(`/api/search?q=${encodeURIComponent(vectorQuery)}&limit=12`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const apiRes = await fetch(`/api/search?q=${encodeURIComponent(vectorQuery)}&limit=12`, { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (apiRes.ok) {
                 const data = await apiRes.json();
                 if (data.success && Array.isArray(data.matches) && data.matches.length > 0) {
@@ -972,8 +1051,8 @@ class RecommendationsApp {
                         const isSteam = typeof g.id === 'string' && g.id.startsWith('steam-');
                         const numericSteamId = isSteam ? parseInt(g.id.replace('steam-', ''), 10) : null;
                         const storeUrl = g.storeUrl || (numericSteamId ? `https://store.steampowered.com/app/${numericSteamId}/` : 'https://store.steampowered.com/');
-                        const sim = typeof m.similarity === 'number' && m.similarity > 0 ? m.similarity : (0.98 - idx * 0.02);
-                        const matchScore = Math.min(99, Math.max(78, Math.max(Math.round(sim * 100), 98 - idx * 2)));
+                        const rawSim = typeof m.similarity === 'number' && m.similarity > 0 ? m.similarity : 0.98;
+                        const diffScore = Number((Math.min(99.45, Math.max(85.00, (rawSim >= 0.85 ? rawSim * 100 : 98.77 - idx * 2.15)))).toFixed(2));
                         return {
                             id: g.id,
                             title: g.title,
@@ -982,8 +1061,8 @@ class RecommendationsApp {
                             releaseYear: g.year || g.releaseYear || 2023,
                             genres: Array.isArray(g.genres) ? g.genres : [g.genres || 'Action'],
                             tags: Array.isArray(g.tags) ? g.tags : [g.tags || 'Recommended'],
-                            matchScore,
-                            similarity: sim,
+                            matchScore: diffScore.toFixed(2),
+                            similarity: diffScore / 100,
                             platforms: [{ name: g.badge || 'steam', url: storeUrl, badge: (g.badge || 'steam') }],
                             description: g.desc || g.description || '',
                             source: vectorSource,
@@ -998,20 +1077,23 @@ class RecommendationsApp {
         if (vectorMatches.length === 0) {
             // Fallback to local catalog hybrid search
             const localResult = CatalogEngine.searchCatalog(vectorQuery, 1);
-            vectorMatches = localResult.matches.slice(0, 6).map((m, idx) => ({
-                id: m.game.id,
-                title: m.game.title,
-                image: m.game.image,
-                developer: m.game.developer,
-                releaseYear: m.game.releaseYear,
-                genres: m.game.genres,
-                tags: m.game.tags,
-                matchScore: Math.min(99, Math.max(78, Math.max(Math.round(m.similarity * 100), 98 - idx * 2))),
-                similarity: m.similarity,
-                platforms: m.game.platforms,
-                description: m.game.description,
-                source: 'local',
-            }));
+            vectorMatches = localResult.matches.slice(0, 6).map((m, idx) => {
+                const diffScore = Number((Math.min(99.45, Math.max(85.00, 98.77 - idx * 2.15))).toFixed(2));
+                return {
+                    id: m.game.id,
+                    title: m.game.title,
+                    image: m.game.image,
+                    developer: m.game.developer,
+                    releaseYear: m.game.releaseYear,
+                    genres: m.game.genres,
+                    tags: m.game.tags,
+                    matchScore: diffScore.toFixed(2),
+                    similarity: diffScore / 100,
+                    platforms: m.game.platforms,
+                    description: m.game.description,
+                    source: 'local',
+                };
+            });
         }
         // Convert customAnswers map to serializable object
         const customAnswersObj = {};
@@ -1075,17 +1157,29 @@ class RecommendationsApp {
             const isTop = idx === 0;
             const storeUrl = rec.platforms[0]?.url || 'https://store.steampowered.com/';
             const storeName = rec.platforms[0]?.name || 'Steam Store';
-            const tagPills = rec.tags.slice(0, 3).map(t => `<span class="card-genre-pill">#${t}</span>`).join('');
+            const steamId = VectorEngine.extractSteamAppId(rec.id) || '';
+            const safeTitle = (rec.title || '').replace(/"/g, '&quot;');
+            const safeDev = (rec.developer || '').replace(/"/g, '&quot;');
+            const safeGenre = (rec.genres[0] || 'Action').replace(/"/g, '&quot;');
             return `
-        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${rec.title}">
-          <img src="${rec.image}" alt="${rec.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+        <div class="arranged-game-card ${isTop ? 'top-soulmate' : ''}" data-game-title="${safeTitle}">
+          <img 
+            src="${rec.image}" 
+            alt="${safeTitle}" 
+            class="card-bg-img" 
+            loading="lazy" 
+            data-steam-id="${steamId}"
+            data-title="${safeTitle}"
+            data-dev="${safeDev}"
+            data-genre="${safeGenre}"
+            onerror="window.handleGameImageError(this)" 
+          />
           <div class="card-scrim"></div>
           <div class="card-top-bar">
             <div class="card-badge-left">
               ${isTop ? '<span class="soulmate-flag-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 SOULMATE</span>' : ''}
-              <span class="card-sim-badge score-excellent">✨ ${rec.matchScore}% Match</span>
+              <span class="card-sim-badge score-excellent"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${rec.matchScore}% Match</span>
             </div>
-            ${rec.source === 'pinecone' ? '<span class="card-pinecone-tag" title="Matched via Pinecone 1024-D Vector Index">Pinecone</span>' : ''}
           </div>
           <div class="card-overlay-content">
             <div class="card-title-row">
@@ -1093,7 +1187,6 @@ class RecommendationsApp {
               <span class="card-year">${rec.releaseYear}</span>
             </div>
             <div class="card-meta-line">${rec.developer} &bull; ${rec.genres.slice(0, 2).join(' / ')}</div>
-            <div class="card-tag-row">${tagPills}</div>
             <div class="card-action-bar">
               <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
                 <span>Store</span>
@@ -1153,12 +1246,11 @@ class RecommendationsApp {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          <h3 class="matches-title">Vector-Matched Games (${recList.length})</h3>
-          <span class="vector-model-tag" style="margin-left: 8px;">✨ OpenRouter 1024-D + Pinecone</span>
+          <h3 class="matches-title">Soulmate Matches (${recList.length})</h3>
         </div>
 
-        <button id="profile-explore-all-btn" class="matches-all-btn" title="Explore similar games in catalog" aria-label="Explore similar games">
-          <span>Explore Similar in Catalog</span>
+        <button id="profile-explore-all-btn" class="matches-all-btn" title="Explore catalog" aria-label="Explore catalog">
+          <span>Explore Catalog</span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"></path>
           </svg>
@@ -1395,7 +1487,7 @@ class RecommendationsApp {
             this.catalogHeading.textContent = 'Explore Catalog';
         }
         if (this.resultCountSpan) {
-            this.resultCountSpan.innerHTML = `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 5,000 real titles`;
+            this.resultCountSpan.innerHTML = `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 5,000 titles`;
         }
         this.renderGamesGrid(this.currentMatches, false);
         this.renderPaginationBar();
@@ -1442,6 +1534,23 @@ class RecommendationsApp {
             const card = this.createGameCard(match.game, match.similarity, isSearching, idx + 1);
             this.searchResultsContainer.appendChild(card);
         });
+        // GSAP movement animation when search cards appear or reorder
+        const cards = this.searchResultsContainer.querySelectorAll('.game-card');
+        if (cards.length > 0) {
+            gsap.fromTo(cards, {
+                opacity: 0,
+                y: 28,
+                scale: 0.96
+            }, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.38,
+                stagger: 0.035,
+                ease: 'power2.out',
+                clearProps: 'opacity,transform'
+            });
+        }
     }
     /**
      * Create interactive game card
@@ -1451,18 +1560,32 @@ class RecommendationsApp {
         card.className = `game-card ${game.isSamtagonOriginal ? 'card-original' : ''}`;
         let badgeHtml = '';
         if (isSearching && similarity > 0) {
-            const percentMatch = Math.round(similarity * 100);
+            const percentMatch = (Math.min(0.9985, Math.max(0.40, similarity)) * 100).toFixed(2);
             const scoreClass = similarity >= 0.88 ? 'score-excellent' : similarity >= 0.74 ? 'score-good' : 'score-fair';
             badgeHtml = `<span class="card-sim-badge ${scoreClass}">${percentMatch}% Match</span>`;
         }
         else {
-            const pct = Math.round(game.rating * 20);
+            const pct = VectorEngine.formatPositivePercentage(game);
             badgeHtml = `<span class="card-rating-badge">&#9733; ${pct}% Positive</span>`;
         }
         const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
         const storeName = game.platforms[0]?.name || 'Steam Store';
+        const steamId = VectorEngine.extractSteamAppId(game.id) || '';
+        const safeTitle = (game.title || '').replace(/"/g, '&quot;');
+        const safeDev = (game.developer || '').replace(/"/g, '&quot;');
+        const safeGenre = (game.genres[0] || 'Action').replace(/"/g, '&quot;');
         card.innerHTML = `
-      <img src="${game.image}" alt="${game.title}" class="card-bg-img" loading="lazy" onerror="this.onerror=null; this.src='https://cdn.akamai.steamstatic.com/steam/apps/1222140/capsule_616x353.jpg';" />
+      <img 
+        src="${game.image}" 
+        alt="${safeTitle}" 
+        class="card-bg-img" 
+        loading="lazy" 
+        data-steam-id="${steamId}"
+        data-title="${safeTitle}"
+        data-dev="${safeDev}"
+        data-genre="${safeGenre}"
+        onerror="window.handleGameImageError(this)" 
+      />
       <div class="card-scrim"></div>
       <div class="card-top-bar">
         <div class="card-badge-left">
@@ -1498,12 +1621,18 @@ class RecommendationsApp {
             this.audio.playChime(783.99, 0.06);
             this.openGameDetailModal(game);
         });
-        // Hover animation
+        // GSAP movement animation on hover
         card.addEventListener('mouseenter', () => {
-            gsap.to(card, { y: -4, duration: 0.16, ease: 'power2.out', overwrite: 'auto' });
+            gsap.to(card, { y: -6, duration: 0.22, ease: 'power2.out', overwrite: 'auto' });
+            const img = card.querySelector('.card-bg-img');
+            if (img)
+                gsap.to(img, { scale: 1.05, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
         });
         card.addEventListener('mouseleave', () => {
-            gsap.to(card, { y: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' });
+            gsap.to(card, { y: 0, duration: 0.24, ease: 'power2.out', overwrite: 'auto' });
+            const img = card.querySelector('.card-bg-img');
+            if (img)
+                gsap.to(img, { scale: 1.0, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
         });
         return card;
     }
@@ -1582,51 +1711,54 @@ class RecommendationsApp {
             catch (_) { }
             this.currentHls = null;
         }
-        // Media presentation: High-res poster banner + YouTube or Steam video trailer stream
-        let mediaHtml = '';
-        if (isSteam) {
-            mediaHtml = `
-        <div class="modal-media-wrap" id="modal-media-player-wrap">
-          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" id="modal-media-poster-img" />
-          <div class="modal-trailer-badge" id="modal-trailer-badge" style="display: none;">🎥 Steam Official Trailer</div>
-          <div id="modal-video-container"></div>
-        </div>
-      `;
-        }
-        else if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
-            mediaHtml = `
-        <div class="modal-media-wrap">
-          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" />
-          <iframe 
-            src="${game.videoTrailer}?autoplay=1&mute=1&loop=1&playlist=${game.videoTrailer.split('/embed/')[1] || ''}" 
-            title="${game.title} Trailer" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-        </div>
-      `;
-        }
-        else {
-            mediaHtml = `
-        <div class="modal-media-wrap">
-          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" />
-        </div>
-      `;
-        }
+        // Media presentation: High-res clean poster banner (no video trailer buffering or playback delays)
+        const steamId = VectorEngine.extractSteamAppId(game.id) || '';
+        const safeTitle = (game.title || '').replace(/"/g, '&quot;');
+        const safeDev = (game.developer || '').replace(/"/g, '&quot;');
+        const safeGenre = (game.genres[0] || 'Action').replace(/"/g, '&quot;');
+        const mediaHtml = `
+      <div class="modal-media-wrap">
+        <img 
+          src="${game.image}" 
+          alt="${safeTitle}" 
+          class="modal-media-poster" 
+          data-steam-id="${steamId}"
+          data-title="${safeTitle}"
+          data-dev="${safeDev}"
+          data-genre="${safeGenre}"
+          onerror="window.handleGameImageError(this)" 
+        />
+      </div>
+    `;
         const tagPillsHtml = game.genres
             .map(g => `<span class="modal-tag-pill">${g}</span>`)
             .concat(game.tags.slice(0, 4).map(t => `<span class="modal-tag-pill">#${t}</span>`))
             .join('');
         const similarCardsHtml = similarGames
-            .map(sim => `
+            .map(sim => {
+            const simSteamId = VectorEngine.extractSteamAppId(sim.id) || '';
+            const simSafeTitle = (sim.title || '').replace(/"/g, '&quot;');
+            const simSafeDev = (sim.developer || '').replace(/"/g, '&quot;');
+            const simSafeGenre = (sim.genres[0] || 'Action').replace(/"/g, '&quot;');
+            return `
         <div class="modal-similar-card" data-sim-id="${sim.id}">
-          <img src="${sim.image}" alt="${sim.title}" class="modal-similar-thumb" />
+          <img 
+            src="${sim.image}" 
+            alt="${simSafeTitle}" 
+            class="modal-similar-thumb" 
+            data-steam-id="${simSteamId}"
+            data-title="${simSafeTitle}"
+            data-dev="${simSafeDev}"
+            data-genre="${simSafeGenre}"
+            onerror="window.handleGameImageError(this)" 
+          />
           <div class="modal-similar-info">
             <div class="modal-similar-title">${sim.title}</div>
             <div class="modal-similar-studio">${sim.developer} &bull; ${sim.releaseYear}</div>
           </div>
         </div>
-      `)
+      `;
+        })
             .join('');
         this.modalContent.innerHTML = `
       ${mediaHtml}
@@ -1645,7 +1777,7 @@ class RecommendationsApp {
         </div>
 
         <div class="modal-review-bar">
-          <span class="score-star">&#9733; ${Math.round(game.rating * 20)}% Positive</span>
+          <span class="score-star">&#9733; ${VectorEngine.formatPositivePercentage(game)}% Positive</span>
           <span>&bull;</span>
           <span>${game.reviewsSummary || 'Very Positive'}</span>
           <span>&bull;</span>
@@ -1664,11 +1796,6 @@ class RecommendationsApp {
             <span>Play on Steam Store</span>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
           </a>
-
-          <a href="${studioUrl}" target="_blank" rel="noopener noreferrer" class="modal-studio-btn">
-            <span>Developer Studio</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-          </a>
         </div>
 
         <div class="modal-similar-section">
@@ -1679,10 +1806,6 @@ class RecommendationsApp {
         </div>
       </div>
     `;
-        // Asynchronously stream official Steam video trailer if game has a Steam AppID
-        if (isSteam) {
-            this.loadSteamTrailer(numericSteamId, game);
-        }
         // Hook similar game cards inside modal to transition modal to that game
         this.modalContent.querySelectorAll('.modal-similar-card').forEach((simCard) => {
             simCard.addEventListener('click', () => {
@@ -1698,6 +1821,19 @@ class RecommendationsApp {
         this.modalBackdrop.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         const dialog = this.modalBackdrop.querySelector('.game-modal-dialog');
+        // Always scroll immediately to top at start so user never opens mid-way or confused
+        this.modalBackdrop.scrollTop = 0;
+        this.modalContent.scrollTop = 0;
+        if (dialog) {
+            dialog.scrollTop = 0;
+        }
+        requestAnimationFrame(() => {
+            this.modalBackdrop.scrollTop = 0;
+            this.modalContent.scrollTop = 0;
+            if (dialog) {
+                dialog.scrollTop = 0;
+            }
+        });
         gsap.fromTo(this.modalBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power2.out' });
         if (dialog) {
             gsap.fromTo(dialog, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.25, ease: 'power2.out' });

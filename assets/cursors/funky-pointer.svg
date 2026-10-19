@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <!-- Soft Glass Drop Shadow -->
+    <filter id="p-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="3.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.42" />
+    </filter>
+
+    <!-- 3D Glass Side Extrusion Iridescent Prismatic Gradient -->
+    <linearGradient id="p-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#2dd4bf" stop-opacity="0.9" />
+      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+    </linearGradient>
+
+    <!-- Translucent Frosted Glass Face Gradient -->
+    <linearGradient id="p-face" x1="15%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="35%" stop-color="#e0f2fe" stop-opacity="0.45" />
+      <stop offset="70%" stop-color="#fdf4ff" stop-opacity="0.40" />
+      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.60" />
+    </linearGradient>
+
+    <!-- Iridescent Rim Stroke -->
+    <linearGradient id="p-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="25%" stop-color="#a5f3fc" stop-opacity="0.92" />
+      <stop offset="65%" stop-color="#f472b6" stop-opacity="0.88" />
+      <stop offset="100%" stop-color="#e879f9" stop-opacity="0.92" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#p-shadow)">
+    <!-- 1. 3D Under-Bevel Depth Extrusion (Shifted down-right) -->
+    <path 
+      d="M 12 3 C 10 3 8.5 4.5 8.5 7 L 8.5 21 C 7.2 20.2 5.5 20.5 4.5 22 C 3.2 23.8 3.5 26.5 5.5 28.8 L 9.5 33 L 9.5 39 C 9.5 41 11 42.5 13 42.5 L 27.5 42.5 C 29.5 42.5 31 41 31 39 L 31 32 C 33 30.2 33.5 27 33.5 24.5 C 33.5 22.8 32 21.5 30.2 22 C 29.8 20.2 28.2 19 26.5 19.5 C 25.8 18 24.2 17.2 22.8 17.8 L 22.8 7 C 22.8 4.8 21.2 3 19.2 3 C 17.5 3 16.2 4.2 16.2 6.2 L 16.2 17 L 14.8 17 L 14.8 7 C 14.8 4.8 13.8 3 12 3 Z"
+      fill="url(#p-edge)"
+      stroke="url(#p-edge)"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+      transform="translate(2.6, 3.2)"
+    />
+
+    <!-- 2. Dark delicate ambient contour for contrast on white -->
+    <path 
+      d="M 12 3 C 10 3 8.5 4.5 8.5 7 L 8.5 21 C 7.2 20.2 5.5 20.5 4.5 22 C 3.2 23.8 3.5 26.5 5.5 28.8 L 9.5 33 L 9.5 39 C 9.5 41 11 42.5 13 42.5 L 27.5 42.5 C 29.5 42.5 31 41 31 39 L 31 32 C 33 30.2 33.5 27 33.5 24.5 C 33.5 22.8 32 21.5 30.2 22 C 29.8 20.2 28.2 19 26.5 19.5 C 25.8 18 24.2 17.2 22.8 17.8 L 22.8 7 C 22.8 4.8 21.2 3 19.2 3 C 17.5 3 16.2 4.2 16.2 6.2 L 16.2 17 L 14.8 17 L 14.8 7 C 14.8 4.8 13.8 3 12 3 Z"
+      fill="none"
+      stroke="#0f172a"
+      stroke-width="1.6"
+      stroke-opacity="0.25"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- 3. Main Glass Surface Body -->
+    <path 
+      d="M 12 3 C 10 3 8.5 4.5 8.5 7 L 8.5 21 C 7.2 20.2 5.5 20.5 4.5 22 C 3.2 23.8 3.5 26.5 5.5 28.8 L 9.5 33 L 9.5 39 C 9.5 41 11 42.5 13 42.5 L 27.5 42.5 C 29.5 42.5 31 41 31 39 L 31 32 C 33 30.2 33.5 27 33.5 24.5 C 33.5 22.8 32 21.5 30.2 22 C 29.8 20.2 28.2 19 26.5 19.5 C 25.8 18 24.2 17.2 22.8 17.8 L 22.8 7 C 22.8 4.8 21.2 3 19.2 3 C 17.5 3 16.2 4.2 16.2 6.2 L 16.2 17 L 14.8 17 L 14.8 7 C 14.8 4.8 13.8 3 12 3 Z"
+      fill="url(#p-face)"
+      stroke="url(#p-rim)"
+      stroke-width="1.8"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- 4. Glossy Specular White Edge Glare Highlight (Index finger & thumb) -->
+    <path 
+      d="M 12 4.5 L 12 20 M 19 5.5 L 19 19 M 24.5 19 L 24.5 28 M 29.5 23 L 29.5 29"
+      stroke="#ffffff"
+      stroke-width="1.2"
+      stroke-linecap="round"
+      stroke-opacity="0.85"
+    />
+
+    <!-- 5. Fingertip Glint -->
+    <circle cx="12" cy="4.5" r="1.3" fill="#ffffff" opacity="0.95" />
+  </g>
+</svg>
