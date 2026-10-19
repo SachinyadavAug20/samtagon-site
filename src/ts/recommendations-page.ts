@@ -613,19 +613,19 @@ class RecommendationsApp {
   }
 
   public switchTab(tab: 'quiz' | 'explore', searchKeyword?: string): void {
+    if (this.activeTab === tab && searchKeyword === undefined) return;
     this.activeTab = tab;
+
+    const outgoing = tab === 'quiz' ? this.viewExplore : this.viewQuiz;
+    const incoming = tab === 'quiz' ? this.viewQuiz : this.viewExplore;
+
     if (tab === 'quiz') {
-      if (this.viewQuiz) this.viewQuiz.style.display = 'block';
-      if (this.viewExplore) this.viewExplore.style.display = 'none';
       this.tabQuizBtn?.classList.add('active');
       this.tabQuizBtn?.setAttribute('aria-selected', 'true');
       this.tabExploreBtn?.classList.remove('active');
       this.tabExploreBtn?.setAttribute('aria-selected', 'false');
       this.audio.playChime(523.25, 0.06);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      if (this.viewQuiz) this.viewQuiz.style.display = 'none';
-      if (this.viewExplore) this.viewExplore.style.display = 'block';
       this.tabExploreBtn?.classList.add('active');
       this.tabExploreBtn?.setAttribute('aria-selected', 'true');
       this.tabQuizBtn?.classList.remove('active');
@@ -641,7 +641,27 @@ class RecommendationsApp {
         this.currentPage = 1;
         this.loadCatalog();
       }
+    }
 
+    if (outgoing && incoming) {
+      gsap.to(outgoing, {
+        opacity: 0,
+        y: -8,
+        duration: 0.16,
+        ease: 'power2.in',
+        overwrite: 'auto',
+        onComplete: () => {
+          outgoing.style.display = 'none';
+          incoming.style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          gsap.fromTo(
+            incoming,
+            { opacity: 0, y: 12 },
+            { opacity: 1, y: 0, duration: 0.32, ease: 'power3.out', clearProps: 'all', overwrite: 'auto' }
+          );
+        }
+      });
+    } else {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -783,24 +803,35 @@ class RecommendationsApp {
   }
 
   private setupSmoothPageTransitions(): void {
-    // Page load gentle entrance
-    gsap.fromTo(document.body, { opacity: 0 }, { opacity: 1, duration: 0.32, ease: 'power2.out' });
+    // Page load buttery smooth entrance
+    gsap.fromTo(
+      document.body,
+      { opacity: 0, y: 8 },
+      { opacity: 1, y: 0, duration: 0.42, ease: 'power3.out', clearProps: 'all' }
+    );
 
-    // Back to home button with silky smooth exit
-    const backBtn = document.querySelector<HTMLAnchorElement>('.rec-back-btn');
-    backBtn?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.audio.playChime(659.25, 0.06);
-      setTimeout(() => this.audio.playChime(523.25, 0.08), 80);
-      gsap.to(document.body, {
-        opacity: 0,
-        y: 12,
-        duration: 0.26,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          window.location.href = backBtn.href;
-        },
+    // Universal buttery smooth page exit for internal navigation links
+    document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || link.target === '_blank') return;
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.audio.playChime(659.25, 0.06);
+        setTimeout(() => this.audio.playChime(523.25, 0.08), 70);
+        gsap.to(document.body, {
+          opacity: 0,
+          y: -10,
+          duration: 0.25,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            window.location.href = href;
+          },
+        });
       });
+    });
+
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) gsap.set(document.body, { opacity: 1, y: 0 });
     });
   }
 
@@ -1302,17 +1333,15 @@ class RecommendationsApp {
             onerror="window.handleGameImageError(this)" 
           />
           <div class="card-scrim"></div>
-          <div class="card-top-bar">
-            <div class="card-badge-left">
-              ${isTop ? '<span class="soulmate-flag-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 SOULMATE</span>' : ''}
-              <span class="card-sim-badge score-excellent"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${rec.matchScore}% Match</span>
-            </div>
-          </div>
           <div class="card-overlay-content">
-            <div class="card-title-row">
-              <h4 class="card-title">${rec.title}</h4>
+            <div class="card-eyebrow-row">
+              <div class="card-metric-group">
+                ${isTop ? '<span class="card-metric-pill soulmate-amber"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 Soulmate</span>' : ''}
+                <span class="card-metric-pill score-excellent"><span class="metric-dot"></span>${rec.matchScore}% Match</span>
+              </div>
               <span class="card-year">${rec.releaseYear}</span>
             </div>
+            <h4 class="card-title">${rec.title}</h4>
             <div class="card-meta-line">${rec.developer} &bull; ${rec.genres.slice(0, 2).join(' / ')}</div>
             <div class="card-action-bar">
               <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
@@ -1690,31 +1719,36 @@ class RecommendationsApp {
       this.searchResultsContainer.appendChild(card);
     });
 
-    // GSAP movement animation when search cards appear or reorder
+    // GSAP buttery smooth hardware-accelerated entrance for search cards
     const cards = this.searchResultsContainer.querySelectorAll('.game-card');
     if (cards.length > 0) {
+      gsap.killTweensOf(cards);
       gsap.fromTo(
         cards,
         {
           opacity: 0,
-          y: 28,
-          scale: 0.96
+          y: 20,
+          scale: 0.97,
         },
         {
           opacity: 1,
           y: 0,
           scale: 1,
-          duration: 0.38,
-          stagger: 0.035,
-          ease: 'power2.out',
-          clearProps: 'opacity,transform'
+          duration: 0.42,
+          stagger: {
+            each: 0.032,
+            from: 'start',
+          },
+          ease: 'power3.out',
+          clearProps: 'transform,opacity',
+          overwrite: 'auto',
         }
       );
     }
   }
 
   /**
-   * Create interactive game card
+   * Create interactive game card (Redesigned as one continuous cohesive unit)
    */
   private createGameCard(
     game: ExtendedGameItem,
@@ -1727,12 +1761,12 @@ class RecommendationsApp {
 
     let badgeHtml = '';
     if (isSearching && similarity > 0) {
-      const percentMatch = (Math.min(0.9985, Math.max(0.40, similarity)) * 100).toFixed(2);
+      const percentMatch = (Math.min(0.9985, Math.max(0.40, similarity)) * 100).toFixed(1);
       const scoreClass = similarity >= 0.88 ? 'score-excellent' : similarity >= 0.74 ? 'score-good' : 'score-fair';
-      badgeHtml = `<span class="card-sim-badge ${scoreClass}">${percentMatch}% Match</span>`;
+      badgeHtml = `<span class="card-metric-pill ${scoreClass}"><span class="metric-dot"></span>${percentMatch}% Match</span>`;
     } else {
       const pct = VectorEngine.formatPositivePercentage(game);
-      badgeHtml = `<span class="card-rating-badge">&#9733; ${pct}% Positive</span>`;
+      badgeHtml = `<span class="card-metric-pill rating-amber"><span class="rating-star">★</span> ${pct}% Positive</span>`;
     }
 
     const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
@@ -1755,17 +1789,15 @@ class RecommendationsApp {
         onerror="window.handleGameImageError(this)" 
       />
       <div class="card-scrim"></div>
-      <div class="card-top-bar">
-        <div class="card-badge-left">
-          ${badgeHtml}
-          ${game.isSamtagonOriginal ? `<span class="badge-samtagon-float">Original</span>` : ''}
-        </div>
-      </div>
       <div class="card-overlay-content">
-        <div class="card-title-row">
-          <h3 class="card-title">${game.title}</h3>
+        <div class="card-eyebrow-row">
+          <div class="card-metric-group">
+            ${badgeHtml}
+            ${game.isSamtagonOriginal ? `<span class="card-original-pill">Original</span>` : ''}
+          </div>
           <span class="card-year">${game.releaseYear}</span>
         </div>
+        <h3 class="card-title" title="${safeTitle}">${game.title}</h3>
         <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
         <div class="card-action-bar">
           <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">

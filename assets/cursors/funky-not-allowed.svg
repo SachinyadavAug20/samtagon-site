@@ -4,22 +4,22 @@
       <feDropShadow dx="2" dy="3.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.42" />
     </filter>
     <linearGradient id="na-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.95" />
-      <stop offset="35%" stop-color="#fb7185" stop-opacity="0.9" />
-      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
-      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+      <stop offset="0%" stop-color="#fb7185" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="#f43f5e" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#e11d48" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#9f1239" stop-opacity="0.90" />
     </linearGradient>
     <linearGradient id="na-face" x1="15%" y1="10%" x2="90%" y2="90%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
-      <stop offset="35%" stop-color="#ffe4e6" stop-opacity="0.45" />
-      <stop offset="70%" stop-color="#fdf4ff" stop-opacity="0.40" />
-      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.60" />
+      <stop offset="35%" stop-color="#fff1f2" stop-opacity="0.50" />
+      <stop offset="70%" stop-color="#ffe4e6" stop-opacity="0.40" />
+      <stop offset="100%" stop-color="#fecdd3" stop-opacity="0.65" />
     </linearGradient>
     <linearGradient id="na-rim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="30%" stop-color="#fda4af" stop-opacity="0.92" />
-      <stop offset="70%" stop-color="#f43f5e" stop-opacity="0.88" />
-      <stop offset="100%" stop-color="#e11d48" stop-opacity="0.92" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="30%" stop-color="#fecdd3" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#f43f5e" stop-opacity="0.90" />
+      <stop offset="100%" stop-color="#be123c" stop-opacity="0.92" />
     </linearGradient>
   </defs>
 

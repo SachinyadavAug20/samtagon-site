@@ -557,16 +557,16 @@
   transform: scale(1.06);
 }
 
-/* Smooth Gradient Scrim for Flawless Text Legibility */
+/* Smooth Continuous Gradient Scrim for Flawless Text Legibility */
 .card-scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 14, 0.15) 0%,
-    rgba(10, 10, 14, 0.4) 40%,
-    rgba(10, 10, 14, 0.88) 72%,
-    rgba(10, 10, 14, 0.98) 100%
+    rgba(9, 10, 12, 0.02) 0%,
+    rgba(9, 10, 12, 0.20) 30%,
+    rgba(9, 10, 12, 0.78) 60%,
+    #090a0c 95%
   );
   z-index: 1;
   pointer-events: none;
@@ -577,86 +577,88 @@
 .arranged-game-card:hover .card-scrim {
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 14, 0.1) 0%,
-    rgba(10, 10, 14, 0.32) 35%,
-    rgba(10, 10, 14, 0.85) 68%,
-    rgba(10, 10, 14, 0.98) 100%
+    rgba(9, 10, 12, 0.0) 0%,
+    rgba(9, 10, 12, 0.15) 25%,
+    rgba(9, 10, 12, 0.75) 58%,
+    #090a0c 95%
   );
 }
 
-/* Floating Top Bar for Score / Badge */
+/* Hidden legacy floating top-bar to prevent detached stickers */
 .card-top-bar {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  display: none !important;
+}
+
+/* Continuous Eyebrow & Status Row */
+.card-eyebrow-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  z-index: 2;
-  pointer-events: none;
+  margin-bottom: 2px;
 }
 
-.card-badge-left {
+.card-metric-group {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.card-sim-badge,
-.card-rating-badge {
+.card-metric-pill {
   font-family: var(--font-mono);
   font-size: 0.70rem;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 0;
-  background: rgba(10, 10, 14, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
-.card-sim-badge.score-excellent {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
+.card-metric-pill.rating-amber {
+  color: #f59e0b;
 }
 
-.card-sim-badge.score-good {
-  background: var(--secondary);
-  color: var(--secondary-foreground);
-  border-color: var(--secondary);
+.card-metric-pill.score-excellent {
+  color: #10b981;
 }
 
-.card-sim-badge.score-fair {
-  background: rgba(10, 10, 14, 0.85);
-  color: var(--text-secondary);
-  border-color: var(--border-subtle);
+.card-metric-pill.score-good {
+  color: #f59e0b;
 }
 
-.badge-samtagon-float {
+.card-metric-pill.score-fair {
+  color: #9ca3af;
+}
+
+.card-metric-pill.soulmate-amber {
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.metric-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.rating-star {
+  color: #f59e0b;
+  font-size: 0.75rem;
+}
+
+.card-original-pill {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 0;
-  background: rgba(10, 10, 14, 0.85);
-  color: var(--highlight);
-  border: 1px solid var(--highlight);
-}
-
-.soulmate-flag-tag {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #000;
-  background: var(--primary);
-  padding: 3px 8px;
-  border: 1px solid var(--primary);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  padding: 1px 6px;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 /* Card Bottom Overlay Content (Least text, elegant typography) */
@@ -903,17 +905,17 @@
   transform: translateY(-1px);
 }
 
-/* Review Sentiment Badge for Browsing */
+/* Backward compatible mapping for rating badge */
 .card-rating-badge {
   font-family: var(--font-mono);
   font-size: 0.70rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 0;
-  background: rgba(18, 19, 22, 0.90);
-  color: var(--primary);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #f59e0b;
+  background: transparent;
+  border: none;
 }
 
 /* ==========================================================================

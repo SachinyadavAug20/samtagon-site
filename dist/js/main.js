@@ -144,28 +144,33 @@ function setupZenInteractions(stage, audio) {
     playBtn?.addEventListener('click', () => {
         audio.playChime(660, 0.1);
     });
-    // 5b. Smooth Page Transition to Game Recommendations
-    const recBtn = document.getElementById('game-rec-engine-btn') || document.querySelector('a[href="recommendations.html"]');
-    recBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        audio.playChime(523.25, 0.08);
-        setTimeout(() => audio.playChime(659.25, 0.12), 90);
-        const mainEl = document.querySelector('.zen-page');
-        if (mainEl) {
-            gsap.to(mainEl, {
+    // 5b. Universal Buttery Smooth Page Transitions
+    const pageRoot = (document.querySelector('.zen-page') || document.querySelector('main') || document.body);
+    if (pageRoot) {
+        gsap.fromTo(pageRoot, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', clearProps: 'all' });
+    }
+    document.querySelectorAll('a[href]').forEach((link) => {
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || link.target === '_blank')
+            return;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            audio.playChime(523.25, 0.08);
+            setTimeout(() => audio.playChime(659.25, 0.1), 70);
+            gsap.to(document.body, {
                 opacity: 0,
-                y: -14,
-                scale: 0.985,
-                duration: 0.28,
+                y: -10,
+                duration: 0.25,
                 ease: 'power2.inOut',
                 onComplete: () => {
-                    window.location.href = 'recommendations.html';
+                    window.location.href = href;
                 },
             });
-        }
-        else {
-            window.location.href = 'recommendations.html';
-        }
+        });
+    });
+    window.addEventListener('pageshow', (e) => {
+        if (e.persisted)
+            gsap.set(document.body, { opacity: 1, y: 0 });
     });
     // 6. Game pills acoustic feedback
     document.querySelectorAll('.game-pill').forEach((pill, idx) => {

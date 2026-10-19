@@ -4,20 +4,21 @@
       <feDropShadow dx="2" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.45" />
     </filter>
     <linearGradient id="t-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95" />
-      <stop offset="40%" stop-color="#2dd4bf" stop-opacity="0.9" />
-      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
-      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.95" />
+      <stop offset="35%" stop-color="#f59e0b" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#d97706" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.90" />
     </linearGradient>
     <linearGradient id="t-face" x1="20%" y1="0%" x2="80%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
-      <stop offset="50%" stop-color="#e0f2fe" stop-opacity="0.5" />
-      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.7" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.90" />
+      <stop offset="45%" stop-color="#fef3c7" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#fde68a" stop-opacity="0.75" />
     </linearGradient>
     <linearGradient id="t-rim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="40%" stop-color="#a5f3fc" stop-opacity="0.9" />
-      <stop offset="100%" stop-color="#f472b6" stop-opacity="0.9" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="35%" stop-color="#fef08a" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.90" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.92" />
     </linearGradient>
   </defs>
 

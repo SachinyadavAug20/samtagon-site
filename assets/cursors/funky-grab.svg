@@ -4,22 +4,22 @@
       <feDropShadow dx="2" dy="3.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.42" />
     </filter>
     <linearGradient id="g-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.95" />
-      <stop offset="30%" stop-color="#2dd4bf" stop-opacity="0.9" />
-      <stop offset="70%" stop-color="#f472b6" stop-opacity="0.92" />
-      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.88" />
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#f59e0b" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#d97706" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.90" />
     </linearGradient>
     <linearGradient id="g-face" x1="15%" y1="10%" x2="90%" y2="90%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
-      <stop offset="35%" stop-color="#e0f2fe" stop-opacity="0.45" />
-      <stop offset="70%" stop-color="#fdf4ff" stop-opacity="0.40" />
-      <stop offset="100%" stop-color="#fbcfe8" stop-opacity="0.60" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.86" />
+      <stop offset="35%" stop-color="#fef3c7" stop-opacity="0.52" />
+      <stop offset="70%" stop-color="#fff7ed" stop-opacity="0.42" />
+      <stop offset="100%" stop-color="#fde68a" stop-opacity="0.65" />
     </linearGradient>
     <linearGradient id="g-rim" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="25%" stop-color="#a5f3fc" stop-opacity="0.92" />
-      <stop offset="65%" stop-color="#f472b6" stop-opacity="0.88" />
-      <stop offset="100%" stop-color="#e879f9" stop-opacity="0.92" />
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="30%" stop-color="#fef08a" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.90" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.92" />
     </linearGradient>
   </defs>
 
