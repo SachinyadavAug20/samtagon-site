@@ -401,8 +401,8 @@ export class VectorEngine {
 
     // Apply semantic dictionary activations
     tokens.forEach((token) => {
-      const match = semanticConcepts[token];
-      if (match) {
+      const match = Object.prototype.hasOwnProperty.call(semanticConcepts, token) ? semanticConcepts[token] : null;
+      if (match && Array.isArray(match.dims)) {
         match.dims.forEach((d) => {
           vector[d] += match.weight;
         });

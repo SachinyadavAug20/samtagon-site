@@ -13,6 +13,7 @@ import { join } from 'node:path';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const ROOT_DIR = process.cwd();
+const trailerCache = new Map<number, any>();
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -153,6 +154,74 @@ Bun.serve({
           },
         }
       );
+    }
+
+    // 2b. API: Steam Video Trailer Endpoint
+    if (url.pathname === '/api/trailer') {
+      const appidParam = url.searchParams.get('appid') || url.searchParams.get('id');
+      const numericId = parseInt(String(appidParam).replace(/[^0-9]/g, ''), 10);
+      if (isNaN(numericId) || numericId <= 0) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Valid numeric Steam appid is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (trailerCache.has(numericId)) {
+        return new Response(
+          JSON.stringify(trailerCache.get(numericId)),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      try {
+        const steamRes = await fetch(`https://store.steampowered.com/api/appdetails?appids=${numericId}&cc=us&l=en`, {
+          headers: { 'User-Agent': 'SamtagonTrailerService/2.0' },
+        });
+        const steamData: any = await steamRes.json();
+        const appData = steamData[numericId]?.data;
+
+        if (!appData) {
+          const resp = { success: false, appid: numericId, error: 'Game not found on Steam' };
+          trailerCache.set(numericId, resp);
+          return new Response(JSON.stringify(resp), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        const movies = appData.movies || [];
+        if (movies.length === 0) {
+          const resp = {
+            success: true,
+            appid: numericId,
+            hasVideo: false,
+            title: appData.name || '',
+            steamUrl: `https://store.steampowered.com/app/${numericId}/`,
+          };
+          trailerCache.set(numericId, resp);
+          return new Response(JSON.stringify(resp), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        const m = movies.find((x: any) => x.highlight) || movies[0];
+        const resp = {
+          success: true,
+          appid: numericId,
+          hasVideo: true,
+          title: m.name || appData.name || 'Official Trailer',
+          thumbnail: m.thumbnail || '',
+          hls: m.hls_h264 || null,
+          dash: m.dash_h264 || null,
+          mp4: m.mp4?.max || m.mp4?.['480'] || null,
+          webm: m.webm?.max || m.webm?.['480'] || null,
+          steamUrl: `https://store.steampowered.com/app/${numericId}/`,
+        };
+        trailerCache.set(numericId, resp);
+        return new Response(JSON.stringify(resp), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (err: any) {
+        console.error(`[Server] Trailer fetch error for appid ${numericId}:`, err);
+        return new Response(
+          JSON.stringify({ success: false, appid: numericId, error: err.message || 'Trailer fetch failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // 3. Static File Server

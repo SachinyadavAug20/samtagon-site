@@ -1,5 +1,6 @@
 import { GameItem, GameMatch, PlatformLink, VectorEngine } from './vector-engine.js';
 import { GAMES_CATALOG } from './games-data.js';
+import { REAL_STEAM_GAMES } from './real-steam-games.js';
 import { OpenRouterEmbedder } from './openrouter-embed.js';
 
 export interface ExtendedGameItem extends GameItem {
@@ -153,7 +154,7 @@ export const CURATED_GAMES: CuratedGame[] = [
     genres: ['Tactical Shooter', 'FPS', 'Competitive'],
     year: 2020,
     rating: 4.92,
-    image: 'assets/images/games/valorant.svg',
+    image: 'assets/images/games/valorant.png',
     storeUrl: 'https://playvalorant.com/',
     badge: 'web',
     trailer: 'https://www.youtube.com/embed/e_E9W2VSZYQ',
@@ -167,7 +168,7 @@ export const CURATED_GAMES: CuratedGame[] = [
     genres: ['Sandbox', 'Creation', 'Multiplayer'],
     year: 2006,
     rating: 4.88,
-    image: 'assets/images/games/roblox.svg',
+    image: 'assets/images/games/roblox.png',
     storeUrl: 'https://www.roblox.com/',
     badge: 'web',
     trailer: 'https://www.youtube.com/embed/eAvXhNkyUcg',
@@ -992,59 +993,41 @@ export const CURATED_GAMES: CuratedGame[] = [
   }
 ];
 
-const GENRE_POOLS = [
-  ['Narrative', 'Choices Matter', 'Cinematic'],
-  ['Action RPG', 'Open World', 'Fantasy'],
-  ['Sci-Fi', 'Cyberpunk', 'FPS'],
-  ['Roguelike', 'Deckbuilder', 'Strategy'],
-  ['Metroidvania', 'Platformer', 'Pixel Art'],
-  ['Simulation', 'Transit', 'Tycoon'],
-  ['Survival Horror', 'Atmospheric', 'Mystery'],
-  ['Co-op', 'Shooter', 'Action'],
-  ['JRPG', 'Turn-Based', 'Anime'],
-  ['Puzzle', 'Exploration', 'Story Rich'],
-];
-
-const STUDIO_POOLS = [
-  'Mojang Studios', 'Rockstar Games', 'Valve', 'Epic Games', 'Nintendo', 'FromSoftware',
-  'CD Projekt Red', 'Larian Studios', 'Supergiant Games', 'Team Cherry', 'Capcom', 'Atlus',
-  'Remedy Entertainment', 'Bloober Team', 'DONTNOD Entertainment', 'Obsidian',
-  'Unknown Worlds', 'MegaCrit', 'LocalThunk', 'Samtagon Game Studios', 'BioWare',
-  'Bungie', 'Arkane Studios', 'Respawn', 'Kojima Productions', 'Sucker Punch',
-];
-
-const TITLE_PREFIXES = [
-  'Chronicles of', 'Echoes of', 'Tales from', 'Legacy of', 'Beyond',
-  'Return to', 'Sands of', 'Edge of', 'Secrets of', 'Dawn of',
-  'Kingdom of', 'Hollow', 'Iron', 'Shadows of', 'Cyber', 'Neon',
-  'Quantum', 'Star', 'Infinite', 'Project', 'Protocol', 'Ascent of',
-];
-
-const TITLE_NOUNS = [
-  'Elysium', 'Arcadia', 'Valhalla', 'Oblivion', 'Frontier', 'Solitude',
-  'Nexus', 'Vanguard', 'Horizon', 'Singularity', 'Eclipse', 'Sanctuary',
-  'Rebellion', 'Paradox', 'Mirage', 'Continuum', 'Sovereign', 'Resonance',
-];
-
 export class CatalogEngine {
   public static readonly ITEMS_PER_PAGE = 12;
-  public static readonly TOTAL_PAGES = 1000;
-  public static readonly TOTAL_GAMES = CatalogEngine.ITEMS_PER_PAGE * CatalogEngine.TOTAL_PAGES;
+  public static readonly TOTAL_GAMES = 5000;
+  public static readonly TOTAL_PAGES = Math.ceil(CatalogEngine.TOTAL_GAMES / CatalogEngine.ITEMS_PER_PAGE);
 
-  private static pageCache: Map<number, ExtendedGameItem[]> = new Map();
   private static allCurated: ExtendedGameItem[] = [];
+  private static allGames: ExtendedGameItem[] = [];
+  private static gamesById: Map<string, ExtendedGameItem> = new Map();
+  private static gamesByTitle: Map<string, ExtendedGameItem> = new Map();
 
   static {
     this.allCurated = this.buildCuratedLibrary();
+    this.allGames = this.buildFullLibrary();
+    this.allGames.forEach((g) => {
+      this.gamesById.set(g.id, g);
+      this.gamesByTitle.set(g.title.toLowerCase().trim(), g);
+    });
   }
 
   public static getAllCurated(): ExtendedGameItem[] {
     return this.allCurated;
   }
 
+  public static getAllGames(): ExtendedGameItem[] {
+    return this.allGames;
+  }
+
   public static getCuratedByTitle(title: string): ExtendedGameItem | undefined {
     const clean = title.toLowerCase().trim();
-    return this.allCurated.find(g => g.title.toLowerCase().trim() === clean || g.title.toLowerCase().includes(clean));
+    if (this.gamesByTitle.has(clean)) return this.gamesByTitle.get(clean);
+    return this.allGames.find(g => g.title.toLowerCase().trim() === clean || g.title.toLowerCase().includes(clean));
+  }
+
+  public static getGameById(id: string): ExtendedGameItem | undefined {
+    return this.gamesById.get(id);
   }
 
   private static buildCuratedLibrary(): ExtendedGameItem[] {
@@ -1078,7 +1061,7 @@ export class CatalogEngine {
         releaseYear: g.year,
         developer: g.studio,
         studioUrl: isSteam
-          ? `https://store.steampowered.com/developer/${encodeURIComponent(g.studio.toLowerCase().replace(/[^a-z0-9]/g, ''))}`
+          ? `https://store.steampowered.com/search/?developer=${encodeURIComponent(g.studio)}`
           : steamUrl,
         videoTrailer: g.trailer,
         reviewsSummary: g.rating >= 4.95 ? 'Overwhelmingly Positive' : g.rating >= 4.88 ? 'Very Positive' : 'Positive',
@@ -1094,6 +1077,62 @@ export class CatalogEngine {
     return list;
   }
 
+  private static buildFullLibrary(): ExtendedGameItem[] {
+    const list: ExtendedGameItem[] = [...this.allCurated];
+    const seenTitles = new Set<string>();
+    const seenAppIds = new Set<string>();
+
+    this.allCurated.forEach(g => {
+      seenTitles.add(g.title.toLowerCase().replace(/[^a-z0-9]/g, ''));
+      const numId = g.id.replace(/\D/g, '');
+      if (numId) seenAppIds.add(numId);
+    });
+
+    for (const [appid, title, studio, genresStr, year, rating, positiveReviews] of REAL_STEAM_GAMES) {
+      if (list.length >= this.TOTAL_GAMES) break;
+      const normTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const strId = String(appid);
+      if (seenTitles.has(normTitle) || seenAppIds.has(strId)) continue;
+      seenTitles.add(normTitle);
+      seenAppIds.add(strId);
+
+      const genres = genresStr.split(',').map(x => x.trim()).filter(Boolean);
+      const tags = [
+        ...genres.map(x => x.toLowerCase()),
+        title.toLowerCase(),
+        studio.toLowerCase(),
+        'steam',
+        'pc gaming',
+      ];
+      const steamUrl = `https://store.steampowered.com/app/${appid}/`;
+      const capsule = `https://shared.steamstatic.com/store_item_assets/steam/apps/${appid}/capsule_616x353.jpg`;
+      const sentiment = rating >= 4.8 ? 'Overwhelmingly Positive' : rating >= 4.5 ? 'Very Positive' : 'Positive';
+
+      list.push({
+        id: `steam-${appid}`,
+        title,
+        subtitle: `${genres.slice(0, 2).join(' • ')} Experience`,
+        description: `${title} is a renowned ${genres.join(' / ')} title crafted by ${studio}. Experience captivating gameplay mechanics, rich atmosphere, and positive community praise on Steam.`,
+        image: capsule,
+        genres: genres.length > 0 ? genres : ['Action', 'Adventure'],
+        tags,
+        rating,
+        releaseYear: year,
+        developer: studio,
+        studioUrl: `https://store.steampowered.com/search/?developer=${encodeURIComponent(studio)}`,
+        videoTrailer: '', // Populated dynamically via /api/trailer?appid=${appid}
+        reviewsSummary: sentiment,
+        reviewCount: `${positiveReviews.toLocaleString()} Positive Reviews`,
+        platforms: [
+          { name: 'Steam Store', url: steamUrl, badge: 'steam' },
+        ],
+        embedding: VectorEngine.embedText(`${title} ${genres.join(' ')} ${studio}`),
+      });
+    }
+
+    return list;
+  }
+
   public static getPage(pageNumber: number): {
     games: ExtendedGameItem[];
     totalPages: number;
@@ -1101,101 +1140,15 @@ export class CatalogEngine {
     currentPage: number;
   } {
     const page = Math.max(1, Math.min(this.TOTAL_PAGES, Math.floor(pageNumber)));
-
-    if (this.pageCache.has(page)) {
-      return {
-        games: this.pageCache.get(page)!,
-        totalPages: this.TOTAL_PAGES,
-        totalCount: this.TOTAL_GAMES,
-        currentPage: page,
-      };
-    }
-
-    const items: ExtendedGameItem[] = [];
-    const curatedStart = (page - 1) * this.ITEMS_PER_PAGE;
-    const curatedEnd = curatedStart + this.ITEMS_PER_PAGE;
-
-    if (curatedStart < this.allCurated.length) {
-      items.push(...this.allCurated.slice(curatedStart, curatedEnd));
-      if (items.length < this.ITEMS_PER_PAGE) {
-        for (let i = items.length; i < this.ITEMS_PER_PAGE; i++) {
-          const itemSeed = page * 100 + i;
-          items.push(this.generateDeterministicGame(page, i, itemSeed));
-        }
-      }
-    } else {
-      for (let i = 0; i < this.ITEMS_PER_PAGE; i++) {
-        const itemSeed = page * 100 + i;
-        const game = this.generateDeterministicGame(page, i, itemSeed);
-        items.push(game);
-      }
-    }
-
-    this.pageCache.set(page, items);
+    const start = (page - 1) * this.ITEMS_PER_PAGE;
+    const end = start + this.ITEMS_PER_PAGE;
+    const items = this.allGames.slice(start, end);
 
     return {
       games: items,
       totalPages: this.TOTAL_PAGES,
-      totalCount: this.TOTAL_GAMES,
+      totalCount: this.allGames.length,
       currentPage: page,
-    };
-  }
-
-  private static generateDeterministicGame(page: number, slot: number, seed: number): ExtendedGameItem {
-    const baseCurated = CURATED_GAMES[seed % CURATED_GAMES.length];
-    const prefix = TITLE_PREFIXES[seed % TITLE_PREFIXES.length];
-    const noun = TITLE_NOUNS[(seed * 7 + slot) % TITLE_NOUNS.length];
-    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'Zero', 'Evolution', 'Origins'][(seed + slot) % 9];
-    
-    const title = slot % 3 === 0 
-      ? `${baseCurated.title}: ${noun}` 
-      : `${prefix} ${noun} ${roman}`;
-
-    const studio = STUDIO_POOLS[(seed * 3 + slot) % STUDIO_POOLS.length];
-    const genreGroup = GENRE_POOLS[(seed + slot) % GENRE_POOLS.length];
-    const releaseYear = 2004 + (seed % 22);
-    const rating = Number((4.75 + ((seed % 24) * 0.01)).toFixed(2));
-    const reviewsPct = Math.round(rating * 20);
-    const sentiment = reviewsPct >= 96 ? 'Overwhelmingly Positive' : reviewsPct >= 90 ? 'Very Positive' : 'Positive';
-
-    const isSteam = typeof baseCurated.id === 'number';
-    const capsule = isSteam
-      ? `https://shared.steamstatic.com/store_item_assets/steam/apps/${baseCurated.id}/capsule_616x353.jpg`
-      : (baseCurated.image || 'assets/images/games/minecraft.png');
-    const steamUrl = isSteam ? `https://store.steampowered.com/app/${baseCurated.id}/` : (baseCurated.storeUrl || 'https://www.minecraft.net/');
-
-    const desc = `${title} is a critically acclaimed ${genreGroup.join(', ').toLowerCase()} title crafted by ${studio}. Explore expansive worlds, conquer masterfully tuned gameplay systems, and forge your journey.`;
-
-    const tags = [
-      ...genreGroup.map(g => g.toLowerCase()),
-      studio.toLowerCase(),
-      noun.toLowerCase(),
-      'steam',
-      'story-rich',
-      'atmospheric',
-    ];
-
-    const embedding = VectorEngine.embedText(`${title} ${desc} ${genreGroup.join(' ')} ${studio}`);
-
-    return {
-      id: `proc-p${page}-s${slot}-${seed}`,
-      title,
-      subtitle: `${genreGroup[0]} &bull; ${studio}`,
-      description: desc,
-      image: capsule,
-      genres: genreGroup,
-      tags,
-      rating,
-      releaseYear,
-      developer: studio,
-      studioUrl: `https://store.steampowered.com/developer/${encodeURIComponent(studio.toLowerCase().replace(/[^a-z0-9]/g, ''))}`,
-      videoTrailer: baseCurated.trailer,
-      reviewsSummary: sentiment,
-      reviewCount: `${Math.floor(12000 + ((seed * 17) % 65000)).toLocaleString()} Verified Reviews`,
-      platforms: [
-        { name: isSteam ? 'Steam Store' : 'Official Portal', url: steamUrl, badge: isSteam ? 'steam' : 'web' },
-      ],
-      embedding,
     };
   }
 
@@ -1223,18 +1176,7 @@ export class CatalogEngine {
     }
 
     const queryVector = VectorEngine.embedText(trimmed);
-    const searchPool: ExtendedGameItem[] = [...this.allCurated];
-
-    // Search across cached pages and first 36 procedural pages (~430+ titles)
-    const pagesToScan = Math.min(36, this.TOTAL_PAGES);
-    for (let p = 1; p <= pagesToScan; p++) {
-      const pg = this.getPage(p);
-      pg.games.forEach(g => {
-        if (!searchPool.some(existing => existing.id === g.id)) {
-          searchPool.push(g);
-        }
-      });
-    }
+    const searchPool: ExtendedGameItem[] = this.allGames;
 
     const scoredMatches: GameMatch[] = [];
     const allScored: GameMatch[] = [];
@@ -1395,11 +1337,19 @@ export class CatalogEngine {
   }
 
   public static getSimilarGames(targetGame: GameItem, count: number = 3): ExtendedGameItem[] {
-    const candidates = this.allCurated.filter(g => g.id !== targetGame.id);
+    const targetEmb = targetGame.embedding && targetGame.embedding.length === 128
+      ? targetGame.embedding
+      : VectorEngine.embedText(`${targetGame.title} ${targetGame.genres.join(' ')} ${targetGame.developer}`);
+
+    const pool = this.allCurated.length >= count ? this.allCurated : this.allGames;
+    const candidates = pool.filter(g => g.id !== targetGame.id);
     const matches: { game: ExtendedGameItem; score: number }[] = [];
 
     candidates.forEach(cand => {
-      const sim = VectorEngine.cosineSimilarity(targetGame.embedding, cand.embedding);
+      const candEmb = cand.embedding && cand.embedding.length === 128
+        ? cand.embedding
+        : VectorEngine.embedText(`${cand.title} ${cand.genres.join(' ')} ${cand.developer}`);
+      const sim = VectorEngine.cosineSimilarity(targetEmb, candEmb);
       const sharedGenres = cand.genres.filter(cg => targetGame.genres.includes(cg)).length;
       const finalScore = sim * 0.8 + (sharedGenres * 0.08);
       matches.push({ game: cand, score: finalScore });

@@ -6887,7 +6887,7 @@ export class ThreeStage {
         }
         // 9. Windmill Sails & Waterwheel Continuous Kinetic Animation
         if (this.windmillSails) {
-            this.windmillSails.rotation.x -= this.windmillCurrentSpeed;
+            this.windmillSails.rotation.z -= this.windmillCurrentSpeed;
             if (this.windmillCurrentSpeed > this.windmillBaseSpeed) {
                 this.windmillCurrentSpeed = THREE.MathUtils.lerp(this.windmillCurrentSpeed, this.windmillBaseSpeed, 0.015);
             }

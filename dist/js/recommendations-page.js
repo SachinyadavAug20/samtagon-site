@@ -312,8 +312,8 @@ const ARCHETYPE_DATABASE_MATCHES = {
 class RecommendationsApp {
     audio;
     currentPage = 1;
-    totalPages = 1000;
-    totalCount = 12000;
+    totalPages = 417;
+    totalCount = 5000;
     currentQuery = '';
     currentMatches = [];
     // Mode Tabs & View Elements
@@ -354,6 +354,7 @@ class RecommendationsApp {
     modalBackdrop;
     modalContent;
     modalCloseBtn;
+    currentHls = null;
     constructor() {
         this.audio = new ProceduralAudio();
         this.initDOM();
@@ -1394,7 +1395,7 @@ class RecommendationsApp {
             this.catalogHeading.textContent = 'Explore Catalog';
         }
         if (this.resultCountSpan) {
-            this.resultCountSpan.innerHTML = `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 12,000 titles`;
+            this.resultCountSpan.innerHTML = `Page ${this.currentPage.toLocaleString()} of ${this.totalPages.toLocaleString()} &bull; 5,000 real titles`;
         }
         this.renderGamesGrid(this.currentMatches, false);
         this.renderPaginationBar();
@@ -1569,20 +1570,49 @@ class RecommendationsApp {
         const similarGames = CatalogEngine.getSimilarGames(game, 3);
         const storeUrl = game.platforms[0]?.url || `https://store.steampowered.com/`;
         const studioUrl = game.studioUrl || `https://store.steampowered.com/search/?developer=${encodeURIComponent(game.developer)}`;
-        // Media presentation: High-res poster banner + YouTube video trailer embed
-        let mediaHtml = `
-      <div class="modal-media-wrap">
-        <img src="${game.image}" alt="${game.title}" class="modal-media-poster" />
-        ${game.videoTrailer && game.videoTrailer.includes('youtube.com') ? `
+        const numericSteamId = game.id.startsWith('steam-')
+            ? parseInt(game.id.replace('steam-', ''), 10)
+            : (typeof game.id === 'number' ? game.id : parseInt(String(game.id).replace(/\D/g, ''), 10));
+        const isSteam = !isNaN(numericSteamId) && numericSteamId > 0;
+        // Clean up previous HLS instance if any
+        if (this.currentHls) {
+            try {
+                this.currentHls.destroy();
+            }
+            catch (_) { }
+            this.currentHls = null;
+        }
+        // Media presentation: High-res poster banner + YouTube or Steam video trailer stream
+        let mediaHtml = '';
+        if (isSteam) {
+            mediaHtml = `
+        <div class="modal-media-wrap" id="modal-media-player-wrap">
+          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" id="modal-media-poster-img" />
+          <div class="modal-trailer-badge" id="modal-trailer-badge" style="display: none;">🎥 Steam Official Trailer</div>
+          <div id="modal-video-container"></div>
+        </div>
+      `;
+        }
+        else if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+            mediaHtml = `
+        <div class="modal-media-wrap">
+          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" />
           <iframe 
             src="${game.videoTrailer}?autoplay=1&mute=1&loop=1&playlist=${game.videoTrailer.split('/embed/')[1] || ''}" 
             title="${game.title} Trailer" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen>
           </iframe>
-        ` : ''}
-      </div>
-    `;
+        </div>
+      `;
+        }
+        else {
+            mediaHtml = `
+        <div class="modal-media-wrap">
+          <img src="${game.image}" alt="${game.title}" class="modal-media-poster" />
+        </div>
+      `;
+        }
         const tagPillsHtml = game.genres
             .map(g => `<span class="modal-tag-pill">${g}</span>`)
             .concat(game.tags.slice(0, 4).map(t => `<span class="modal-tag-pill">#${t}</span>`))
@@ -1649,6 +1679,10 @@ class RecommendationsApp {
         </div>
       </div>
     `;
+        // Asynchronously stream official Steam video trailer if game has a Steam AppID
+        if (isSteam) {
+            this.loadSteamTrailer(numericSteamId, game);
+        }
         // Hook similar game cards inside modal to transition modal to that game
         this.modalContent.querySelectorAll('.modal-similar-card').forEach((simCard) => {
             simCard.addEventListener('click', () => {
@@ -1670,11 +1704,85 @@ class RecommendationsApp {
         }
     }
     /**
+     * Asynchronously load and stream the official Steam trailer via HLS / HTML5 Video
+     */
+    async loadSteamTrailer(appid, game) {
+        try {
+            const res = await fetch(`/api/trailer?appid=${appid}`);
+            if (!res.ok)
+                return;
+            const data = await res.json();
+            const badge = document.getElementById('modal-trailer-badge');
+            const container = document.getElementById('modal-video-container');
+            if (!container)
+                return;
+            if (data.success && data.hasVideo && data.hls) {
+                if (badge) {
+                    badge.textContent = `🎥 Steam Trailer: ${data.title || 'Official Highlight'}`;
+                    badge.style.display = 'inline-flex';
+                }
+                container.innerHTML = `
+          <video id="modal-steam-video" class="modal-media-video" controls autoplay muted loop playsinline poster="${data.thumbnail || game.image}">
+            <source src="${data.hls}" type="application/x-mpegURL">
+          </video>
+        `;
+                const video = document.getElementById('modal-steam-video');
+                if (!video)
+                    return;
+                if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = data.hls;
+                    video.play().catch(() => { });
+                }
+                else if (window.Hls && window.Hls.isSupported()) {
+                    const hls = new window.Hls({
+                        enableWorker: true,
+                        lowLatencyMode: true,
+                    });
+                    hls.loadSource(data.hls);
+                    hls.attachMedia(video);
+                    hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+                        video.play().catch(() => { });
+                    });
+                    this.currentHls = hls;
+                }
+            }
+            else if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+                // Fallback to YouTube if Steam video is not found
+                container.innerHTML = `
+          <iframe 
+            src="${game.videoTrailer}?autoplay=1&mute=1&loop=1&playlist=${game.videoTrailer.split('/embed/')[1] || ''}" 
+            title="${game.title} Trailer" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        `;
+            }
+        }
+        catch (err) {
+            console.warn('[Recommendations] Failed to stream Steam trailer:', err);
+        }
+    }
+    /**
      * Close Game Detail Modal
      */
     closeGameDetailModal() {
         if (!this.modalBackdrop)
             return;
+        if (this.currentHls) {
+            try {
+                this.currentHls.destroy();
+            }
+            catch (_) { }
+            this.currentHls = null;
+        }
+        const video = document.getElementById('modal-steam-video');
+        if (video) {
+            try {
+                video.pause();
+                video.src = '';
+            }
+            catch (_) { }
+        }
         const dialog = this.modalBackdrop.querySelector('.game-modal-dialog');
         gsap.to(this.modalBackdrop, {
             opacity: 0,

@@ -9,6 +9,7 @@
  */
 import { CURATED_GAMES } from './catalog-engine.js';
 import { GAMES_CATALOG } from './games-data.js';
+import { REAL_STEAM_GAMES } from './real-steam-games.js';
 import { VectorEngine } from './vector-engine.js';
 export class PineconeService {
     static DEFAULT_OPENROUTER_MODEL = 'liquid/lfm-2.5-embedding-350m:free';
@@ -98,6 +99,40 @@ export class PineconeService {
                 tags: g.tags || [],
             });
         });
+        // 3. 5,000 Real Steam Database
+        for (const [appid, title, studio, genresStr, year, rating, positiveReviews] of REAL_STEAM_GAMES) {
+            if (gameMap.size >= 5000)
+                break;
+            const normTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const id = `steam-${appid}`;
+            if (seenTitles.has(normTitle) || gameMap.has(id))
+                continue;
+            seenTitles.add(normTitle);
+            const genres = genresStr.split(',').map((g) => g.trim()).filter(Boolean);
+            const tags = Array.from(new Set([
+                ...genres.map((x) => x.toLowerCase()),
+                title.toLowerCase(),
+                studio.toLowerCase(),
+                'steam',
+                'pc gaming',
+            ]));
+            const steamUrl = `https://store.steampowered.com/app/${appid}/`;
+            const capsule = `https://shared.steamstatic.com/store_item_assets/steam/apps/${appid}/capsule_616x353.jpg`;
+            gameMap.set(id, {
+                id,
+                title,
+                studio,
+                genres: genres.length > 0 ? genres : ['Action', 'Adventure'],
+                year,
+                rating,
+                desc: `${title} is a critically acclaimed ${genres.join(' / ')} title crafted by ${studio}. Experience captivating gameplay mechanics, rich atmosphere, and positive community praise on Steam.`,
+                image: capsule,
+                trailer: '',
+                storeUrl: steamUrl,
+                badge: 'steam',
+                tags,
+            });
+        }
         return Array.from(gameMap.values());
     }
     /**
