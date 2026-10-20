@@ -10,7 +10,8 @@
     "start": "bun run server.ts",
     "serve": "bun run server.ts",
     "index-vectors": "bun run scripts/index-pinecone.ts",
-    "index-openrouter": "bun run scripts/index-pinecone.ts --target=openrouter"
+    "index-openrouter": "bun run scripts/index-pinecone.ts --target=openrouter",
+    "generate:assets": "bash scripts/gen-og-assets.sh"
   },
   "keywords": [
     "samtagon",

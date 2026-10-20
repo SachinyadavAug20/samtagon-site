@@ -3,9 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Games Catalog &bull; SAMTAGON STUDIOS</title>
-  <meta name="description" content="Explore the game portfolio of Samtagon: Metro Grid, Void Protocol, Alien Blaster, and custom engine prototypes.">
+  <title>Games Catalog &bull; Metro Grid, Void Protocol &amp; Alien Blaster — SAMTAGON STUDIOS</title>
+  <meta name="description" content="Explore the Samtagon games catalog: Metro Grid (C++17/Raylib transit simulator), Void Protocol (Godot space shooter) and Alien Blaster — technical breakdowns, gameplay manuals, screenshots and playable builds.">
+  <meta name="keywords" content="samtagon games, metro grid, void protocol, alien blaster, c++17 games, raylib, godot engine games, indie game catalog">
+  <meta name="author" content="Samtagon Game Studios">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#0A0F1D" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
+  <link rel="canonical" href="https://samtagon.com/games">
   <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/logos/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/logos/apple-touch-icon.png">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://samtagon.com/games">
+  <meta property="og:title" content="The Samtagon Games Catalog — Deep Dives &amp; Playables">
+  <meta property="og:description" content="Metro Grid, Void Protocol and Alien Blaster: full technical breakdowns, screenshots and playable builds from Samtagon Game Studios.">
+  <meta property="og:image" content="https://samtagon.com/assets/logos/og-games-banner.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Samtagon games catalog — Metro Grid, Void Protocol, Alien Blaster">
+  <meta property="og:site_name" content="Samtagon Game Studios">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@samtagon38824">
+  <meta name="twitter:creator" content="@samtagon38824">
+  <meta name="twitter:title" content="The Samtagon Games Catalog — Deep Dives &amp; Playables">
+  <meta name="twitter:description" content="Metro Grid, Void Protocol and Alien Blaster: full technical breakdowns, screenshots and playable builds from Samtagon Game Studios.">
+  <meta name="twitter:image" content="https://samtagon.com/assets/logos/og-games-banner.png">
+  <meta name="twitter:image:alt" content="Samtagon games catalog — Metro Grid, Void Protocol, Alien Blaster">
+
+  <!-- JSON-LD: Game catalog, creator info & breadcrumbs -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": "https://samtagon.com/games#page",
+        "url": "https://samtagon.com/games",
+        "name": "The Samtagon Games Catalog",
+        "description": "Technical breakdowns, mechanics overviews and playable builds for every title created by Samtagon Game Studios.",
+        "isPartOf": { "@id": "https://samtagon.com/#website" },
+        "breadcrumb": { "@id": "https://samtagon.com/games#breadcrumb" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://samtagon.com/games#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Studio Home", "item": "https://samtagon.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Games Catalog", "item": "https://samtagon.com/games" }
+        ]
+      },
+      {
+        "@type": "VideoGame",
+        "@id": "https://samtagon.com/games#metro-grid",
+        "name": "Metro Grid",
+        "description": "2.5D isometric urban transit simulator: lay tracks and stations, balance self-regulating 3-aspect signal blocks, and route shape-coded commuters across a 48x48 city grid. 100% procedural VVVF audio, C++17 + Raylib 6.0, WebAssembly build.",
+        "genre": ["Simulation", "Strategy", "City Builder"],
+        "gamePlatform": ["Web Browser", "PC", "Windows", "Linux"],
+        "applicationCategory": "Game",
+        "author": { "@id": "https://samtagon.com/#organization" },
+        "inLanguage": "en-US",
+        "playMode": "SinglePlayer",
+        "url": "https://sachinapr20.itch.io/",
+        "image": "https://samtagon.com/assets/images/metro-grid/test_metro_infinite_loop_proof.png"
+      },
+      {
+        "@type": "VideoGame",
+        "@id": "https://samtagon.com/games#void-protocol",
+        "name": "Void Protocol: Space Shooter",
+        "description": "Kinetic 2D space combat in Godot Engine: inertia-dampened thrust-and-drift flight, alien raider fleets, warp gates and frame-accurate collision physics.",
+        "genre": ["Action", "Shooter", "Space"],
+        "gamePlatform": ["Web Browser", "PC"],
+        "applicationCategory": "Game",
+        "author": { "@id": "https://samtagon.com/#organization" },
+        "inLanguage": "en-US",
+        "playMode": "SinglePlayer",
+        "url": "https://sachinapr20.itch.io/"
+      },
+      {
+        "@type": "VideoGame",
+        "@id": "https://samtagon.com/games#alien-blaster",
+        "name": "Alien Blaster",
+        "description": "2D retro arcade action platformer prototype with fluid projectile physics, camera shake feedback and modular state machines.",
+        "genre": ["Arcade", "Action", "Platformer"],
+        "gamePlatform": ["Web Browser", "PC"],
+        "applicationCategory": "Game",
+        "author": { "@id": "https://samtagon.com/#organization" },
+        "inLanguage": "en-US",
+        "playMode": "SinglePlayer",
+        "url": "https://github.com/SachinyadavAug20/AlienBlaster"
+      }
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -240,10 +337,15 @@
   <footer class="site-footer">
     <div class="container footer-bottom">
       <div>&copy; 2026 SAMTAGON STUDIOS &bull; CRAFTED WITH TS &amp; CSS</div>
-      <div><a href="index.html" style="color: var(--accent-amber);">&larr; Back to Studio Home</a></div>
+      <div>
+        <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">itch.io</a>
+        <a href="https://github.com/SachinyadavAug20" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">GitHub</a>
+        <a href="https://x.com/samtagon38824" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">X</a>
+        <a href="index.html" style="color: var(--accent-amber);">&larr; Back to Studio Home</a>
+      </div>
     </div>
   </footer>
 
-  <script type="module" src="dist/js/bundle.js?v=9.1"></script>
+  <script type="module" src="dist/js/bundle.js?v=14.0"></script>
 </body>
 </html>

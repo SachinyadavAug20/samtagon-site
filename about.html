@@ -3,9 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Studio Manifesto &bull; SAMTAGON</title>
-  <meta name="description" content="The story, philosophy, and engineering behind Samtagon Game Studio.">
+  <title>The Samtagon Manifesto &bull; Systems-First Game Engineering</title>
+  <meta name="description" content="The story, philosophy and engineering behind Samtagon Game Studios: kinetic simulation loops, zero engine bloat, C++17 + Raylib, and 100% procedural audio — authored by founder Sachin Chandra Yadav.">
+  <meta name="keywords" content="samtagon manifesto, indie game studio philosophy, systems programming, c++ game engine, procedural audio, sachin chandra yadav">
+  <meta name="author" content="Samtagon Game Studios">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#0A0F1D" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
+  <link rel="canonical" href="https://samtagon.com/about">
   <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/logos/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/logos/apple-touch-icon.png">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="https://samtagon.com/about">
+  <meta property="og:title" content="The Samtagon Manifesto — Systems First. Zero Engine Bloat.">
+  <meta property="og:description" content="Why Samtagon builds games through low-level systems engineering, procedural audio and autonomous kinetic loops. Author: Sachin Chandra Yadav.">
+  <meta property="og:image" content="https://samtagon.com/assets/logos/og-about-banner.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The Samtagon manifesto — systems-first game engineering">
+  <meta property="og:site_name" content="Samtagon Game Studios">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@samtagon38824">
+  <meta name="twitter:creator" content="@samtagon38824">
+  <meta name="twitter:title" content="The Samtagon Manifesto — Systems First. Zero Engine Bloat.">
+  <meta name="twitter:description" content="Why Samtagon builds games through low-level systems engineering, procedural audio and autonomous kinetic loops.">
+  <meta name="twitter:image" content="https://samtagon.com/assets/logos/og-about-banner.png">
+  <meta name="twitter:image:alt" content="The Samtagon manifesto — systems-first game engineering">
+
+  <!-- JSON-LD: About page, creator profile & breadcrumbs -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "AboutPage",
+        "@id": "https://samtagon.com/about#page",
+        "url": "https://samtagon.com/about",
+        "name": "The Samtagon Manifesto",
+        "description": "The story, philosophy and engineering behind Samtagon Game Studios.",
+        "isPartOf": { "@id": "https://samtagon.com/#website" },
+        "about": { "@id": "https://samtagon.com/#organization" },
+        "breadcrumb": { "@id": "https://samtagon.com/about#breadcrumb" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://samtagon.com/about#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Studio Home", "item": "https://samtagon.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Studio Manifesto", "item": "https://samtagon.com/about" }
+        ]
+      },
+      {
+        "@type": "Person",
+        "@id": "https://samtagon.com/about#creator",
+        "name": "Sachin Chandra Yadav",
+        "jobTitle": "Founder, Systems Programmer and Game Engine Architect",
+        "description": "Computer Science Engineering student at Lokmanya Tilak College of Engineering. Creator of Metro Grid, the Samtagon universe, and low-level systems-first games.",
+        "worksFor": { "@id": "https://samtagon.com/#organization" },
+        "email": "mailto:samtagon777@gmail.com",
+        "url": "https://samtagon.com/about",
+        "sameAs": [
+          "https://github.com/SachinyadavAug20",
+          "https://sachinapr20.itch.io/",
+          "https://x.com/samtagon38824"
+        ]
+      }
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,10 +222,17 @@
   <footer class="site-footer">
     <div class="container footer-bottom">
       <div>&copy; 2026 SAMTAGON STUDIOS &bull; SYSTEMS FIRST</div>
-      <div><a href="index.html" style="color: var(--accent-amber);">&larr; Return to Studio Home</a></div>
+      <div>
+        <a href="games.html" style="color: var(--text-secondary); margin-right: 14px;">Games</a>
+        <a href="recommendations.html" style="color: var(--text-secondary); margin-right: 14px;">Fuzzy Find</a>
+        <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">itch.io</a>
+        <a href="https://github.com/SachinyadavAug20" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">GitHub</a>
+        <a href="https://x.com/samtagon38824" target="_blank" rel="noopener noreferrer" style="color: var(--text-secondary); margin-right: 14px;">X</a>
+        <a href="index.html" style="color: var(--accent-amber);">&larr; Return to Studio Home</a>
+      </div>
     </div>
   </footer>
 
-  <script type="module" src="dist/js/bundle.js?v=9.1"></script>
+  <script type="module" src="dist/js/bundle.js?v=14.0"></script>
 </body>
 </html>

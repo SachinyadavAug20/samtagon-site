@@ -4,22 +4,88 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Game Recommendations &bull; SAMTAGON</title>
-  <meta name="title" content="Game Recommendations &bull; SAMTAGON">
-  <meta name="description" content="Discover games and similar recommendations based on genre, gameplay, and mood.">
+  <title>Fuzzy Find — AI Game Finder for 5,000+ Games &bull; SAMTAGON</title>
+  <meta name="title" content="Fuzzy Find — AI Game Finder for 5,000+ Games &bull; SAMTAGON">
+  <meta name="description" content="Describe the game you're imagining — vibe, genre, mechanics or plot — and our neural vector-engine (Pinecone semantic search) finds it instantly across 5,000+ real Steam titles. Mixed with a personality quiz mode.">
+  <meta name="keywords" content="game finder, ai game recommendations, similar games, fuzzy search, vector search, semantic game search, steam games, what game should i play, game quiz">
   <meta name="author" content="Samtagon Game Studios">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="theme-color" content="#0A0F1D" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
+  <link rel="canonical" href="https://samtagon.com/recommendations">
   <link rel="icon" type="image/svg+xml" href="assets/logos/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/logos/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/logos/apple-touch-icon.png">
 
-  <!-- Typography -->
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://samtagon.com/recommendations">
+  <meta property="og:title" content="Fuzzy Find — describe a game, get it in a heartbeat">
+  <meta property="og:description" content="Neural vector semantic search across 5,000+ real Steam titles. Say 'a girl got the power of time travel' — we'll find Life is Strange. Built by Samtagon.">
+  <meta property="og:image" content="https://samtagon.com/assets/logos/og-rec-banner.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Samtagon Fuzzy Find — neural game finder for 5,000+ titles">
+  <meta property="og:site_name" content="Samtagon Game Studios">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@samtagon38824">
+  <meta name="twitter:creator" content="@samtagon38824">
+  <meta name="twitter:title" content="Fuzzy Find — describe a game, get it in a heartbeat">
+  <meta name="twitter:description" content="Neural vector semantic search across 5,000+ Steam titles by Samtagon. A girl with time-travel powers → Life is Strange.">
+  <meta name="twitter:image" content="https://samtagon.com/assets/logos/og-rec-banner.png">
+  <meta name="twitter:image:alt" content="Samtagon Fuzzy Find — neural game finder">
+
+  <!-- JSON-LD: Application + Site search action + breadcrumbs -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://samtagon.com/recommendations#app",
+        "name": "Samtagon Fuzzy Find",
+        "url": "https://samtagon.com/recommendations",
+        "description": "Neural vector semantic game finder: describe a game by vibe, genre, mechanics or plot and instantly discover matches across a 5,000-title catalog, powered by Pinecone vector embeddings with hybrid fuzzy scoring. Includes a personality-based game quiz.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any (Web Browser)",
+        "browserRequirements": "Requires JavaScript and WebGL-capable browser",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "creator": { "@id": "https://samtagon.com/#organization" },
+        "publisher": { "@id": "https://samtagon.com/#organization" },
+        "featureList": [
+          "Semantic vector search across 5,000+ Steam games",
+          "Personality quiz game recommendations",
+          "Steam trailer streaming",
+          "Fuzzy title and acronym matching",
+          "Never-empty results with local hybrid fallback"
+        ],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://samtagon.com/recommendations#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Studio Home", "item": "https://samtagon.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Fuzzy Find — AI Game Finder", "item": "https://samtagon.com/recommendations" }
+        ]
+      }
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/variables.css?v=12.0">
-  <link rel="stylesheet" href="css/base.css?v=12.0">
-  <link rel="stylesheet" href="css/components.css?v=12.0">
-  <link rel="stylesheet" href="css/recommendations.css?v=12.0">
+  <link rel="stylesheet" href="css/variables.css?v=14.0">
+  <link rel="stylesheet" href="css/base.css?v=14.0">
+  <link rel="stylesheet" href="css/components.css?v=14.0">
+  <link rel="stylesheet" href="css/recommendations.css?v=14.0">
   <!-- Theme Initialization -->
   <script>
     (function() {
@@ -99,6 +165,25 @@
   </div>
 
   <main class="rec-main-wrapper">
+    <!-- Crawlable SEO summary for the JS-driven finder -->
+    <section class="sr-only" aria-label="About the Samtagon Fuzzy Find game engine">
+      <h1>Fuzzy Find — the AI game finder by Samtagon</h1>
+      <p>
+        Describe any game you are imagining — vibe, mood, genre, mechanics or plot — and Samtagon's neural
+        vector engine surfaces it instantly from a catalog of 5,000+ real Steam titles.
+        Semantic search is powered by Pinecone integrated embeddings (llama-text-embed-v2) fused with fuzzy
+        title, tag and acronym scoring, with a resilient fallback chain and never-empty results.
+        A personality quiz mode ("Gamer Quest") recommends curated games from your answers.
+      </p>
+      <h2>Example searches</h2>
+      <ul>
+        <li>"a girl got super power of time travel" → Life is Strange</li>
+        <li>"cozy farming simulation" → Stardew Valley, Farm Together</li>
+        <li>"steal cars in an open world city" → Grand Theft Auto IV, Vice City, Cyberpunk 2077</li>
+        <li>"build factories and trains" → Factorio, Satisfactory, Transport Tycoon</li>
+      </ul>
+    </section>
+
     <!-- TAB VIEW 1: Full-Screen 1-Question Game Mode & Profile Dashboard -->
     <div id="view-quiz" class="rec-tab-view active" role="tabpanel" aria-labelledby="tab-quiz-btn">
       <div class="container quiz-screen-container">
@@ -258,13 +343,15 @@
       <div class="footer-links">
         <a href="index.html">Home</a>
         <a href="games.html">Games</a>
+        <a href="about.html">Manifesto</a>
         <a href="https://sachinapr20.itch.io/" target="_blank" rel="noopener noreferrer">itch.io</a>
         <a href="https://github.com/SachinyadavAug20" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://x.com/samtagon38824" target="_blank" rel="noopener noreferrer">X / Twitter</a>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script type="module" src="dist/js/recommendations.bundle.js?v=13.0"></script>
+  <script type="module" src="dist/js/recommendations.bundle.js?v=14.0"></script>
 </body>
 </html>
