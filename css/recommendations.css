@@ -620,13 +620,27 @@
 
 .card-metric-pill {
   font-family: var(--font-mono);
-  font-size: 0.70rem;
+  font-size: 0.72rem;
   font-weight: 700;
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  align-items: baseline;
+  gap: 3px;
   letter-spacing: 0.02em;
   line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.metric-unit {
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.metric-word {
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.6;
+  margin-left: 2px;
 }
 
 .card-metric-pill.rating-amber {

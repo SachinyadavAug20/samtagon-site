@@ -1198,7 +1198,7 @@ class RecommendationsApp {
           <div class="card-top-row">
             <div class="card-metric-group">
               ${isTop ? '<span class="card-metric-pill soulmate-amber"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 Soulmate</span>' : ''}
-              <span class="card-metric-pill score-excellent"><span class="metric-dot"></span>${rec.matchScore}% Match</span>
+              <span class="card-metric-pill score-excellent"><span class="metric-dot"></span>${Number(rec.matchScore).toFixed(1)}<span class="metric-unit">%</span><span class="metric-word">match</span></span>
             </div>
             <span class="card-year">${rec.releaseYear}</span>
           </div>
@@ -1611,11 +1611,11 @@ class RecommendationsApp {
         if (isSearching && similarity > 0) {
             const percentMatch = (Math.min(0.9985, Math.max(0.40, similarity)) * 100).toFixed(1);
             const scoreClass = similarity >= 0.88 ? 'score-excellent' : similarity >= 0.74 ? 'score-good' : 'score-fair';
-            badgeHtml = `<span class="card-metric-pill ${scoreClass}"><span class="metric-dot"></span>${percentMatch}% Match</span>`;
+            badgeHtml = `<span class="card-metric-pill ${scoreClass}"><span class="metric-dot"></span>${percentMatch}<span class="metric-unit">%</span><span class="metric-word">match</span></span>`;
         }
         else {
             const pct = VectorEngine.formatPositivePercentage(game);
-            badgeHtml = `<span class="card-metric-pill rating-amber"><span class="rating-star">★</span> ${pct}% Positive</span>`;
+            badgeHtml = `<span class="card-metric-pill rating-amber"><span class="rating-star">★</span>${Number(pct).toFixed(1)}<span class="metric-unit">%</span></span>`;
         }
         const storeUrl = game.platforms[0]?.url || 'https://store.steampowered.com/';
         const storeName = game.platforms[0]?.name || 'Steam Store';
