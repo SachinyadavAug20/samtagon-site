@@ -1283,7 +1283,8 @@ export class CatalogEngine {
       ? directMatches
       : scoredMatches.filter((m) => m.fuzzyScore >= 0.50 || m.hybridScore >= 0.30);
 
-    // If still empty, fall back to best candidates
+    // If still empty, fall back to best candidates — cosine similarity always
+    // produces a ranking for every embedded game, so search NEVER returns zero results.
     const finalList = candidateList.length > 0 ? candidateList : allScored.slice(0, 36);
 
     // Precise descending sort: direct fuzzy title hits rank at top, then hybrid similarity
@@ -1296,11 +1297,11 @@ export class CatalogEngine {
       return b.hybridScore - a.hybridScore;
     });
 
-    const totalCount = candidateList.length;
+    const totalCount = finalList.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / this.ITEMS_PER_PAGE));
     const safePage = Math.max(1, Math.min(totalPages, pageNumber));
     const offset = (safePage - 1) * this.ITEMS_PER_PAGE;
-    const pageMatches = candidateList.slice(offset, offset + this.ITEMS_PER_PAGE);
+    const pageMatches = finalList.slice(offset, offset + this.ITEMS_PER_PAGE);
 
     return {
       matches: pageMatches,

@@ -1630,8 +1630,11 @@ class RecommendationsApp {
         this.catalogHeading.textContent = `Search Results for "${this.currentQuery}"`;
       }
       if (this.resultCountSpan) {
-        this.resultCountSpan.innerHTML = `🔍 Searching vectors...`;
+        this.resultCountSpan.innerHTML = `<span class="vector-search-note">&rarr;&lambda; tracing vectors</span>`;
       }
+
+      // Clear stale results immediately: minimal centered vector loader (no confusing half-state)
+      this.showVectorLoader();
 
       const vectorResult = await CatalogEngine.searchCatalogVectorAPI(querySnapshot, this.currentPage);
       // Guard against race conditions if query changed while fetching
@@ -1745,6 +1748,36 @@ class RecommendationsApp {
         }
       );
     }
+  }
+
+  /**
+   * Minimal, clutter-free vector search loader.
+   * Animated embedding-graph SVG (query node projecting into vector space).
+   */
+  private showVectorLoader(): void {
+    if (!this.searchResultsContainer) return;
+
+    if (this.paginationControls) {
+      this.paginationControls.innerHTML = '';
+    }
+
+    this.searchResultsContainer.innerHTML = `
+      <div class="vector-loader" style="grid-column: 1 / -1;">
+        <svg class="vector-loader-svg" width="46" height="46" viewBox="0 0 46 46" fill="none" stroke-linecap="round">
+          <circle class="vl-core" cx="23" cy="23" r="3.4" fill="currentColor" stroke="none"/>
+          <g class="vl-orbit">
+            <line x1="23" y1="23" x2="23" y2="9" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 3" opacity="0.5"/>
+            <circle cx="23" cy="9" r="2.4" fill="currentColor" stroke="none" opacity="0.9"/>
+            <line x1="23" y1="23" x2="34.5" y2="30" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 3" opacity="0.4"/>
+            <circle cx="34.5" cy="30" r="2" fill="currentColor" stroke="none" opacity="0.75"/>
+            <line x1="23" y1="23" x2="11.5" y2="30" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 3" opacity="0.4"/>
+            <circle cx="11.5" cy="30" r="2" fill="currentColor" stroke="none" opacity="0.75"/>
+          </g>
+          <circle class="vl-ring" cx="23" cy="23" r="14" stroke="currentColor" stroke-width="1.2" opacity="0.35"/>
+        </svg>
+        <span class="vector-loader-label">searching vectors</span>
+      </div>
+    `;
   }
 
   /**
@@ -2038,6 +2071,13 @@ class RecommendationsApp {
       });
     });
 
+    // Stream the real Steam store trailer (stolen from the Steam appdetails API) over the poster.
+    // Curated games with an official YouTube trailer fall back to the embedded YouTube player.
+    if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+      this.injectYouTubeTrailer(game);
+    } else if (isSteam) {
+      this.loadSteamTrailer(numericSteamId, game);
+    }
     // Reveal modal with GSAP
     this.modalBackdrop.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -2070,56 +2110,85 @@ class RecommendationsApp {
   private async loadSteamTrailer(appid: number, game: ExtendedGameItem): Promise<void> {
     try {
       const res = await fetch(`/api/trailer?appid=${appid}`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+          this.injectYouTubeTrailer(game);
+        }
+        return;
+      }
       const data: any = await res.json();
-      const badge = document.getElementById('modal-trailer-badge');
-      const container = document.getElementById('modal-video-container');
+      const container = document.querySelector('.modal-media-wrap');
       if (!container) return;
 
-      if (data.success && data.hasVideo && data.hls) {
-        if (badge) {
-          badge.textContent = `🎥 Steam Trailer: ${data.title || 'Official Highlight'}`;
-          badge.style.display = 'inline-flex';
+      // Steam store page has no movie for this appid -> use curated YouTube fallback if present
+      if (!(data.success && data.hasVideo)) {
+        if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+          this.injectYouTubeTrailer(game);
         }
+        return;
+      }
 
-        container.innerHTML = `
-          <video id="modal-steam-video" class="modal-media-video" controls autoplay muted loop playsinline poster="${data.thumbnail || game.image}">
-            <source src="${data.hls}" type="application/x-mpegURL">
-          </video>
-        `;
+      const videoUrl: string = data.hls || data.mp4 || data.webm || '';
+      if (!videoUrl) {
+        if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+          this.injectYouTubeTrailer(game);
+        }
+        return;
+      }
 
-        const video = document.getElementById('modal-steam-video') as HTMLVideoElement;
-        if (!video) return;
+      const isHls = videoUrl.includes('m3u8') || videoUrl === data.hls;
+      container.insertAdjacentHTML('beforeend', `
+        <video id="modal-steam-video" class="modal-media-video" controls autoplay muted loop playsinline poster="${data.thumbnail || game.image}">
+          <source src="${videoUrl}" type="${isHls ? 'application/x-mpegURL' : 'video/mp4'}">
+        </video>
+      `);
 
+      const video = document.getElementById('modal-steam-video') as HTMLVideoElement;
+      if (!video) return;
+
+      if (isHls) {
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = data.hls;
+          video.src = videoUrl;
           video.play().catch(() => {});
         } else if ((window as any).Hls && (window as any).Hls.isSupported()) {
           const hls = new (window as any).Hls({
             enableWorker: true,
             lowLatencyMode: true,
           });
-          hls.loadSource(data.hls);
+          hls.loadSource(videoUrl);
           hls.attachMedia(video);
           hls.on((window as any).Hls.Events.MANIFEST_PARSED, () => {
             video.play().catch(() => {});
           });
           this.currentHls = hls;
         }
-      } else if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
-        // Fallback to YouTube if Steam video is not found
-        container.innerHTML = `
-          <iframe 
-            src="${game.videoTrailer}?autoplay=1&mute=1&loop=1&playlist=${game.videoTrailer.split('/embed/')[1] || ''}" 
-            title="${game.title} Trailer" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-        `;
+      } else {
+        video.play().catch(() => {});
       }
     } catch (err) {
       console.warn('[Recommendations] Failed to stream Steam trailer:', err);
+      if (game.videoTrailer && game.videoTrailer.includes('youtube.com')) {
+        this.injectYouTubeTrailer(game);
+      }
     }
+  }
+
+  /**
+   * Replace the static poster with the embedded official YouTube trailer
+   */
+  private injectYouTubeTrailer(game: ExtendedGameItem): void {
+    const wrap = document.querySelector('.modal-media-wrap');
+    if (!wrap || !game.videoTrailer) return;
+
+    const ytId = game.videoTrailer.split('/embed/')[1] || '';
+    wrap.insertAdjacentHTML('beforeend', `
+      <iframe
+        src="${game.videoTrailer}?autoplay=1&mute=1&loop=1&playlist=${ytId}"
+        title="${game.title} Trailer"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    `);
   }
 
   /**

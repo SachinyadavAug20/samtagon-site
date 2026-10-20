@@ -182,7 +182,8 @@ export class PineconeService {
 
   /**
    * Generates a deep, rich semantic description for Vector DB embeddings.
-   * Covers gameplay mechanics, tactical loops, narrative theme, player archetypes, and dynamics.
+   * Covers gameplay mechanics, tactical loops, narrative theme, setting, mood,
+   * player archetypes, character archetypes, and dynamics.
    * This ensures Pinecone vector search has high cosine similarity for diverse user queries.
    */
   public static generateDetailedSemanticDescription(game: {
@@ -191,12 +192,20 @@ export class PineconeService {
     genres: string[];
     tags?: string[];
     year?: number;
+    desc?: string;
   }): string {
+    const corpus = [
+      game.title,
+      game.studio,
+      game.genres.join(' '),
+      (game.tags || []).join(' '),
+      game.desc || '',
+    ].join(' ').toLowerCase();
     const genresLower = game.genres.map((g) => g.toLowerCase());
     const tagsLower = (game.tags || []).map((t) => t.toLowerCase());
     const allTokens = [...genresLower, ...tagsLower, game.title.toLowerCase()];
 
-    const has = (regex: RegExp) => allTokens.some((t) => regex.test(t));
+    const has = (regex: RegExp) => regex.test(corpus) || allTokens.some((t) => regex.test(t));
     const parts: string[] = [];
 
     // Core Title & Heritage
@@ -235,12 +244,119 @@ export class PineconeService {
       parts.push('Provides relaxing, heartwarming pacing with rewarding cultivation, friendly community interactions, tactile problem solving, and peaceful escapism.');
     }
 
+    // --- Deep thematic & narrative semantics (visual-novel / story-driven coverage) ---
+    if (has(/time\s*travel|rewind|time\s*loop|chrono|turn\s*back\s*time|undo/)) {
+      parts.push('Centered on time manipulation: the protagonist can rewind time, undo events, replay moments, and alter branching timelines, exploring butterfly-effect consequences of second chances.');
+    }
+    if (has(/super\s*power|superpower|superhuman|psychic|supernatural\s*abilit|special\s*power|magic|magical|spell|witch|wizard|sorcer|telekinesis|telepath|elemental\s*power/)) {
+      parts.push('Showcases extraordinary supernatural abilities and superhuman powers — a protagonist gifted with special powers such as telekinesis, elemental magic, or psychic talents that reshape the story and combat encounters.');
+    }
+    if (has(/school|highschool|high-school|academy|college|campus|classroom|student|university/)) {
+      parts.push('Set around school and student life: classroom drama, campus friendships, teenage social circles, homework, clubs, and coming-of-age milestones interwoven with the main plot.');
+    }
+    if (has(/teen|teenage|young\s*girl|young\s*woman|girl|boy|youth|coming\s*of\s*age|adolescen|youthful/)) {
+      parts.push('Follows a young, relatable coming-of-age protagonist navigating adolescence, friendship, identity, first love, and self-discovery through an emotional story-rich journey.');
+    }
+    if (has(/photograph|camera|photo/)) {
+      parts.push('Photography plays a central signature role — capturing camera moments, portraits, and candid snapshots that unlock memories and hidden story details.');
+    }
+    if (has(/mystery|murder| disappearance|investigat|detective|crime\s*case|whodunit|missing/)) {
+      parts.push('Weaves an overarching mystery: a missing person case, suspicious disappearances, cryptic clues, red herrings, and a slow-burn whodunit that the player pieces together.');
+    }
+    if (has(/visual\s*novel|narrative|choice\s*matter|branching|endings|story\s*rich|episode|episodic|tell[ -]?tale|dialogue/)) {
+      parts.push('A choice-driven narrative adventure where dialogue decisions, moral dilemmas, consequences, and multiple endings carry real weight; heavy reading for players who love story-rich, episodic, plot-driven experiences.');
+    }
+    if (has(/friendship|friend|romance|love|relation/)) {
+      parts.push('Explores bonds of friendship and romance: deepening relationships through conversations, trust, loyalty, betrayal, and heartfelt emotional payoff.');
+    }
+    if (has(/emotional|drama|touching|tearjerker|heartfelt|melanchol/)) {
+      parts.push('Carries a strong emotional dramatic tone with bittersweet moments, character-driven pathos, and story beats that linger long after the credits roll.');
+    }
+    if (has(/open\s*world|explore|exploration|open\s*world\s*adventure/)) {
+      parts.push('Encourages free-form exploration of a sprawling handcrafted world filled with landmarks, collectibles, secrets, and environmental storytelling.');
+    }
+    if (has(/horror|scary|creepy|paranormal|ghost|haunt|supernatural\s*horror/)) {
+      parts.push('Builds creeping paranormal horror: haunted environments, unexplained phenomena, dread-soaked atmosphere, and jump-scare-free psychological tension.');
+    }
+    if (has(/space|galact|cosmos|planet|starship|interstellar/)) {
+      parts.push('Set across the cosmos with starships, alien planets, orbital stations, and interstellar travel steeped in science-fiction wonder.');
+    }
+    if (has(/fantasy|dragon|magic\s*realm|kingdom|medieval|sword|mythic/)) {
+      parts.push('Brimming with epic fantasy lore, ancient kingdoms, legendary beasts, swordplay, and mythic prophecy across a handcrafted realm.');
+    }
+    if (has(/zombie|undead|infected|outbreak/)) {
+      parts.push('Pits survivors against relentless undead hordes in a collapsed society where scavenging, barricades, and morality define survival.');
+    }
+    if (has(/samurai|ninja|japan|feudal|katana|edo/)) {
+      parts.push('Steeped in Japanese-inspired settings — feudal lords, blade duels, shinobi stealth, bamboo forests, and honor-bound codes of the samurai.');
+    }
+    if (has(/alien|extraterrestrial|invasion|ufo/)) {
+      parts.push('Confronts an otherworldly alien threat with invasion scenarios, xenobiology, and desperate human resistance.');
+    }
+    if (has(/war|battlefield|soldier|militar|conflict/)) {
+      parts.push('Portrays the brutal realities of war — squad-based battlefield tactics, frontline camaraderie, and the human cost of large-scale conflict.');
+    }
+    if (has(/apoca|wasteland|post-nuclear|fallout-style|desolate/)) {
+      parts.push('Unfolds in a desolate post-apocalyptic wasteland of scarcity, ruined cities, raiders, and fragile pockets of civilization.');
+    }
+    if (has(/pirate|piracy|sail|ship|ocean\s*adventure|caraib|caribb/)) {
+      parts.push('Embraces seafaring pirate fantasy: sailing ships, naval battles, treasure maps, tropical islands, and plunder on the open ocean.');
+    }
+    if (has(/sports|football|soccer|basketball|baseball|hockey|tennis|golf/)) {
+      parts.push('Delivers authentic competitive sports action with team strategies, season modes, player progression, and stadium atmosphere.');
+    }
+    if (has(/wrestl|boxing|martial\s*arts|fight|karate|kung\s*fu|mma/)) {
+      parts.push('Features up-close combat sports and martial arts mastery — grapples, combos, training arcs, and championship rivalries.');
+    }
+    if (has(/mech|robot|android|cyborg|titan|pilot/)) {
+      parts.push('Puts the player in control of towering mechs, robots, or android pilots with customizable loadouts, kinetic machine combat, and AI companions.');
+    }
+    if (has(/cyberpunk|neon|hacker|dystop|megacorp/)) {
+      parts.push('Immerses in a neon-drenched cyberpunk dystopia of body augmentation, corporate megastructures, hacktivism, and street-level survival.');
+    }
+    if (has(/detective|noir|crime\s*scene|forensic/)) {
+      parts.push('Adopts a hard-boiled detective noir voice: interrogation, forensic deduction, case boards, and morally gray suspects.');
+    }
+    if (has(/party|couch|local\s*multiplayer|minigame/)) {
+      parts.push('Shines as a social couch multiplayer party game packed with chaotic minigames, laughter, and friendly rivalries.');
+    }
+    if (has(/roguelite|roguelike|procedural|permadeath|run-based/)) {
+      parts.push('Built around roguelike runs: procedurally generated challenge runs, permadeath stakes, and run-defining synergies that make every attempt feel fresh.');
+    }
+    if (has(/deck|card|poker|hand\s*of\s*cards|deckbuilding/)) {
+      parts.push('Centers on deckbuilding card strategy — collecting powerful cards, constructing synergistic decks, and playing calculated risk-versus-reward hands.');
+    }
+    if (has(/island|tropical|beach|vacation/)) {
+      parts.push('Unfolds on sun-soaked tropical islands with beaches, ocean views, laid-back exploration, and vacation escapism.');
+    }
+    if (has(/farm|crops|harvest|village|rural|township/)) {
+      parts.push('Celebrates pastoral farming life: planting seasonal crops, raising livestock, befriending villagers, festivals, and slow satisfying self-sufficiency.');
+    }
+    if (has(/city|urban|metro|traffic|mayor/)) {
+      parts.push('Empowers you to plan and grow a living city — zoning districts, transit networks, economy balancing, and citizen happiness simulations.');
+    }
+    if (has(/dinosaur|prehistoric|jungle\s*danger|t-rex|trex/)) {
+      parts.push('Thrills with prehistoric danger — massive dinosaurs, untamed Jurassic wilderness, and high-stakes paleo encounters.');
+    }
+    if (has(/meme|comedy|funny|hilarious|humor|silly/)) {
+      parts.push('Brims with comedic writing, meme-worthy humor, absurd situations, and laugh-out-loud dialogue.');
+    }
+    if (has(/trains?\b|railway|locomotive|metro|subway|_transit/)) {
+      parts.push('Features immersive railway transit: driving trains, routing signals, station schedules, and logistics across a connected rail network.');
+    }
+
+    // Signature archetype — story-rich narrative adventures with special-ability protagonists
+    if (genresLower.join(' ').match(/adventure|narrative/i) && has(/time\s*travel|rewind|super\s*power|magic|special\s*power/)) {
+      parts.push('The definitive pick for players seeking a story-driven adventure about an ordinary person who gains an extraordinary power and must navigate its consequences.');
+    }
+
     // Archetype alignment
     const archetypes: string[] = [];
     if (has(/build|craft|factory|puzzle|system|simulat|city/)) archetypes.push('The Architect (system builders)');
     if (has(/fast|racing|action|fps|reflex|speed/)) archetypes.push('The Speedster (reflex masters)');
     if (has(/open world|explor|rpg|story|lore|adventure/)) archetypes.push('The Explorer (wanderers and discoverers)');
     if (has(/tactical|strategy|stealth|turn-based|souls/)) archetypes.push('The Tactician (strategic thinkers)');
+    if (has(/story|narrative|choice|emotional|romance|friendship/)) archetypes.push('The Storyteller (narrative lovers)');
 
     if (archetypes.length > 0) {
       parts.push(`Resonates strongly with ${archetypes.join(' and ')} playstyles.`);
@@ -250,7 +366,9 @@ export class PineconeService {
   }
 
   /**
-   * Format game record into rich semantic text for embedding into Vector DB
+   * Format game record into rich semantic text for embedding into Vector DB.
+   * Includes the game's own display description plus the deep semantic expansion,
+   * so the embedding captures real plot/theme keywords, not just genre boilerplate.
    */
   public static formatSemanticText(game: IndexedGameRecord): string {
     const detailed = this.generateDetailedSemanticDescription(game);
@@ -258,8 +376,9 @@ export class PineconeService {
       `Title: ${game.title}`,
       `Developer / Studio: ${game.studio}`,
       `Genres: ${game.genres.join(', ')}`,
+      `Description: ${(game.desc || '').slice(0, 900)}`,
       `Tags: ${game.tags.join(', ')}`,
-      `Detailed Gameplay & Mechanics: ${detailed}`,
+      `Detailed Gameplay, Themes & Mechanics: ${detailed}`,
       `Released: ${game.year}`,
     ].join(' | ');
   }
@@ -373,42 +492,56 @@ export class PineconeService {
     const { openrouterKey, openrouterModel } = this.getEnv();
 
     if (!openrouterKey || openrouterKey.includes('your_openrouter')) {
+      console.warn('[PineconeService] ⚠️ OpenRouter missing — using LOCAL PROJECTION embeddings (shared space OK, weaker semantics)');
       return texts.map((t) => this.generateSemanticEmbedding1024(t));
     }
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const embed = async (): Promise<Response> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        try {
+          return await fetch('https://openrouter.ai/api/v1/embeddings', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://samtagon.com',
+              'X-Title': 'Samtagon Games Studio',
+            },
+            body: JSON.stringify({
+              model: openrouterModel,
+              input: texts.length === 1 ? texts[0] : texts,
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
 
-      const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openrouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://samtagon.com',
-          'X-Title': 'Samtagon Games Studio',
-        },
-        body: JSON.stringify({
-          model: openrouterModel,
-          input: texts.length === 1 ? texts[0] : texts,
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
+      // Two attempts: transient 429/5xx on free models is common
+      let response = await embed();
+      if (!response.ok) {
+        console.warn(`[PineconeService] Embedding HTTP ${response.status}, retrying once...`);
+        response = await embed();
+      }
 
       if (!response.ok) {
+        console.error('[PineconeService] ❌ Embedding API failed — FALLING BACK to local projection. Vectors may mix spaces!');
         return texts.map((t) => this.generateSemanticEmbedding1024(t));
       }
 
       const json = await response.json();
       if (!json?.data || !Array.isArray(json.data) || json.data.length === 0) {
+        console.error('[PineconeService] ❌ Embedding API returned no data — FALLING BACK to local projection.');
         return texts.map((t) => this.generateSemanticEmbedding1024(t));
       }
 
       const sorted = json.data.slice().sort((a: any, b: any) => (a.index ?? 0) - (b.index ?? 0));
       return sorted.map((item: any) => item.embedding as number[]);
     } catch (_) {
+      console.error('[PineconeService] ❌ Embedding network error — FALLING BACK to local projection.');
       return texts.map((t) => this.generateSemanticEmbedding1024(t));
     }
   }
@@ -555,9 +688,23 @@ export class PineconeService {
     if (/\b(farming|crops?|harvest)\b/i.test(expandedQuery)) {
       expandedQuery += ' stardew cozy farm agriculture';
     }
+    if (/\b(time\s*trav\w*|timeloop|time\s*loop|rewind|turn\s*back\s*time|chrono)\b/i.test(expandedQuery)) {
+      expandedQuery += ' time manipulation rewind timelines branching narrative choice powers protagonist life is strange max caulfield';
+    }
+    if (/\b(super\s*power\w*|superhuman|psychic|supernatural|special\s*power\w*|magic\w*|telekinesis)\b/i.test(expandedQuery)) {
+      expandedQuery += ' special supernatural abilities gifted protagonist powers magical talent';
+    }
+    if (/\b(girl|girls|woman|female|she|her|teenage\w*|highschool|school|student|coming\s*of\s*age)\b/i.test(expandedQuery)) {
+      expandedQuery += ' teenage girl young woman protagonist school life story emotional friendship';
+    }
 
-    // 2. Generate 1024-dimension semantic query embedding
-    const queryVector = this.generateSemanticEmbedding1024(expandedQuery);
+    // 2. Generate semantic query embedding with the SAME model used at index time.
+    //    (Deterministic hash projection is only a fallback — mixing spaces destroys ranking.)
+    const embeddedQuery = await this.embedTexts([expandedQuery]);
+    const queryVector: number[] =
+      embeddedQuery && embeddedQuery.length > 0 && embeddedQuery[0]?.length > 0
+        ? embeddedQuery[0]
+        : this.generateSemanticEmbedding1024(expandedQuery);
 
     // 3. Execute Vector Search against Pinecone DB
     let pineconeMatches: { id: string; score: number; metadata: any }[] | null = null;

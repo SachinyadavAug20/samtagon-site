@@ -118,7 +118,7 @@ async function main() {
           genres: game.genres.join(', '),
           year: game.year,
           rating: game.rating,
-          desc: PineconeService.generateDetailedSemanticDescription(game).slice(0, 1000), // Detailed description in Vector DB
+          desc: game.desc.slice(0, 500), // Minimal display description (retrieved by frontend)
           image: game.image,
           trailer: game.trailer,
           storeUrl: game.storeUrl,
