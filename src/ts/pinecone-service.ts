@@ -53,10 +53,25 @@ export class PineconeService {
     const openrouterModel = env.OPENROUTER_EMBED_MODEL?.trim() || this.DEFAULT_OPENROUTER_MODEL;
     const pineconeKey = env.PINECONE_API_KEY?.trim() || '';
     const pineconeIndex = env.PINECONE_INDEX?.trim() || 'samtagon-games';
+    const pineconeNamespace = env.PINECONE_NAMESPACE?.trim() || 'games';
     let pineconeHost = env.PINECONE_INDEX_HOST?.trim() || '';
 
     if (pineconeHost && !pineconeHost.startsWith('http://') && !pineconeHost.startsWith('https://')) {
       pineconeHost = `https://${pineconeHost}`;
+    }
+
+    // Secondary (classic externals-vector) index for runtime fallback queries
+    const pineconeFallbackIndex = env.PINECONE_FALLBACK_INDEX?.trim() || '';
+    let pineconeFallbackHost = env.PINECONE_FALLBACK_INDEX_HOST?.trim() || '';
+    if (pineconeFallbackHost && !pineconeFallbackHost.startsWith('http://') && !pineconeFallbackHost.startsWith('https://')) {
+      pineconeFallbackHost = `https://${pineconeFallbackHost}`;
+    }
+
+    // Optional explicit integrated-embedding host (symmetric reverse fallback
+    // when the primary index is a classic vector index)
+    let pineconeIntegratedHost = env.PINECONE_INTEGRATED_INDEX_HOST?.trim() || '';
+    if (pineconeIntegratedHost && !pineconeIntegratedHost.startsWith('http://') && !pineconeIntegratedHost.startsWith('https://')) {
+      pineconeIntegratedHost = `https://${pineconeIntegratedHost}`;
     }
 
     return {
@@ -64,9 +79,57 @@ export class PineconeService {
       openrouterModel,
       pineconeKey,
       pineconeIndex,
+      pineconeNamespace,
       pineconeHost,
-      isConfigured: Boolean(openrouterKey && pineconeKey && (pineconeHost || pineconeIndex)),
+      pineconeFallbackIndex,
+      pineconeFallbackHost,
+      pineconeIntegratedHost,
+      isConfigured: Boolean(pineconeKey && (pineconeHost || pineconeIndex)),
     };
+  }
+
+  /** Clears the cached integrated-index determination (re-probed on next call). */
+  public static resetDetectCache(): void {
+    this.integratedIndexCache = null;
+  }
+
+  /** Cached detection: does the configured index host Pinecone-managed (integrated) embeddings? */
+  private static integratedIndexCache: boolean | null = null;
+
+  public static async detectIntegratedIndex(): Promise<boolean> {
+    if (this.integratedIndexCache !== null) return this.integratedIndexCache;
+    const { openrouterKey, pineconeKey, pineconeIndex } = this.getEnv();
+    if (env_declaresIntegrated()) {
+      this.integratedIndexCache = true;
+      return true;
+    }
+    if (!pineconeKey || !pineconeIndex) return false;
+    void openrouterKey;
+    try {
+      const res = await fetch(`https://api.pinecone.io/indexes/${pineconeIndex}`, {
+        headers: { 'Api-Key': pineconeKey, 'X-Pinecone-Api-Version': '2026-07' },
+      });
+      if (!res.ok) return false;
+      const desc: any = await res.json();
+      // Control plane surfaces the embedding model either under `embed`
+      // or as a semantic_text field in the index schema, depending on API version.
+      const schemaModel = desc?.schema?.fields && Object.values(desc.schema.fields)
+        .some((f: any) => f?.type === 'semantic_text' || f?.model);
+      this.integratedIndexCache = Boolean(desc?.embed?.model || schemaModel);
+      if (this.integratedIndexCache) {
+        const model = desc?.embed?.model ?? (Object.values(desc.schema.fields) as any[])
+          .find((f) => f?.model)?.model;
+        console.log(`[PineconeService] 🧠 Integrated embedding index detected (model: ${model}) — no external embedding API needed`);
+      }
+      return this.integratedIndexCache;
+    } catch {
+      return false;
+    }
+
+    function env_declaresIntegrated(): boolean {
+      const e = typeof process !== 'undefined' ? process.env : {} as any;
+      return e.PINECONE_INTEGRATED === '1' || e.PINECONE_INTEGRATED === 'true';
+    }
   }
 
   /**
@@ -605,46 +668,69 @@ export class PineconeService {
   }
 
   /**
-   * Query Pinecone index using an embedding vector
+   * Query a classic externals-vector Pinecone index using an embedding vector.
+   * `hostOverride` targets a secondary index (runtime fallback chain).
+   * Short timeout: query-time backoff must never stall the HTTP response.
    */
   public static async queryPinecone(
     vector: number[],
-    topK: number = 36
+    topK: number = 36,
+    hostOverride?: string
   ): Promise<{ id: string; score: number; metadata: any }[] | null> {
     const { pineconeKey, pineconeHost } = this.getEnv();
-    if (!pineconeKey || !pineconeHost) {
+    const host = hostOverride || pineconeHost;
+    if (!pineconeKey || !host) {
       return null;
     }
 
-    try {
-      const queryUrl = `${pineconeHost}/query`;
-      const response = await fetch(queryUrl, {
-        method: 'POST',
-        headers: {
-          'Api-Key': pineconeKey,
-          'Content-Type': 'application/json',
-          'X-Pinecone-API-Version': '2024-07',
-        },
-        body: JSON.stringify({
-          vector,
-          topK,
-          includeMetadata: true,
-          includeValues: false,
-        }),
-      });
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        let response: Response;
+        try {
+          response = await fetch(`${host}/query`, {
+            method: 'POST',
+            headers: {
+              'Api-Key': pineconeKey,
+              'Content-Type': 'application/json',
+              'X-Pinecone-API-Version': '2024-07',
+            },
+            body: JSON.stringify({
+              vector,
+              topK,
+              includeMetadata: true,
+              includeValues: false,
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[PineconeService] Pinecone query error ${response.status}:`, errorText);
+        if (!response.ok) {
+          const errorText = await response.text();
+          // Single fast retry on transient 429 token-bucket hits
+          if (response.status === 429 && attempt === 1) {
+            await new Promise((r) => setTimeout(r, 800));
+            continue;
+          }
+          console.error(`[PineconeService] Pinecone query error ${response.status}:`, errorText.slice(0, 300));
+          return null;
+        }
+
+        const json = await response.json();
+        return json.matches || [];
+      } catch (err) {
+        if (attempt === 1) {
+          await new Promise((r) => setTimeout(r, 800));
+          continue;
+        }
+        console.error('[PineconeService] Failed to query Pinecone:', err instanceof Error ? err.message : err);
         return null;
       }
-
-      const json = await response.json();
-      return json.matches || [];
-    } catch (err) {
-      console.error('[PineconeService] Failed to query Pinecone:', err);
-      return null;
     }
+    return null;
   }
 
   /**
@@ -687,6 +773,134 @@ export class PineconeService {
   }
 
   /**
+   * Upsert plain-text records into an integrated-embedding index.
+   * Pinecone embeds `chunk_text` server-side with the index's model (llama-text-embed-v2).
+   * Max 96 records per request.
+   */
+  public static async upsertRecordBatch(
+    records: { id: string; text: string; metadata: Record<string, any> }[]
+  ): Promise<boolean> {
+    const { pineconeKey, pineconeHost, pineconeNamespace } = this.getEnv();
+    if (!pineconeKey || !pineconeHost) {
+      console.error('[PineconeService] Pinecone credentials missing for record upsert');
+      return false;
+    }
+
+    try {
+      const upsertUrl = `${pineconeHost}/records/namespaces/${encodeURIComponent(pineconeNamespace)}/upsert`;
+      const body = records
+        .map((r) => JSON.stringify({ _id: r.id, chunk_text: r.text, ...r.metadata }))
+        .join('\n');
+
+      // Token-quota pacing: free plan allows 250K tokens/min for llama-text-embed-v2.
+      // Retry with server-indicated (or fixed 60s) backoff before giving up.
+      const MAX_TRIES = 10;
+      for (let attempt = 1; ; attempt++) {
+        const response = await fetch(upsertUrl, {
+          method: 'POST',
+          headers: {
+            'Api-Key': pineconeKey,
+            'Content-Type': 'application/x-ndjson',
+            'accept': 'application/json',
+          },
+          body,
+        });
+
+        if (response.ok) return true;
+
+        const errorText = await response.text();
+        const quotaHit = response.status === 429 &&
+          /RESOURCE_EXHAUSTED|rate|per minute|tokens per/i.test(errorText);
+
+        if (quotaHit && attempt < MAX_TRIES) {
+          const retryAfterMs = Number(response.headers.get('Retry-After') || '0') * 1000;
+          const waitMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0 && retryAfterMs < 300000
+            ? retryAfterMs
+            : 61000;
+          console.warn(`[PineconeService] ⏳ Token quota hit (${attempt}/${MAX_TRIES}) — waiting ${Math.round(waitMs / 1000)}s...`);
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+
+        console.error(`[PineconeService] Record upsert error ${response.status}:`, errorText.slice(0, 500));
+        return false;
+      }
+    } catch (err) {
+      console.error('[PineconeService] Record upsert network failure:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Semantic search on an integrated-embedding index using plain text —
+   * Pinecone embeds the query server-side (no OpenRouter call, no quota).
+   */
+  public static async searchRecords(
+    queryText: string,
+    topK: number = 60,
+    hostOverride?: string
+  ): Promise<{ id: string; score: number; metadata: any }[] | null> {
+    const { pineconeKey, pineconeHost, pineconeNamespace } = this.getEnv();
+    const host = hostOverride || pineconeHost;
+    if (!pineconeKey || !host) return null;
+
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const searchUrl = `${host}/records/namespaces/${encodeURIComponent(pineconeNamespace)}/search`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        let response: Response;
+        try {
+          response = await fetch(searchUrl, {
+            method: 'POST',
+            headers: {
+              'Api-Key': pineconeKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: {
+                inputs: { text: String(queryText).slice(0, 4000) },
+                top_k: topK,
+              },
+              fields: ['title', 'studio', 'genres', 'year', 'rating', 'desc', 'image', 'storeUrl', 'badge', 'tags'],
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          // Single fast retry on transient 429 token-bucket hits (query TPM = 50K/min)
+          if (response.status === 429 && attempt === 1) {
+            await new Promise((r) => setTimeout(r, 800));
+            continue;
+          }
+          console.error(`[PineconeService] Record search error ${response.status}:`, errorText.slice(0, 300));
+          return null;
+        }
+
+        const json: any = await response.json();
+        const hits = json?.result?.hits ?? json?.hits ?? [];
+        return hits.map((h: any) => ({
+          id: h._id ?? h.id,
+          score: typeof h._score === 'number' ? h._score : 0,
+          metadata: h.fields ?? h.metadata ?? {},
+        }));
+      } catch (err) {
+        if (attempt === 1) {
+          await new Promise((r) => setTimeout(r, 800));
+          continue;
+        }
+        console.error('[PineconeService] Record search network failure:', err instanceof Error ? err.message : err);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Universal Neural Vector + Fuzzy Hybrid Search:
    * 1. Query expansion for gaming intent & synonyms.
    * 2. Query Pinecone Vector Database with 1024-dimension unit-normalized semantic embedding vector.
@@ -699,6 +913,7 @@ export class PineconeService {
   ): Promise<{
     matches: PineconeMatchResult[];
     source: 'pinecone' | 'local';
+    engine: 'pinecone-integrated' | 'pinecone-openrouter' | 'local';
     model: string;
     totalCount: number;
     message?: string;
@@ -721,6 +936,7 @@ export class PineconeService {
       return {
         matches: initial,
         source: 'local',
+        engine: 'local',
         model: env.openrouterModel,
         totalCount: allGames.length,
       };
@@ -756,37 +972,106 @@ export class PineconeService {
       expandedQuery += ' teenage girl young woman protagonist school life story emotional friendship';
     }
 
-    // 2. Generate semantic query embedding with the SAME model used at index time.
-    //    Cached (LRU) so repeat queries don't burn the daily free-tier quota.
-    const cacheKey = `${env.openrouterModel}::${expandedQuery.trim().toLowerCase()}`;
-    const cached = this.queryEmbeddingCache.get(cacheKey);
-    let embeddedQuery = cached ? [cached] : await this.embedTextsSafe([expandedQuery], { fallbackToLocal: false });
-    let queryVector: number[];
-    if (embeddedQuery && embeddedQuery.length > 0 && embeddedQuery[0]?.length > 0) {
-      queryVector = embeddedQuery[0];
+    // 2/3. Resilient vector-search chain (each engine independent — never zero results):
+    //   A) Primary: integrated-embedding index → plain-text query (no OpenRouter quota).
+    //      Fallback: OpenRouter embed → classic externals-vector index.
+    //   B) Primary: classic index → OpenRouter embed → vector query.
+    //      Fallback: integrated-embedding text query (if configured).
+    //   C) Final: local fuzzy/tag hybrid ranking (always yields results).
+    const TOP_K = Math.max(limit * 2, 60);
+    const integrated = await this.detectIntegratedIndex();
+    let pineconeMatches: { id: string; score: number; metadata: any }[] | null = null;
+    let engine: 'pinecone-integrated' | 'pinecone-openrouter' | 'none' = 'none';
+
+    const setQueryEmbeddingCache = (key: string, vec: number[]) => {
       if (this.queryEmbeddingCache.size >= 200) {
         this.queryEmbeddingCache.delete(this.queryEmbeddingCache.keys().next().value as string);
       }
-      this.queryEmbeddingCache.set(cacheKey, queryVector);
-    } else {
-      // API failed (429 quota / network). NEVER query Pinecone with a vector
-      // from a different embedding space — rank locally instead.
-      console.warn('[PineconeService] ⚠️ Query embedding unavailable — ranking locally (skipping Pinecone to avoid vector-space mismatch)');
-      queryVector = this.generateSemanticEmbedding1024(expandedQuery);
-    }
+      this.queryEmbeddingCache.set(key, vec);
+    };
 
-    // 3. Execute Vector Search against Pinecone DB (only in matching embedding space)
-    let pineconeMatches: { id: string; score: number; metadata: any }[] | null = null;
-    let usedRealEmbedding = Boolean(cached || (embeddedQuery && embeddedQuery.length > 0));
-    if (env.isConfigured && usedRealEmbedding) {
+    if (env.isConfigured && integrated) {
+      // A) Primary: integrated search (8s timeout — no long query-time waits).
+      //    Honors explicit integrated-host override (e.g. when the configured
+      //    primary host/name points at the classic fallback index).
       try {
-        console.log(`[PineconeService] ⚡ Vector query to Pinecone for: "${trimmed}" (topK: ${Math.max(limit * 2, 60)})...`);
-        pineconeMatches = await this.queryPinecone(queryVector, Math.max(limit * 2, 60));
+        console.log(`[PineconeService] ⚡ Integrated vector query for: "${trimmed}" (topK: ${TOP_K})...`);
+        pineconeMatches = await this.searchRecords(expandedQuery, TOP_K, env.pineconeIntegratedHost || undefined);
         if (pineconeMatches && pineconeMatches.length > 0) {
-          console.log(`[PineconeService] ✅ Pinecone returned ${pineconeMatches.length} vector matches`);
+          engine = 'pinecone-integrated';
+          console.log(`[PineconeService] ✅ ${pineconeMatches.length} vector matches (integrated embedding)`);
         }
       } catch (err) {
-        console.error('[PineconeService] Vector search error:', err);
+        console.error('[PineconeService] Integrated vector search error:', err);
+      }
+
+      // A-fallback) OpenRouter embedding → classic externals-vector index
+      if (!pineconeMatches || pineconeMatches.length === 0) {
+        const hasOpenRouter = env.openrouterKey && !env.openrouterKey.includes('your_openrouter');
+        if (hasOpenRouter && env.pineconeFallbackHost) {
+          console.warn('[PineconeService] ⚠️ Integrated search unavailable — falling back to OpenRouter embedding + classic index');
+          const cacheKey = `${env.openrouterModel}::${expandedQuery.trim().toLowerCase()}`;
+          const cached = this.queryEmbeddingCache.get(cacheKey);
+          const embedded = cached ? [cached] : await this.embedTextsSafe([expandedQuery], { fallbackToLocal: false });
+          if (embedded && embedded[0]) {
+            if (!cached) setQueryEmbeddingCache(cacheKey, embedded[0]);
+            try {
+              pineconeMatches = await this.queryPinecone(embedded[0], TOP_K, env.pineconeFallbackHost);
+              if (pineconeMatches && pineconeMatches.length > 0) {
+                engine = 'pinecone-openrouter';
+                console.log(`[PineconeService] ✅ ${pineconeMatches.length} vector matches (OpenRouter fallback)`);
+              }
+            } catch (err) {
+              console.error('[PineconeService] Fallback vector search error:', err);
+            }
+          } else {
+            console.warn('[PineconeService] ⚠️ OpenRouter embedding unavailable — ranking locally');
+          }
+        } else {
+          console.warn('[PineconeService] ⚠️ No OpenRouter fallback configured — ranking locally');
+        }
+      }
+    } else if (env.isConfigured && !integrated) {
+      // B) Primary: classic index — embed query with the SAME model used at index time.
+      //    Cached (LRU) so repeat queries don't burn the daily free-tier quota.
+      let embeddedVector: number[] | null = null;
+      const cacheKey = `${env.openrouterModel}::${expandedQuery.trim().toLowerCase()}`;
+      const cached = this.queryEmbeddingCache.get(cacheKey);
+      const embedded = cached ? [cached] : await this.embedTextsSafe([expandedQuery], { fallbackToLocal: false });
+      if (embedded && embedded.length > 0 && embedded[0]?.length > 0) {
+        embeddedVector = embedded[0];
+        if (!cached) setQueryEmbeddingCache(cacheKey, embedded[0]);
+      } else {
+        // API failed (429 quota / network). NEVER query Pinecone with a vector
+        // from a different embedding space.
+        console.warn('[PineconeService] ⚠️ Query embedding unavailable — trying fallback engines');
+      }
+
+      if (embeddedVector) {
+        try {
+          console.log(`[PineconeService] ⚡ Vector query to Pinecone for: "${trimmed}" (topK: ${TOP_K})...`);
+          pineconeMatches = await this.queryPinecone(embeddedVector, TOP_K);
+          if (pineconeMatches && pineconeMatches.length > 0) {
+            engine = 'pinecone-openrouter';
+            console.log(`[PineconeService] ✅ ${pineconeMatches.length} vector matches (OpenRouter embedding)`);
+          }
+        } catch (err) {
+          console.error('[PineconeService] Vector search error:', err);
+        }
+      }
+
+      // B-fallback) integrated-embedding search if explicitly configured
+      if ((!pineconeMatches || pineconeMatches.length === 0) && env.pineconeIntegratedHost) {
+        try {
+          console.warn('[PineconeService] ⚠️ OpenRouter search unavailable — falling back to integrated embedding index');
+          pineconeMatches = await this.searchRecords(expandedQuery, TOP_K, env.pineconeIntegratedHost);
+          if (pineconeMatches && pineconeMatches.length > 0) {
+            engine = 'pinecone-integrated';
+            console.log(`[PineconeService] ✅ ${pineconeMatches.length} vector matches (integrated fallback)`);
+          }
+        } catch (err) {
+          console.error('[PineconeService] Integrated fallback search error:', err);
+        }
       }
     }
 
@@ -921,13 +1206,19 @@ export class PineconeService {
     scoredResults.sort((a, b) => b.hybridScore - a.hybridScore);
 
     const isPineconeActive = Boolean(pineconeMatches && pineconeMatches.length > 0);
+    const finalEngine = isPineconeActive
+      ? (engine !== 'none' ? engine : 'pinecone-integrated' as const)
+      : 'local' as const;
     return {
       matches: scoredResults.slice(0, limit),
       source: isPineconeActive ? 'pinecone' : 'local',
+      engine: finalEngine,
       model: env.openrouterModel,
       totalCount: scoredResults.length,
       message: isPineconeActive
-        ? `⚡ Vector hybrid search active via Pinecone (${pineconeMatches?.length} vector matches)`
+        ? engine === 'pinecone-integrated'
+          ? `⚡ Vector hybrid search via Pinecone integrated embedding (${pineconeMatches!.length} vector matches)`
+          : `⚡ Vector hybrid search via Pinecone + OpenRouter embeddings (${pineconeMatches!.length} vector matches)`
         : `⚡ Neural hybrid search active (local projection)`,
     };
   }

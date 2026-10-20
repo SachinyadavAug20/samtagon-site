@@ -99,6 +99,7 @@ Bun.serve({
             success: true,
             query,
             source: searchResult.source,
+            engine: searchResult.engine,
             model: searchResult.model,
             totalCount: searchResult.totalCount,
             matches: searchResult.matches,

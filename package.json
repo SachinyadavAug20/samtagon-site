@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "description": "Minimal showcase website for Samtagon Game Studio",
   "scripts": {
-    "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && bun build src/ts/recommendations-page.ts --outfile dist/js/recommendations.bundle.js --minify && tsc",
+    "build": "bun build src/ts/main.ts --outfile dist/js/bundle.js --minify && bun build src/ts/recommendations-page.ts --outfile dist/js/recommendations.bundle.js --minify && bun run bundle:api && tsc",
+    "bundle:api": "bun build api-src/search.ts --outfile api/search.js --format=cjs --minify --sourcemap=none && bun build api-src/status.ts --outfile api/status.js --format=cjs --minify --sourcemap=none",
     "watch": "bun build src/ts/main.ts --outfile dist/js/bundle.js --watch",
     "dev": "bun run server.ts",
     "start": "bun run server.ts",
     "serve": "bun run server.ts",
-    "index-vectors": "bun run scripts/index-pinecone.ts"
+    "index-vectors": "bun run scripts/index-pinecone.ts",
+    "index-openrouter": "bun run scripts/index-pinecone.ts --target=openrouter"
   },
   "keywords": [
     "samtagon",

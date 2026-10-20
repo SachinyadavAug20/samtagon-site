@@ -14,3 +14,6 @@ bun.lockb
 # Local env
 .env
 .env.local
+.index-openrouter-state.json
+api/*.js
+api/*.js.map
