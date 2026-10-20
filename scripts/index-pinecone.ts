@@ -99,9 +99,16 @@ async function main() {
 
     process.stdout.write(`⏳ [Batch ${b + 1}/${totalBatches}] Embedding ${batch.length} games... `);
 
-    const embeddings = await PineconeService.embedTexts(semanticTexts);
+    const embeddings = await PineconeService.embedTextsSafe(semanticTexts, { fallbackToLocal: false });
     if (!embeddings || embeddings.length !== batch.length) {
-      console.log(`❌ Failed to retrieve embeddings for batch ${b + 1}`);
+      console.log(`❌ Skipping batch ${b + 1} — no valid embeddings (never store broken/zero vectors). Re-run later.`);
+      continue;
+    }
+
+    // Defensive validation: reject zeroed/garbage vectors before upsert
+    const allValid = embeddings.every((v) => Array.isArray(v) && v.length > 64 && v.some((x) => Number.isFinite(x) && x !== 0));
+    if (!allValid) {
+      console.log(`❌ Skipping batch ${b + 1} — vector validation failed (all-zero or malformed).`);
       continue;
     }
 

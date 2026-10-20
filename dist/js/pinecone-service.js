@@ -14,6 +14,8 @@ import { VectorEngine } from './vector-engine.js';
 export class PineconeService {
     static DEFAULT_OPENROUTER_MODEL = 'liquid/lfm-2.5-embedding-350m:free';
     static DEFAULT_DIMENSIONS = 1024;
+    /** LRU cache of recent query embeddings (model::query -> vector) to conserve free-tier quota */
+    static queryEmbeddingCache = new Map();
     /**
      * Resolve environment variables from process.env
      */
@@ -423,17 +425,53 @@ export class PineconeService {
      * Fetch embeddings from OpenRouter using a free or specified model, with resilient 1024-dim neural fallback
      */
     static async embedTexts(texts) {
+        return this.embedTextsSafe(texts, { fallbackToLocal: true });
+    }
+    /**
+     * Validate embeddings from OpenRouter: correct dimension, finite, and NOT all-zero.
+     * Some free embedding models silently return HTTP 200 with zeroed arrays when
+     * rate limited — those must be treated as failures, never stored.
+     */
+    static isValidEmbedding(v) {
+        if (!Array.isArray(v) || v.length < 64)
+            return false;
+        if (!Number.isFinite(v[0]?.length ?? 0) && v.length === 0)
+            return false;
+        let sum = 0;
+        for (let i = 0; i < v.length; i++) {
+            const x = v[i];
+            if (!Number.isFinite(x))
+                return false;
+            sum += Math.abs(x);
+        }
+        return sum > 1e-6;
+    }
+    static normalizeEmbedding(v, dim) {
+        if (v.length === dim)
+            return v;
+        if (v.length > dim)
+            return v.slice(0, dim);
+        return [...v, ...new Array(dim - v.length).fill(0)];
+    }
+    /**
+     * Flexible embedding call. OpenRouter real embeddings with resilient
+     * local-projection fallback controlled by the caller (`fallbackToLocal`).
+     */
+    static async embedTextsSafe(texts, opts = {}) {
         if (texts.length === 0)
             return [];
+        const fallbackToLocal = opts.fallbackToLocal !== false;
         const { openrouterKey, openrouterModel } = this.getEnv();
         if (!openrouterKey || openrouterKey.includes('your_openrouter')) {
             console.warn('[PineconeService] ⚠️ OpenRouter missing — using LOCAL PROJECTION embeddings (shared space OK, weaker semantics)');
-            return texts.map((t) => this.generateSemanticEmbedding1024(t));
+            return texts.map((t) => this.generateSemanticEmbedding1024(String(t).slice(0, 2000)));
         }
+        // OpenRouter silently zero-fills on very long inputs — cap defensively
+        const capped = texts.map((t) => String(t).slice(0, 1600));
         try {
             const embed = async () => {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                const timeoutId = setTimeout(() => controller.abort(), 20000);
                 try {
                     return await fetch('https://openrouter.ai/api/v1/embeddings', {
                         method: 'POST',
@@ -445,7 +483,7 @@ export class PineconeService {
                         },
                         body: JSON.stringify({
                             model: openrouterModel,
-                            input: texts.length === 1 ? texts[0] : texts,
+                            input: capped.length === 1 ? capped[0] : capped,
                         }),
                         signal: controller.signal,
                     });
@@ -457,24 +495,44 @@ export class PineconeService {
             // Two attempts: transient 429/5xx on free models is common
             let response = await embed();
             if (!response.ok) {
-                console.warn(`[PineconeService] Embedding HTTP ${response.status}, retrying once...`);
+                const retryAfterMs = Number(response.headers.get('Retry-After') || '0') * 1000;
+                const waitMs = Number.isFinite(retryAfterMs) && retryAfterMs > 0 && retryAfterMs < 30000 ? retryAfterMs : 4000;
+                console.warn(`[PineconeService] Embedding HTTP ${response.status}, retrying once in ${Math.round(waitMs)}ms...`);
+                await new Promise((r) => setTimeout(r, waitMs));
                 response = await embed();
             }
             if (!response.ok) {
-                console.error('[PineconeService] ❌ Embedding API failed — FALLING BACK to local projection. Vectors may mix spaces!');
-                return texts.map((t) => this.generateSemanticEmbedding1024(t));
+                console.error(`[PineconeService] ❌ Embedding API failed (HTTP ${response.status})`);
+                if (!fallbackToLocal)
+                    return null;
+                console.error('[PineconeService] FALLING BACK to local projection. Vectors may mix spaces!');
+                return texts.map((t) => this.generateSemanticEmbedding1024(String(t).slice(0, 2000)));
             }
             const json = await response.json();
             if (!json?.data || !Array.isArray(json.data) || json.data.length === 0) {
-                console.error('[PineconeService] ❌ Embedding API returned no data — FALLING BACK to local projection.');
-                return texts.map((t) => this.generateSemanticEmbedding1024(t));
+                console.error('[PineconeService] ❌ Embedding API returned no data');
+                if (!fallbackToLocal)
+                    return null;
+                console.error('[PineconeService] FALLING BACK to local projection. Vectors may mix spaces!');
+                return texts.map((t) => this.generateSemanticEmbedding1024(String(t).slice(0, 2000)));
             }
             const sorted = json.data.slice().sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+            const valid = sorted.every((item) => this.isValidEmbedding(item.embedding));
+            if (!valid) {
+                console.error('[PineconeService] ❌ Embedding API returned INVALID vectors (zeroed/short/non-finite) — quota-soft-fail detected');
+                if (!fallbackToLocal)
+                    return null;
+                console.error('[PineconeService] FALLING BACK to local projection. Vectors may mix spaces!');
+                return texts.map((t) => this.generateSemanticEmbedding1024(String(t).slice(0, 2000)));
+            }
             return sorted.map((item) => item.embedding);
         }
         catch (_) {
-            console.error('[PineconeService] ❌ Embedding network error — FALLING BACK to local projection.');
-            return texts.map((t) => this.generateSemanticEmbedding1024(t));
+            console.error('[PineconeService] ❌ Embedding network error');
+            if (!fallbackToLocal)
+                return null;
+            console.error('[PineconeService] FALLING BACK to local projection. Vectors may mix spaces!');
+            return texts.map((t) => this.generateSemanticEmbedding1024(String(t).slice(0, 2000)));
         }
     }
     /**
@@ -607,14 +665,28 @@ export class PineconeService {
             expandedQuery += ' teenage girl young woman protagonist school life story emotional friendship';
         }
         // 2. Generate semantic query embedding with the SAME model used at index time.
-        //    (Deterministic hash projection is only a fallback — mixing spaces destroys ranking.)
-        const embeddedQuery = await this.embedTexts([expandedQuery]);
-        const queryVector = embeddedQuery && embeddedQuery.length > 0 && embeddedQuery[0]?.length > 0
-            ? embeddedQuery[0]
-            : this.generateSemanticEmbedding1024(expandedQuery);
-        // 3. Execute Vector Search against Pinecone DB
+        //    Cached (LRU) so repeat queries don't burn the daily free-tier quota.
+        const cacheKey = `${env.openrouterModel}::${expandedQuery.trim().toLowerCase()}`;
+        const cached = this.queryEmbeddingCache.get(cacheKey);
+        let embeddedQuery = cached ? [cached] : await this.embedTextsSafe([expandedQuery], { fallbackToLocal: false });
+        let queryVector;
+        if (embeddedQuery && embeddedQuery.length > 0 && embeddedQuery[0]?.length > 0) {
+            queryVector = embeddedQuery[0];
+            if (this.queryEmbeddingCache.size >= 200) {
+                this.queryEmbeddingCache.delete(this.queryEmbeddingCache.keys().next().value);
+            }
+            this.queryEmbeddingCache.set(cacheKey, queryVector);
+        }
+        else {
+            // API failed (429 quota / network). NEVER query Pinecone with a vector
+            // from a different embedding space — rank locally instead.
+            console.warn('[PineconeService] ⚠️ Query embedding unavailable — ranking locally (skipping Pinecone to avoid vector-space mismatch)');
+            queryVector = this.generateSemanticEmbedding1024(expandedQuery);
+        }
+        // 3. Execute Vector Search against Pinecone DB (only in matching embedding space)
         let pineconeMatches = null;
-        if (env.isConfigured) {
+        let usedRealEmbedding = Boolean(cached || (embeddedQuery && embeddedQuery.length > 0));
+        if (env.isConfigured && usedRealEmbedding) {
             try {
                 console.log(`[PineconeService] ⚡ Vector query to Pinecone for: "${trimmed}" (topK: ${Math.max(limit * 2, 60)})...`);
                 pineconeMatches = await this.queryPinecone(queryVector, Math.max(limit * 2, 60));
@@ -637,6 +709,7 @@ export class PineconeService {
         if (pineconeMatches) {
             pineconeMatches.forEach((m) => candidateIds.add(m.id));
         }
+        const localFuzzyScores = new Map();
         for (const game of allGames) {
             const dummy = {
                 id: game.id,
@@ -653,7 +726,8 @@ export class PineconeService {
                 embedding: [],
             };
             const fs = VectorEngine.computeFuzzyScore(trimmed, dummy);
-            if (fs >= 0.28) {
+            localFuzzyScores.set(game.id, fs);
+            if (fs >= 0.10) {
                 candidateIds.add(game.id);
             }
         }
@@ -678,7 +752,7 @@ export class PineconeService {
                 developer: game.studio,
                 embedding: [],
             };
-            const fuzzyScore = VectorEngine.computeFuzzyScore(trimmed, dummyGameItem);
+            const fuzzyScore = localFuzzyScores.get(id) ?? 0;
             const vectorScore = vectorScoreMap.get(id) || 0;
             const normTitle = game.title.toLowerCase();
             const normQuery = trimmed.toLowerCase();
@@ -724,6 +798,23 @@ export class PineconeService {
                 hybridScore: Number(hybridScore.toFixed(4)),
                 commonTags,
                 source: vectorScoreMap.has(id) ? 'pinecone' : 'local',
+            });
+        }
+        // Never return zero results for any query — cosine similarity always ranks.
+        if (scoredResults.length === 0 && candidateIds.size === 0) {
+            const bestRated = allGames
+                .slice()
+                .sort((a, b) => b.rating - a.rating)
+                .slice(0, limit);
+            bestRated.forEach((game) => {
+                scoredResults.push({
+                    game,
+                    similarity: 0.35,
+                    fuzzyScore: 0,
+                    hybridScore: 0.35,
+                    commonTags: [],
+                    source: 'local',
+                });
             });
         }
         scoredResults.sort((a, b) => b.hybridScore - a.hybridScore);
