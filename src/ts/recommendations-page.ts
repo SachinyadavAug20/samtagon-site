@@ -1554,11 +1554,15 @@ class RecommendationsApp {
       }
 
       if (debounceTimer) clearTimeout(debounceTimer);
+      // Wait for the user to stop typing before hitting the vector API —
+      // no per-keystroke spam, no submit button. Fires once the query settles.
       debounceTimer = setTimeout(() => {
+        const settled = val.trim();
+        if (settled === this.currentQuery.trim()) return;
         this.currentQuery = val;
         this.currentPage = 1;
         this.loadCatalog();
-      }, 120);
+      }, 450);
     });
 
     this.clearSearchBtn?.addEventListener('click', () => {
