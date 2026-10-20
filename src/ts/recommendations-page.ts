@@ -1333,24 +1333,21 @@ class RecommendationsApp {
             onerror="window.handleGameImageError(this)" 
           />
           <div class="card-scrim"></div>
-          <div class="card-overlay-content">
-            <div class="card-eyebrow-row">
-              <div class="card-metric-group">
-                ${isTop ? '<span class="card-metric-pill soulmate-amber"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 Soulmate</span>' : ''}
-                <span class="card-metric-pill score-excellent"><span class="metric-dot"></span>${rec.matchScore}% Match</span>
-              </div>
-              <span class="card-year">${rec.releaseYear}</span>
+          <div class="card-top-row">
+            <div class="card-metric-group">
+              ${isTop ? '<span class="card-metric-pill soulmate-amber"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> #1 Soulmate</span>' : ''}
+              <span class="card-metric-pill score-excellent"><span class="metric-dot"></span>${rec.matchScore}% Match</span>
             </div>
+            <span class="card-year">${rec.releaseYear}</span>
+          </div>
+          <div class="card-overlay-content">
             <h4 class="card-title">${rec.title}</h4>
-            <div class="card-meta-line">${rec.developer} &bull; ${rec.genres.slice(0, 2).join(' / ')}</div>
-            <div class="card-action-bar">
-              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
-                <span>Store</span>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+            <div class="card-meta-row">
+              <div class="card-meta-line">${rec.developer} &bull; ${rec.genres.slice(0, 2).join(' / ')}</div>
+              <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-store-link" onclick="event.stopPropagation()" title="${storeName}">
+                store
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
               </a>
-              <button class="card-btn-action secondary icon-only arranged-details-btn" data-game-title="${rec.title}" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              </button>
             </div>
           </div>
         </div>
@@ -1468,13 +1465,6 @@ class RecommendationsApp {
 
       if (game) {
         card.addEventListener('click', () => {
-          this.audio.playChime(783.99, 0.06);
-          this.openGameDetailModal(game!);
-        });
-
-        const detailsBtn = card.querySelector<HTMLElement>('.arranged-details-btn');
-        detailsBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
           this.audio.playChime(783.99, 0.06);
           this.openGameDetailModal(game!);
         });
@@ -1826,37 +1816,27 @@ class RecommendationsApp {
         onerror="window.handleGameImageError(this)" 
       />
       <div class="card-scrim"></div>
-      <div class="card-overlay-content">
-        <div class="card-eyebrow-row">
-          <div class="card-metric-group">
-            ${badgeHtml}
-            ${game.isSamtagonOriginal ? `<span class="card-original-pill">Original</span>` : ''}
-          </div>
-          <span class="card-year">${game.releaseYear}</span>
+      <div class="card-top-row">
+        <div class="card-metric-group">
+          ${badgeHtml}
+          ${game.isSamtagonOriginal ? `<span class="card-original-pill">Original</span>` : ''}
         </div>
+        <span class="card-year">${game.releaseYear}</span>
+      </div>
+      <div class="card-overlay-content">
         <h3 class="card-title" title="${safeTitle}">${game.title}</h3>
-        <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
-        <div class="card-action-bar">
-          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-btn-action primary" onclick="event.stopPropagation()" title="${storeName}">
-            <span>Store</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
+        <div class="card-meta-row">
+          <div class="card-meta-line">${game.developer} &bull; ${game.genres.slice(0, 2).join(' / ')}</div>
+          <a href="${storeUrl}" target="_blank" rel="noopener noreferrer" class="card-store-link" onclick="event.stopPropagation()" title="${storeName}">
+            store
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17l9.2-9.2M17 17V8H8"/></svg>
           </a>
-          <button class="card-btn-action secondary icon-only card-details-trigger" onclick="event.stopPropagation()" title="Game Details" aria-label="Game Details">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          </button>
         </div>
       </div>
     `;
 
     // Click card opens full Game Detail Modal
     card.addEventListener('click', () => {
-      this.audio.playChime(783.99, 0.06);
-      this.openGameDetailModal(game);
-    });
-
-    const detailsBtn = card.querySelector<HTMLElement>('.card-details-trigger');
-    detailsBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
       this.audio.playChime(783.99, 0.06);
       this.openGameDetailModal(game);
     });

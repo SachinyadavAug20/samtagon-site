@@ -561,7 +561,9 @@
 .card-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
+  background:
+    linear-gradient(180deg, rgba(9, 10, 12, 0.55) 0%, rgba(9, 10, 12, 0.12) 22%, rgba(9, 10, 12, 0) 38%),
+    linear-gradient(
     180deg,
     rgba(9, 10, 12, 0.02) 0%,
     rgba(9, 10, 12, 0.20) 30%,
@@ -575,7 +577,9 @@
 
 .game-card:hover .card-scrim,
 .arranged-game-card:hover .card-scrim {
-  background: linear-gradient(
+  background:
+    linear-gradient(180deg, rgba(9, 10, 12, 0.45) 0%, rgba(9, 10, 12, 0.08) 22%, rgba(9, 10, 12, 0) 38%),
+    linear-gradient(
     180deg,
     rgba(9, 10, 12, 0.0) 0%,
     rgba(9, 10, 12, 0.15) 25%,
@@ -584,18 +588,28 @@
   );
 }
 
-/* Hidden legacy floating top-bar to prevent detached stickers */
+/* Continuous Floating Top-Bar to prevent detached stickers */
 .card-top-bar {
   display: none !important;
 }
 
-/* Continuous Eyebrow & Status Row */
-.card-eyebrow-row {
+/* Absolute Top Row: metric left, year right — part of the image, not a sticker */
+.card-top-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 2px;
+  padding: 10px 14px;
+  pointer-events: none;
+}
+
+.card-top-row .card-metric-group {
+  pointer-events: auto;
 }
 
 .card-metric-group {
@@ -695,6 +709,15 @@
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* Bottom row: meta text left, quiet store link right — continuous, not a button */
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .card-meta-line {
@@ -703,60 +726,30 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  min-width: 0;
 }
 
-/* Minimal Action Bar */
-.card-action-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-btn-action {
+.card-store-link {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  gap: 4px;
+  flex-shrink: 0;
   font-family: var(--font-mono);
-  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--primary);
   text-decoration: none;
-  border-radius: 0;
+  padding: 3px 0 3px 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
   cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
-  transition: all var(--transition-fast);
-  line-height: 1.2;
+  transition: color var(--transition-fast), gap var(--transition-fast);
 }
 
-.card-btn-action.primary {
-  background: var(--primary);
-  color: #000;
-  border: 1px solid var(--primary);
-}
-
-.card-btn-action.primary:hover {
-  filter: brightness(1.15);
-  transform: translateY(-1px);
-}
-
-.card-btn-action.secondary {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.card-btn-action.secondary:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-1px);
-}
-
-.card-btn-action.icon-only {
-  padding: 5px 8px;
+.card-store-link:hover {
+  color: var(--primary-hover);
+  gap: 7px;
 }
 
 /* Footer */
