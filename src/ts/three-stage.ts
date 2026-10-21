@@ -142,6 +142,7 @@ export class ThreeStage {
   private leftSideRod: THREE.Mesh | null = null;
   private rightSideRod: THREE.Mesh | null = null;
   private wheelAngle: number = 0;
+  private fireboxLight: THREE.PointLight | null = null;
 
   // Multi-Mode Cinematic & Director Camera System (Isometric, Top, Engine, Director, Trackside)
   private currentViewMode: 'isometric' | 'top' | 'cinematic' | 'engine' | 'director' | 'trackside' = 'isometric';
@@ -3601,9 +3602,9 @@ export class ThreeStage {
     firebox.position.set(-0.02, 0.10, 0);
     loco.add(firebox);
 
-    const fireboxGlow = new THREE.PointLight(0xf97316, 0.8, 0.6);
-    fireboxGlow.position.set(-0.04, 0.12, 0);
-    loco.add(fireboxGlow);
+    this.fireboxLight = new THREE.PointLight(0xf97316, 0.9, 0.7);
+    this.fireboxLight.position.set(-0.04, 0.12, 0);
+    loco.add(this.fireboxLight);
 
     // Coupler knuckle
     const couplerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.4 });
@@ -3619,18 +3620,30 @@ export class ThreeStage {
       [-0.08, 0.045, -0.09],
     ], 0.045);
 
-    // Reciprocating Side Connecting Rods (Left & Right)
+    // Reciprocating Side Connecting Rods (Left & Right) with Polished Brass Crank Pins
     const rodMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
     const rodGeo = new THREE.BoxGeometry(0.18, 0.010, 0.006);
 
     this.leftSideRod = new THREE.Mesh(rodGeo, rodMat);
     this.leftSideRod.position.set(0, 0.045, 0.104);
     this.leftSideRod.castShadow = true;
+    [-0.08, 0.08].forEach((px) => {
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.014, 8), brassDetailMat);
+      pin.rotation.x = Math.PI * 0.5;
+      pin.position.set(px, 0, 0);
+      this.leftSideRod!.add(pin);
+    });
     loco.add(this.leftSideRod);
 
     this.rightSideRod = new THREE.Mesh(rodGeo, rodMat);
     this.rightSideRod.position.set(0, 0.045, -0.104);
     this.rightSideRod.castShadow = true;
+    [-0.08, 0.08].forEach((px) => {
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.014, 8), brassDetailMat);
+      pin.rotation.x = Math.PI * 0.5;
+      pin.position.set(px, 0, 0);
+      this.rightSideRod!.add(pin);
+    });
     loco.add(this.rightSideRod);
 
     this.locoCar = loco;
@@ -3826,11 +3839,11 @@ export class ThreeStage {
     this.trainGroup.add(this.cabooseCar);
 
     // -------------------------------------------------------------
-    // VOLUMETRIC PUFFY STEAM PARTICLE POOL
+    // VOLUMETRIC PUFFY STEAM PARTICLE POOL (36 Particles)
     // -------------------------------------------------------------
-    for (let s = 0; s < 16; s++) {
+    for (let s = 0; s < 36; s++) {
       const sMesh = new THREE.Mesh(
-        new THREE.DodecahedronGeometry(0.036 + (s % 3) * 0.014, 1),
+        new THREE.DodecahedronGeometry(0.038 + (s % 4) * 0.012, 1),
         new THREE.MeshStandardMaterial({
           color: 0xffffff,
           roughness: 0.1,
@@ -7601,8 +7614,11 @@ export class ThreeStage {
       });
     });
 
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => this.spawnSteamPuff(1.4), i * 50);
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        this.spawnSteamPuff(1.4, true);
+        this.spawnSteamPuff(1.2, false);
+      }, i * 45);
     }
   }
 
@@ -7625,6 +7641,13 @@ export class ThreeStage {
     if (this.clockHand) {
       gsap.to(this.clockHand.rotation, {
         z: '-=' + Math.PI * 4,
+        duration: 0.8,
+        ease: 'power2.out',
+      });
+    }
+    if (this.clockHourHand) {
+      gsap.to(this.clockHourHand.rotation, {
+        z: '-=' + Math.PI * 0.6,
         duration: 0.8,
         ease: 'power2.out',
       });
@@ -7660,24 +7683,27 @@ export class ThreeStage {
     });
   }
 
-  private spawnSteamPuff(scaleMultiplier: number = 1.0): void {
+  private spawnSteamPuff(scaleMultiplier: number = 1.0, isWhistle: boolean = false): void {
     const p = this.steamParticles.find((sp) => sp.life <= 0);
     if (!p) return;
 
-    const stackWorldPos = new THREE.Vector3(0.13, 0.26, 0);
-    this.locoCar.localToWorld(stackWorldPos);
-    this.rootGroup.worldToLocal(stackWorldPos);
+    const sourcePos = isWhistle
+      ? new THREE.Vector3(0.02, 0.22, 0.03) // Whistle dome
+      : new THREE.Vector3(0.13, 0.26, 0);   // Smokestack
+    this.locoCar.localToWorld(sourcePos);
+    this.rootGroup.worldToLocal(sourcePos);
 
-    p.mesh.position.copy(stackWorldPos);
-    p.mesh.scale.setScalar(0.7 * scaleMultiplier);
+    p.mesh.position.copy(sourcePos);
+    p.mesh.scale.setScalar((isWhistle ? 0.55 : 0.75) * scaleMultiplier);
+    p.mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
     p.mesh.visible = true;
     p.life = 1.0;
 
     // Impart backward momentum from train speed into slipstream
     const tangent = this.trackCurve.getTangentAt(this.progress).normalize();
-    p.vx = -tangent.x * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
-    p.vy = 0.014 + Math.random() * 0.007;
-    p.vz = -tangent.z * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.004;
+    p.vx = -tangent.x * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.005;
+    p.vy = (isWhistle ? 0.022 : 0.014) + Math.random() * 0.008;
+    p.vz = -tangent.z * 0.012 * this.speedMultiplier + (Math.random() - 0.5) * 0.005;
   }
 
   public isTrainInTunnel(): boolean {
@@ -8387,6 +8413,14 @@ export class ThreeStage {
       const crankY = Math.sin(this.wheelAngle) * crankR;
       this.leftSideRod.position.set(crankX, 0.045 + crankY, 0.104);
       this.rightSideRod.position.set(crankX, 0.045 + crankY, -0.104);
+      this.leftSideRod.rotation.z = Math.sin(this.wheelAngle) * 0.07;
+      this.rightSideRod.rotation.z = Math.sin(this.wheelAngle) * 0.07;
+    }
+
+    // Dynamic Firebox Embers & Hearth Combustion Flicker
+    if (this.fireboxLight) {
+      const emberFlicker = Math.sin(Date.now() * 0.014) * 0.22 + Math.sin(Date.now() * 0.033) * 0.12;
+      this.fireboxLight.intensity = Math.max(0.45, 0.95 + emberFlicker);
     }
 
     // Dynamic Spatial Audio: compute distance and stereo panning based on locomotive screen position
@@ -8416,13 +8450,15 @@ export class ThreeStage {
 
     this.steamParticles.forEach((p) => {
       if (p.life > 0) {
-        p.life -= 0.024;
+        p.life -= 0.020;
         p.mesh.position.x += p.vx;
         p.mesh.position.y += p.vy;
         p.mesh.position.z += p.vz;
-        p.mesh.scale.multiplyScalar(1.035);
+        p.mesh.scale.multiplyScalar(1.036);
+        p.mesh.rotation.z += 0.025;
+        p.mesh.rotation.y += 0.015;
         p.mesh.visible = true;
-        (p.mesh.material as THREE.MeshStandardMaterial).opacity = Math.max(0, p.life * 0.75);
+        (p.mesh.material as THREE.MeshStandardMaterial).opacity = Math.max(0, p.life * 0.72);
       } else {
         p.mesh.visible = false;
         p.mesh.position.set(0, -100, 0);
