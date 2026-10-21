@@ -189,7 +189,9 @@ export class ThreeStage {
 
   // Interactive Props
   private clockHand: THREE.Mesh | null = null;
+  private clockHourHand: THREE.Mesh | null = null;
   private clockTowerGroup: THREE.Group | null = null;
+  private signalBoxLight: THREE.PointLight | null = null;
   private interactiveTrees: THREE.Group[] = [];
   private waterMesh: THREE.Mesh | null = null;
 
@@ -1693,120 +1695,453 @@ export class ThreeStage {
     station.position.set(0.00, 0.04, 1.25);
     station.rotation.y = 0;
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 });
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.5 });
-    const terracottaMat = new THREE.MeshStandardMaterial({ color: 0xdd6b20, roughness: 0.35 });
+    const stoneTex = this.createStoneBrickTexture();
+    const stoneMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      map: stoneTex,
+      roughness: 0.52,
+    });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.55 });
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.3 });
+    const brassMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.88, roughness: 0.2 });
+    const emeraldMat = new THREE.MeshStandardMaterial({ color: 0x065f46, metalness: 0.75, roughness: 0.25 });
+    const slateMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45 });
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0xcfe8ff,
+      transparent: true,
+      opacity: 0.60,
+      roughness: 0.08,
+      metalness: 0.2,
+      side: THREE.DoubleSide,
+    });
 
-    // Raised Stone Platform (Parallel to the track)
-    const platform = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.22), stoneMat);
+    // 1. Extended Ashlar Stone Station Platform with Curb & Tactile Strip
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.05, 0.28), stoneMat);
     platform.position.y = 0.025;
     platform.castShadow = true;
     platform.receiveShadow = true;
     station.add(platform);
 
-    // Timber Shelter Pillars & Roof
-    const pillarGeo = new THREE.BoxGeometry(0.024, 0.28, 0.024);
-    const p1 = new THREE.Mesh(pillarGeo, woodMat);
-    p1.position.set(-0.16, 0.16, -0.06);
-    station.add(p1);
+    // Dark Granite Bullnose Platform Curb along Railway Track Face
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.016, 0.035), curbMat);
+    curb.position.set(0, 0.052, -0.125);
+    curb.castShadow = true;
+    station.add(curb);
 
-    const p2 = new THREE.Mesh(pillarGeo, woodMat);
-    p2.position.set(0.08, 0.16, -0.06);
-    station.add(p2);
+    // Amber Tactile Safety Warning Strip
+    const tactileMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+    const tactile = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.005, 0.016), tactileMat);
+    tactile.position.set(0, 0.053, -0.095);
+    station.add(tactile);
 
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.024, 0.20), terracottaMat);
-    roof.position.set(-0.04, 0.30, -0.02);
-    roof.rotation.x = 0.12;
-    roof.castShadow = true;
-    station.add(roof);
+    // 2. Victorian Wrought-Iron & Glass Arched Train Shed Canopy
+    const canopyGroup = new THREE.Group();
+    canopyGroup.position.set(-0.06, 0.05, 0);
 
-    // Miniature Clock Tower atop Platform (Clickable for Ding-Dong chime!)
+    // 4 Fluted Cast-Iron Emerald Columns with Molded Capitals
+    const colCoords = [
+      [-0.18, -0.09],
+      [0.16, -0.09],
+      [-0.18, 0.09],
+      [0.16, 0.09],
+    ];
+    colCoords.forEach(([cx, cz]) => {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.012, 0.26, 8), emeraldMat);
+      col.position.set(cx, 0.13, cz);
+      col.castShadow = true;
+      canopyGroup.add(col);
+
+      // Capital collar
+      const capCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.011, 0.018, 8), brassMat);
+      capCollar.position.set(cx, 0.255, cz);
+      canopyGroup.add(capCollar);
+    });
+
+    // 3 Curved Transverse Emerald Steel Arch Trusses
+    [-0.18, -0.01, 0.16].forEach((tx) => {
+      // Arched semicircular tubular rib (Radius 0.10, thickness 0.008)
+      const archRib = new THREE.Mesh(
+        new THREE.TorusGeometry(0.10, 0.007, 6, 16, Math.PI),
+        emeraldMat
+      );
+      archRib.position.set(tx, 0.26, 0);
+      archRib.castShadow = true;
+      canopyGroup.add(archRib);
+    });
+
+    // Longitudinal Emerald Tie Girders
+    [-0.095, 0.095].forEach((gz) => {
+      const girder = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.012, 0.010), emeraldMat);
+      girder.position.set(-0.01, 0.26, gz);
+      canopyGroup.add(girder);
+    });
+
+    // Smoked Safety Glass Barrel Vault Canopy Roof
+    const glassRoof = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.102, 0.102, 0.36, 16, 1, true, -Math.PI * 0.5, Math.PI),
+      glassMat
+    );
+    glassRoof.rotation.x = -Math.PI * 0.5;
+    glassRoof.rotation.z = Math.PI * 0.5;
+    glassRoof.position.set(-0.01, 0.26, 0);
+    canopyGroup.add(glassRoof);
+
+    // Brass Globe Pendant Chandeliers suspended from canopy apex
+    const pendantMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    [-0.10, 0.08].forEach((px) => {
+      const dropRod = new THREE.Mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.06, 4), brassMat);
+      dropRod.position.set(px, 0.33, 0);
+      canopyGroup.add(dropRod);
+
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), pendantMat);
+      globe.position.set(px, 0.29, 0);
+      canopyGroup.add(globe);
+    });
+
+    // Warm Platform PointLight casting ambiance through the glass
+    this.lanternLight = new THREE.PointLight(0xfef3c7, 1.1, 1.8);
+    this.lanternLight.position.set(-0.01, 0.28, 0);
+    canopyGroup.add(this.lanternLight);
+
+    station.add(canopyGroup);
+
+    // 3. Enamel Station Departure Board
+    const boardGroup = new THREE.Group();
+    boardGroup.position.set(-0.07, 0.25, 0);
+
+    const boardFrame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.045, 0.012), ironMat);
+    boardGroup.add(boardFrame);
+
+    const boardFace = new THREE.Mesh(
+      new THREE.BoxGeometry(0.13, 0.038, 0.014),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 })
+    );
+    boardGroup.add(boardFace);
+
+    const goldBorder = new THREE.Mesh(new THREE.BoxGeometry(0.136, 0.042, 0.008), brassMat);
+    boardGroup.add(goldBorder);
+
+    station.add(boardGroup);
+
+    // 4. Monumental Four-Faced Chrono-Clock Tower
     this.clockTowerGroup = new THREE.Group();
-    this.clockTowerGroup.position.set(0.20, 0, -0.04);
+    this.clockTowerGroup.position.set(0.28, 0, -0.02);
 
-    const towerBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.42, 0.12), stoneMat);
-    towerBody.position.y = 0.235;
+    // Rusticated Stone Pedestal Base
+    const towerPed = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.14), stoneMat);
+    towerPed.position.y = 0.085;
+    towerPed.castShadow = true;
+    this.clockTowerGroup.add(towerPed);
+
+    // Ashlar Shaft
+    const towerBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.34, 0.12), stoneMat);
+    towerBody.position.y = 0.315;
     towerBody.castShadow = true;
     this.clockTowerGroup.add(towerBody);
 
-    const towerSpire = new THREE.Mesh(new THREE.ConeGeometry(0.10, 0.18, 4), terracottaMat);
-    towerSpire.position.y = 0.53;
-    towerSpire.rotation.y = Math.PI * 0.25;
-    towerSpire.castShadow = true;
-    this.clockTowerGroup.add(towerSpire);
+    // Cornice belt molding
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(0.135, 0.018, 0.135), woodMat);
+    cornice.position.y = 0.49;
+    this.clockTowerGroup.add(cornice);
 
-    // Round Clock Face
-    const clockFace = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.038, 0.038, 0.01, 16),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 })
-    );
-    clockFace.rotation.x = Math.PI * 0.5;
-    clockFace.position.set(0, 0.36, 0.065);
-    this.clockTowerGroup.add(clockFace);
+    // 4 Enamel Dial Clock Faces (South, North, East, West)
+    const dialMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1 });
+    const faceRotations = [
+      { rx: Math.PI * 0.5, ry: 0, x: 0, y: 0.44, z: 0.063, isMain: true },
+      { rx: -Math.PI * 0.5, ry: 0, x: 0, y: 0.44, z: -0.063, isMain: false },
+      { rx: 0, ry: Math.PI * 0.5, x: 0.063, y: 0.44, z: 0, isMain: false },
+      { rx: 0, ry: -Math.PI * 0.5, x: -0.063, y: 0.44, z: 0, isMain: false },
+    ];
 
-    // Rotating Minute Hand
-    const handGeo = new THREE.BoxGeometry(0.005, 0.028, 0.005);
-    this.clockHand = new THREE.Mesh(handGeo, new THREE.MeshBasicMaterial({ color: 0x0f172a }));
-    this.clockHand.position.set(0, 0.36, 0.072);
-    this.clockTowerGroup.add(this.clockHand);
+    faceRotations.forEach(({ rx, ry, x, y, z, isMain }) => {
+      const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.008, 16), dialMat);
+      dial.position.set(x, y, z);
+      dial.rotation.x = rx;
+      dial.rotation.y = ry;
+      this.clockTowerGroup!.add(dial);
+
+      const bezel = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.004, 6, 16), brassMat);
+      bezel.position.set(x, y, z);
+      bezel.rotation.x = rx;
+      bezel.rotation.y = ry;
+      this.clockTowerGroup!.add(bezel);
+
+      if (isMain) {
+        // Rotating Minute Hand
+        this.clockHand = new THREE.Mesh(
+          new THREE.BoxGeometry(0.004, 0.026, 0.004),
+          new THREE.MeshBasicMaterial({ color: 0x0f172a })
+        );
+        this.clockHand.position.set(0, y, z + 0.006);
+        this.clockTowerGroup!.add(this.clockHand);
+
+        // Rotating Hour Hand
+        this.clockHourHand = new THREE.Mesh(
+          new THREE.BoxGeometry(0.005, 0.018, 0.004),
+          new THREE.MeshBasicMaterial({ color: 0x0f172a })
+        );
+        this.clockHourHand.position.set(0, y, z + 0.006);
+        this.clockTowerGroup!.add(this.clockHourHand);
+      }
+    });
+
+    // Open-Air Belfry Chamber with 4 Brass Posts and Tolling Bell
+    const belfryMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.85, roughness: 0.25 });
+    [-0.045, 0.045].forEach((bx) => {
+      [-0.045, 0.045].forEach((bz) => {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.08, 6), brassMat);
+        post.position.set(bx, 0.54, bz);
+        this.clockTowerGroup!.add(post);
+      });
+    });
+
+    // Tolling Bell
+    const bell = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.028, 0.035, 12), belfryMat);
+    bell.position.set(0, 0.54, 0);
+    bell.castShadow = true;
+    this.clockTowerGroup.add(bell);
+
+    // Hipped Slate Spire Roof
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(0.105, 0.18, 4), slateMat);
+    spire.position.y = 0.67;
+    spire.rotation.y = Math.PI * 0.25;
+    spire.castShadow = true;
+    this.clockTowerGroup.add(spire);
+
+    // Polished Brass Locomotive Weathercock Finial
+    const vaneNeedle = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.005, 0.09, 6), brassMat);
+    vaneNeedle.position.y = 0.79;
+    this.clockTowerGroup.add(vaneNeedle);
+
+    const vaneLoco = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.018, 0.006), brassMat);
+    vaneLoco.position.set(0, 0.83, 0);
+    this.clockTowerGroup.add(vaneLoco);
 
     station.add(this.clockTowerGroup);
 
-    // Platform Bench & Suitcase
-    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.038, 0.05), woodMat);
-    bench.position.set(-0.06, 0.065, -0.04);
+    // 5. Two-Story Victorian Railway Interlocking Signal Tower / Box
+    const signalBoxGroup = new THREE.Group();
+    signalBoxGroup.position.set(-0.38, 0, -0.22);
+
+    // Ground Floor: Red-Brown Ashlar Brick Masonry Foundation
+    const brickMat = new THREE.MeshStandardMaterial({ color: 0x9a3412, map: stoneTex, roughness: 0.65 });
+    const sbBase = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), brickMat);
+    sbBase.position.y = 0.08;
+    sbBase.castShadow = true;
+    signalBoxGroup.add(sbBase);
+
+    // Upper Floor: Cantilevered Cream Timber Signal Cab
+    const cabMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.45 });
+    const sbCab = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.13, 0.18), cabMat);
+    sbCab.position.y = 0.225;
+    sbCab.castShadow = true;
+    signalBoxGroup.add(sbCab);
+
+    // Panoramic Multi-Pane Window Ribbons Wrapping Around 3 Track-Facing Sides
+    const sbWinMat = new THREE.MeshStandardMaterial({
+      color: 0xfef9c3,
+      emissive: 0xfef08a,
+      emissiveIntensity: 0.6,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.85,
+    });
+    // Front window facing track
+    const winFront = new THREE.Mesh(new THREE.PlaneGeometry(0.17, 0.065), sbWinMat);
+    winFront.position.set(0, 0.23, -0.091);
+    winFront.rotation.y = Math.PI;
+    signalBoxGroup.add(winFront);
+
+    // Side windows
+    [-0.101, 0.101].forEach((wx) => {
+      const winSide = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.065), sbWinMat);
+      winSide.position.set(wx, 0.23, 0);
+      winSide.rotation.y = wx > 0 ? Math.PI * 0.5 : -Math.PI * 0.5;
+      signalBoxGroup.add(winSide);
+    });
+
+    // Interior Signal Levers Frame (Mechanical quadrant levers visible through windows)
+    const leverMatRed = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.5 });
+    const leverMatBlack = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+    for (let l = 0; l < 5; l++) {
+      const lever = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.002, 0.003, 0.035, 4),
+        l % 2 === 0 ? leverMatRed : leverMatBlack
+      );
+      lever.position.set(-0.04 + l * 0.02, 0.20, -0.04);
+      lever.rotation.x = -0.25 + (l % 3) * 0.2;
+      signalBoxGroup.add(lever);
+    }
+
+    // Warm Interior Illumination
+    this.signalBoxLight = new THREE.PointLight(0xfbbf24, this.isNightMode ? 1.4 : 0.4, 1.4);
+    this.signalBoxLight.position.set(0, 0.23, 0);
+    signalBoxGroup.add(this.signalBoxLight);
+
+    // Exterior Wooden Access Flight of Stairs & Balcony Handrail
+    const stairs = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.14), woodMat);
+    stairs.position.set(0.11, 0.06, 0.08);
+    stairs.rotation.x = 0.55;
+    signalBoxGroup.add(stairs);
+
+    // Hipped Slate Roof with Ceramic Chimney Pot
+    const sbRoof = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.085, 4), slateMat);
+    sbRoof.position.y = 0.33;
+    sbRoof.rotation.y = Math.PI * 0.25;
+    sbRoof.castShadow = true;
+    signalBoxGroup.add(sbRoof);
+
+    const chimney = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.012, 0.045, 6), brickMat);
+    chimney.position.set(-0.06, 0.38, 0.04);
+    signalBoxGroup.add(chimney);
+
+    station.add(signalBoxGroup);
+
+    // 6. Victorian Royal Crimson Pillar Post Box
+    const postMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3, metalness: 0.2 });
+    const postBox = new THREE.Group();
+    postBox.position.set(-0.28, 0.05, 0.08);
+
+    const postCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.075, 12), postMat);
+    postCyl.position.y = 0.038;
+    postCyl.castShadow = true;
+    postBox.add(postCyl);
+
+    const postDome = new THREE.Mesh(new THREE.SphereGeometry(0.017, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), postMat);
+    postDome.position.y = 0.075;
+    postBox.add(postDome);
+
+    const postAperture = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.004, 0.008), ironMat);
+    postAperture.position.set(0, 0.055, 0.016);
+    postBox.add(postAperture);
+
+    station.add(postBox);
+
+    // 7. Wrought-Iron Luggage Trolley, Stacked Travel Trunks & Sleeping Cat
+    const trolleyGroup = new THREE.Group();
+    trolleyGroup.position.set(0.12, 0.05, 0.05);
+
+    // Trolley frame & brass handle
+    const tFrame = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.010, 0.06), ironMat);
+    tFrame.position.y = 0.018;
+    trolleyGroup.add(tFrame);
+
+    const tHandle = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.055, 0.06), ironMat);
+    tHandle.position.set(0.05, 0.045, 0);
+    trolleyGroup.add(tHandle);
+
+    // Two small iron wheels
+    [-0.03, 0.03].forEach((wz) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.005, 8), ironMat);
+      wheel.rotation.x = Math.PI * 0.5;
+      wheel.position.set(-0.04, 0.012, wz);
+      trolleyGroup.add(wheel);
+    });
+
+    // 3 Stacked Vintage Leather Travel Trunks with Brass Clasp Accents
+    const trunkColors = [0x92400e, 0x78350f, 0xb45309];
+    const trunkSizes = [
+      [0.068, 0.024, 0.046],
+      [0.055, 0.022, 0.038],
+      [0.042, 0.018, 0.030],
+    ];
+    let curY = 0.024;
+    trunkSizes.forEach(([sx, sy, sz], idx) => {
+      const trunkMat = new THREE.MeshStandardMaterial({ color: trunkColors[idx], roughness: 0.45 });
+      const trunk = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), trunkMat);
+      trunk.position.set(-0.01, curY + sy * 0.5, 0);
+      trunk.rotation.y = idx * 0.15;
+      trunk.castShadow = true;
+      trolleyGroup.add(trunk);
+
+      // Brass corner clasp accents
+      const clasp = new THREE.Mesh(new THREE.BoxGeometry(sx + 0.002, 0.004, 0.008), brassMat);
+      clasp.position.set(-0.01, curY + sy * 0.5, 0);
+      trolleyGroup.add(clasp);
+
+      curY += sy;
+    });
+
+    // Adorable Sleeping Ginger Tabby Cat curled atop the luggage stack
+    const catMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.6 });
+    const catBody = new THREE.Mesh(new THREE.SphereGeometry(0.010, 8, 8), catMat);
+    catBody.scale.set(1.2, 0.65, 0.9);
+    catBody.position.set(-0.01, curY + 0.006, 0);
+    trolleyGroup.add(catBody);
+
+    const catHead = new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 6), catMat);
+    catHead.position.set(0.004, curY + 0.010, 0.004);
+    trolleyGroup.add(catHead);
+
+    station.add(trolleyGroup);
+
+    // 8. Platform Bench, Milk Churns & Passenger Meeples
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.036, 0.045), woodMat);
+    bench.position.set(-0.04, 0.065, -0.04);
     station.add(bench);
 
-    const suitcase = new THREE.Mesh(
-      new THREE.BoxGeometry(0.040, 0.030, 0.022),
-      new THREE.MeshStandardMaterial({ color: 0x92400e })
-    );
-    suitcase.position.set(-0.16, 0.065, -0.04);
-    station.add(suitcase);
-
-    // Platform Milk Cans & Cargo Trunks
+    // Galvanized Milk Churns
     const milkCanMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3 });
-    [-0.19, -0.21].forEach((cx, i) => {
-      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.036, 8), milkCanMat);
-      can.position.set(cx, 0.065, 0.04 + i * 0.03);
+    [-0.15, -0.17].forEach((cx, i) => {
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.017, 0.036, 8), milkCanMat);
+      can.position.set(cx, 0.065, 0.04 + i * 0.028);
       can.castShadow = true;
       station.add(can);
     });
 
-    // Cute Passenger Meeples waiting on platform
-    const meepleColors = [0x2563eb, 0xd97706];
-    meepleColors.forEach((col, idx) => {
+    // 9. Charming Stationmaster & Passenger Meeples
+    // Stationmaster Meeple (Navy Coat, Gold Buttons & Pocket Watch)
+    const smGroup = new THREE.Group();
+    smGroup.position.set(0.04, 0.05, -0.04);
+
+    const smBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018, 0.024, 0.075, 8),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 })
+    );
+    smBody.position.y = 0.038;
+    smGroup.add(smBody);
+
+    const smHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.018, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xffedd5 })
+    );
+    smHead.position.y = 0.085;
+    smGroup.add(smHead);
+
+    const smCap = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.020, 0.010, 8), slateMat);
+    smCap.position.y = 0.098;
+    smGroup.add(smCap);
+
+    const smPeak = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.003, 0.014), ironMat);
+    smPeak.position.set(0, 0.094, -0.016);
+    smGroup.add(smPeak);
+
+    smGroup.castShadow = true;
+    station.add(smGroup);
+
+    // 3 Waiting Passenger Meeples (Vibrant Storybook Palette)
+    const passengerColors = [0x0284c7, 0xd97706, 0xbe123c];
+    passengerColors.forEach((col, idx) => {
       const meeple = new THREE.Group();
       const mBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.020, 0.026, 0.07, 8),
+        new THREE.CylinderGeometry(0.018, 0.024, 0.068, 8),
         new THREE.MeshStandardMaterial({ color: col, roughness: 0.4 })
       );
-      mBody.position.y = 0.085;
+      mBody.position.y = 0.034;
 
       const mHead = new THREE.Mesh(
-        new THREE.SphereGeometry(0.020, 8, 8),
+        new THREE.SphereGeometry(0.018, 8, 8),
         new THREE.MeshStandardMaterial({ color: 0xffedd5 })
       );
-      mHead.position.y = 0.135;
+      mHead.position.y = 0.078;
 
       meeple.add(mBody);
       meeple.add(mHead);
-      meeple.position.set(-0.02 + idx * 0.06, 0, 0.01);
+      meeple.position.set(-0.12 + idx * 0.05, 0.05, -0.02 + (idx % 2) * 0.03);
       meeple.castShadow = true;
       station.add(meeple);
     });
-
-    // Warm Platform Lantern with Point Light
-    this.lanternLight = new THREE.PointLight(0xfef3c7, 0.8, 1.6);
-    this.lanternLight.position.set(-0.04, 0.26, -0.02);
-    station.add(this.lanternLight);
-
-    const lanternGlobe = new THREE.Mesh(
-      new THREE.SphereGeometry(0.022, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xfef08a })
-    );
-    lanternGlobe.position.copy(this.lanternLight.position);
-    station.add(lanternGlobe);
 
     this.sceneryGroup.add(station);
   }
@@ -7540,8 +7875,8 @@ export class ThreeStage {
         }
         if (this.coachInteriorLight1) this.coachInteriorLight1.intensity = 1.2;
         if (this.coachInteriorLight2) this.coachInteriorLight2.intensity = 1.2;
-        if (this.tailLight) this.tailLight.intensity = 1.8;
         if (this.lanternLight) this.lanternLight.intensity = 2.2;
+        if (this.signalBoxLight) this.signalBoxLight.intensity = 1.4;
         if (this.viaductLanternLights) this.viaductLanternLights.forEach((l) => l.intensity = 1.4);
         if (this.tunnelLight) this.tunnelLight.intensity = 0.9;
         if (this.windmillLight) this.windmillLight.intensity = 0.85;
@@ -7611,6 +7946,7 @@ export class ThreeStage {
         if (this.coachInteriorLight2) this.coachInteriorLight2.intensity = 0;
         if (this.tailLight) this.tailLight.intensity = 0.8;
         if (this.lanternLight) this.lanternLight.intensity = 0.8;
+        if (this.signalBoxLight) this.signalBoxLight.intensity = 0.4;
         if (this.viaductLanternLights) this.viaductLanternLights.forEach((l) => l.intensity = 0);
         if (this.tunnelLight) this.tunnelLight.intensity = 0.2;
         if (this.windmillLight) this.windmillLight.intensity = 0;
@@ -8158,6 +8494,9 @@ export class ThreeStage {
     // 7. Station Clock Hand Ticking
     if (this.clockHand) {
       this.clockHand.rotation.z = -Date.now() * 0.001;
+    }
+    if (this.clockHourHand) {
+      this.clockHourHand.rotation.z = -Date.now() * 0.000083;
     }
 
     // 8. Gentle Tranquil Water Specular Shimmer & Moored Boat Bobbing (Fixed elevation, NO vertical clipping!)
