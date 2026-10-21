@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <!-- Soft Glass Drop Shadow -->
+    <filter id="h-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="3.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.42" />
+    </filter>
+
+    <!-- 3D Glass Side Extrusion Ember Accent Gradient -->
+    <linearGradient id="h-edge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#f59e0b" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#d97706" stop-opacity="0.92" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.90" />
+    </linearGradient>
+
+    <!-- Translucent Frosted Glass Face Gradient -->
+    <linearGradient id="h-face" x1="15%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.86" />
+      <stop offset="35%" stop-color="#fef3c7" stop-opacity="0.52" />
+      <stop offset="70%" stop-color="#fff7ed" stop-opacity="0.42" />
+      <stop offset="100%" stop-color="#fde68a" stop-opacity="0.65" />
+    </linearGradient>
+
+    <!-- Warm Amber Ember Rim Stroke -->
+    <linearGradient id="h-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="30%" stop-color="#fef08a" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.90" />
+      <stop offset="100%" stop-color="#fb7185" stop-opacity="0.92" />
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#h-shadow)">
+    <!-- 1. 3D Under-Bevel Depth Extrusion -->
+    <g transform="translate(2.5, 3.0)">
+      <circle cx="20" cy="20" r="14" fill="url(#h-edge)" stroke="url(#h-edge)" stroke-width="2.2" />
+      <path d="M 16 16 C 16 13.5 17.8 11.5 20.5 11.5 C 23.2 11.5 25 13.2 25 15.5 C 25 18 23 19.5 21 21 L 21 24.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+      <circle cx="21" cy="28.5" r="1.8" fill="#ffffff" />
+    </g>
+
+    <!-- 2. Dark delicate contour -->
+    <circle cx="20" cy="20" r="14" fill="none" stroke="#0f172a" stroke-width="2.0" stroke-opacity="0.25" />
+
+    <!-- 3. Main Glass Disc Face -->
+    <circle cx="20" cy="20" r="14" fill="url(#h-face)" stroke="url(#h-rim)" stroke-width="2.2" />
+
+    <!-- 4. Specular White Glare Arc -->
+    <path d="M 11 16 A 11 11 0 0 1 23 9" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" opacity="0.95" />
+
+    <!-- 5. Question Mark Core Glyphs (Crisp Ink with Ember Rim) -->
+    <path d="M 16 16 C 16 13.5 17.8 11.5 20.5 11.5 C 23.2 11.5 25 13.2 25 15.5 C 25 18 23 19.5 21 21 L 21 24.5" fill="none" stroke="url(#h-edge)" stroke-width="2.8" stroke-linecap="round" />
+    <circle cx="21" cy="28.5" r="1.6" fill="url(#h-edge)" />
+  </g>
+</svg>

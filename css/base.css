@@ -31,11 +31,70 @@ body {
   color: var(--accent-emerald);
 }
 
-/* Universal Point Cursors */
-a, button, [role="button"], [role="tab"], select, summary,
-input[type="button"], input[type="submit"], input[type="reset"],
-.clickable, .nav-link, .card, .pill, .btn {
-  cursor: var(--cursor-pointer, url('/assets/cursors/funky-pointer.svg') 12 3, pointer);
+/* ==========================================================================
+   CONTEXT-AWARE IRIDESCENT FROSTED GLASS CURSORS (ALL PAGES)
+   Simple, semantic & universal cursor architecture
+   ========================================================================== */
+
+/* 1. Default Surface & Canvas (Arrow) */
+html,
+body,
+.zen-page,
+.rec-page,
+.rec-main-wrapper,
+.site-header,
+.site-footer,
+.zen-footer,
+.section,
+main,
+.modal-dialog,
+.modal-container,
+.game-modal-dialog {
+  cursor: var(--cursor-arrow, auto);
+}
+
+/* 2. Interactive Action Controls (Pointer)
+   Buttons, links, tabs, switches, toggles, form triggers */
+a,
+button,
+[role="button"],
+[role="tab"],
+select,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+label[for],
+.btn,
+.icon-btn,
+.stage-icon-btn,
+.stage-speed-btn,
+.search-ctrl-btn,
+.rec-tab-btn,
+.rec-back-btn,
+.brand-link,
+.zen-brand,
+.zen-theme-toggle,
+.page-btn,
+.page-jump-btn,
+.clickable,
+.nav-item-link,
+.nav-link,
+.nav-menu a,
+.tag-clickable,
+.breadcrumb-chip,
+.quiz-action-btn,
+.quiz-skip-link,
+.matches-all-btn,
+.cinema-cut-btn,
+.card-store-link,
+.modal-store-btn,
+.modal-studio-btn,
+.ctrl-dock-group button,
+.signal-lamp,
+.pill {
+  cursor: var(--cursor-pointer, pointer);
 }
 
 button {
@@ -44,24 +103,149 @@ button {
   background: none;
 }
 
-/* Universal Text / I-Beam Cursors */
-input[type="text"], input[type="search"], input[type="email"], input[type="password"],
-input[type="number"], input[type="tel"], input[type="url"], textarea, [contenteditable="true"] {
-  cursor: var(--cursor-text, url('/assets/cursors/funky-text.svg') 24 24, text);
+/* Child interactive buttons/links inside cards always stay pointer */
+.game-card a,
+.game-card button,
+.arranged-game-card a,
+.arranged-game-card button,
+.loop-proof-img-wrap a,
+.loop-proof-img-wrap button,
+.modal-similar-card a,
+.modal-similar-card button,
+.glass-card a,
+.glass-card button {
+  cursor: var(--cursor-pointer, pointer);
 }
 
-/* Universal Disabled / Not-Allowed Cursors */
-:disabled, [disabled], [aria-disabled="true"], .disabled, button:disabled {
-  cursor: var(--cursor-not-allowed, url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed) !important;
+/* 3. Inspectable Cards, Gallery Showcases, and Media Previews (Zoom-In / View)
+   Invites user to inspect, view details, or open modal */
+.game-card,
+.arranged-game-card,
+.modal-similar-card,
+.loop-proof-img-wrap,
+.zoomable-img,
+.screenshot-thumb,
+.glass-card.interactive,
+[data-action="view"],
+[data-action="zoom"],
+[data-action="modal"],
+.viewable,
+.inspectable {
+  cursor: var(--cursor-zoom-in, zoom-in);
 }
 
-/* Universal View / Drag / Orbit Cursors */
-.grab, [data-draggable="true"], .draggable, .view-orbit, .orbit-control {
-  cursor: var(--cursor-grab, url('/assets/cursors/funky-grab.svg') 24 22, grab);
+/* Quiz Option Cards */
+.quiz-option-card {
+  cursor: var(--cursor-pointer, pointer);
 }
-.grabbing, .is-dragging, .is-orbiting, .grab:active, [data-draggable="true"]:active {
-  cursor: var(--cursor-grabbing, url('/assets/cursors/funky-grabbing.svg') 24 23, grabbing) !important;
+
+/* 4. Modal Backdrops, Lightbox Dismiss Areas, Close Triggers (Zoom-Out)
+   Clicking closes or zooms out back to overview */
+.modal-backdrop,
+.game-modal-backdrop,
+.modal-overlay,
+.lightbox,
+.modal-close-btn,
+.close-btn,
+[data-action="close"],
+[data-action="dismiss"] {
+  cursor: var(--cursor-zoom-out, zoom-out);
 }
+
+/* 5. Text Input, Code Snippets, Technical Specs (Text / I-Beam) */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+textarea,
+[contenteditable="true"],
+pre,
+code,
+kbd,
+samp,
+.code-snippet,
+.spec-code,
+.font-mono-selectable,
+.selectable-text {
+  cursor: var(--cursor-text, text);
+}
+
+/* 6. 3D Diorama, Viewport Orbit & Draggable Surfaces (Grab & Grabbing) */
+.zen-canvas-holder,
+#three-viewport,
+canvas.interactive-canvas,
+.grab,
+[data-draggable="true"],
+.draggable,
+.view-orbit,
+.orbit-control {
+  cursor: var(--cursor-grab, grab);
+}
+
+.zen-canvas-holder:active,
+.zen-canvas-holder.is-dragging,
+.grabbing,
+.is-dragging,
+.is-orbiting,
+.grab:active,
+[data-draggable="true"]:active {
+  cursor: var(--cursor-grabbing, grabbing) !important;
+}
+
+/* 7. Help, Tooltips, FAQs, Technical Legends, Explanations (Help) */
+summary,
+details summary,
+.faq-item summary,
+.info-tooltip,
+[data-tooltip],
+.help-icon,
+.badge-help,
+abbr[title],
+.field-hint,
+.quiz-keys-hint,
+.commuter-badge,
+.section-tag,
+.badge {
+  cursor: var(--cursor-help, help);
+}
+
+/* Badges that are links or buttons should remain pointer */
+a.badge,
+button.badge,
+.badge a,
+.badge button {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+/* 8. Disabled / Locked / Inactive Elements (Not-Allowed) */
+:disabled,
+[disabled],
+[aria-disabled="true"],
+.disabled,
+button:disabled,
+.page-btn:disabled,
+.is-disabled {
+  cursor: var(--cursor-not-allowed, not-allowed) !important;
+}
+
+/* ==========================================================================
+   SIMPLE DIRECT UTILITY CLASSES
+   Easy one-class application across any element or component
+   ========================================================================== */
+.cursor-arrow        { cursor: var(--cursor-arrow, auto) !important; }
+.cursor-pointer      { cursor: var(--cursor-pointer, pointer) !important; }
+.cursor-grab         { cursor: var(--cursor-grab, grab) !important; }
+.cursor-grabbing     { cursor: var(--cursor-grabbing, grabbing) !important; }
+.cursor-text         { cursor: var(--cursor-text, text) !important; }
+.cursor-zoom-in,
+.cursor-view         { cursor: var(--cursor-zoom-in, zoom-in) !important; }
+.cursor-zoom-out,
+.cursor-close        { cursor: var(--cursor-zoom-out, zoom-out) !important; }
+.cursor-help         { cursor: var(--cursor-help, help) !important; }
+.cursor-not-allowed  { cursor: var(--cursor-not-allowed, not-allowed) !important; }
 
 .container {
   width: 100%;

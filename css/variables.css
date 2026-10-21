@@ -30,6 +30,8 @@
   --cursor-zoom-in: url('/assets/cursors/funky-zoom-in.svg') 18 18, zoom-in;
   --cursor-zoom-out: url('/assets/cursors/funky-zoom-out.svg') 18 18, zoom-out;
   --cursor-not-allowed: url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed;
+  --cursor-help: url('/assets/cursors/funky-help.svg') 20 20, help;
+  --cursor-view: var(--cursor-zoom-in);
 
   /* Backward Compatibility Mapping */
   --accent-emerald: var(--primary);

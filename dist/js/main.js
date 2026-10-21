@@ -7,6 +7,7 @@
  */
 import { ProceduralAudio } from './audio-synth.js';
 import { ThreeStage } from './three-stage.js';
+import { ModalController } from './modal.js';
 import gsap from 'gsap';
 function initMain() {
     // 1. Procedural Audio Synthesizer (Acoustic feedback on interaction)
@@ -23,6 +24,19 @@ function initMain() {
     }
     // 3. Playful acoustics & micro-interactions
     setupZenInteractions(stage, audio);
+    // 4. Global Lightbox Modal (for games catalog & zoomable screenshots)
+    if (document.getElementById('global-modal')) {
+        const modal = new ModalController();
+        document.querySelectorAll('.loop-proof-img-wrap, .zoomable-img').forEach((el) => {
+            el.addEventListener('click', () => {
+                const img = (el instanceof HTMLImageElement ? el : el.querySelector('img'));
+                if (img) {
+                    const caption = el.querySelector('.loop-proof-caption')?.textContent || img.alt || '';
+                    modal.openImage(img.src, caption);
+                }
+            });
+        });
+    }
     console.log('Samtagon Studios online. Zen mode active.');
 }
 if (document.readyState === 'loading') {

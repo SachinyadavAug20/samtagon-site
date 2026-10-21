@@ -49,7 +49,7 @@
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid transparent;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -126,7 +126,7 @@
   border: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   color: var(--text-secondary);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -251,7 +251,7 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   border-radius: 0;
   transition: all var(--transition-fast);
   padding: 0;
@@ -319,7 +319,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: 0;
   padding: 4px 12px;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -523,7 +523,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-zoom-in, zoom-in);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -757,7 +757,7 @@
   text-decoration: none;
   padding: 3px 0 3px 10px;
   border-left: 1px solid rgba(255, 255, 255, 0.14);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: color var(--transition-fast), gap var(--transition-fast);
 }
 
@@ -834,7 +834,7 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%), var(--bg-surface);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -854,7 +854,7 @@
 
 .page-btn:disabled {
   opacity: 0.35;
-  cursor: var(--cursor-not-allowed, url('/assets/cursors/funky-not-allowed.svg') 24 24, not-allowed);
+  cursor: var(--cursor-not-allowed, not-allowed) !important;
   pointer-events: none;
 }
 
@@ -903,7 +903,7 @@
   background: var(--primary);
   color: #000;
   border-radius: 0;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -939,6 +939,7 @@
   justify-content: center;
   padding: 20px;
   overflow-y: auto;
+  cursor: var(--cursor-zoom-out, zoom-out);
 }
 
 .game-modal-dialog {
@@ -953,6 +954,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  cursor: var(--cursor-arrow, auto);
 }
 
 .modal-close-btn {
@@ -969,7 +971,7 @@
   color: #ffffff;
   font-size: 1.5rem;
   border-radius: 0;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-zoom-out, zoom-out);
   z-index: 10;
   transition: all var(--transition-fast);
 }
@@ -1123,7 +1125,7 @@
   font-weight: 700;
   font-size: 0.92rem;
   text-decoration: none;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(217, 119, 6, 0.28);
   transition: all var(--transition-fast);
 }
@@ -1184,7 +1186,7 @@
 .modal-similar-card {
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-zoom-in, zoom-in);
   overflow: hidden;
   transition: all var(--transition-fast);
   display: flex;
@@ -1349,7 +1351,7 @@
   border: 1px solid var(--border-medium);
   padding: 16px 20px;
   text-align: left;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -1488,7 +1490,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all 0.15s ease;
   padding: 0;
 }
@@ -1508,7 +1510,7 @@
   color: #0f172a;
   border: none;
   border-radius: 4px;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   flex-shrink: 0;
   transition: all var(--transition-fast);
   padding: 0;
@@ -1598,7 +1600,7 @@
   border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--text-secondary);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -1628,7 +1630,7 @@
   color: var(--primary);
   background: transparent;
   border: none;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -1738,7 +1740,7 @@
   background: var(--bg-subtle);
   border: 1px solid var(--border-medium);
   color: var(--text-primary);
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
 }
 
@@ -1806,7 +1808,7 @@
   color: var(--primary);
   background: transparent;
   border: none;
-  cursor: url('/assets/cursors/funky-pointer.svg') 12 3, pointer;
+  cursor: var(--cursor-pointer, pointer);
   transition: all var(--transition-fast);
   padding: 4px 8px;
 }
