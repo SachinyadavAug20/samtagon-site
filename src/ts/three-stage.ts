@@ -71,6 +71,7 @@ export class ThreeStage {
   private railClickAccumulator: number = 0;
   private lastBlinkCycle: boolean = false;
   private lastHoverRippleTime: number = 0;
+  private waterfallMistParticles: Array<{ mesh: THREE.Mesh; baseY: number; baseX: number; baseZ: number; speed: number; phase: number }> = [];
 
   // Handcrafted Scenery Elements & Dynamic Lighting
   private windmillGroup: THREE.Group | null = null;
@@ -1057,6 +1058,127 @@ export class ThreeStage {
       canalGroup.add(bloom);
     });
 
+    // 8b. Natural Stepped Mountain Waterfall Cascade & Aqueduct Inflow into Canal Basin
+    const cascadeStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x64748b,
+      map: this.createStoneBrickTexture(),
+      roughness: 0.65,
+      metalness: 0.05,
+    });
+    const cascadeWaterMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      emissive: 0x0284c7,
+      emissiveIntensity: 0.35,
+      roughness: 0.04,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.88,
+    });
+    const foamMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xe0f2fe,
+      emissiveIntensity: 0.4,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0.92,
+    });
+
+    const waterfallGroup = new THREE.Group();
+    waterfallGroup.position.set(0.18, 0.0, -0.46);
+    waterfallGroup.rotation.y = 0.55;
+
+    // Tier 1: Mountain Aqueduct Intake (y = 0.13)
+    const weir1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.055, 0.10), cascadeStoneMat);
+    weir1.position.set(0, 0.125, -0.08);
+    weir1.castShadow = true;
+    waterfallGroup.add(weir1);
+
+    // Tier 2: Mid-tier Catch Basin (y = 0.08)
+    const weir2 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.045, 0.10), cascadeStoneMat);
+    weir2.position.set(0, 0.075, 0.0);
+    weir2.castShadow = true;
+    waterfallGroup.add(weir2);
+
+    // Tier 3: Lower Spillway Apron (y = 0.038)
+    const weir3 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.035, 0.09), cascadeStoneMat);
+    weir3.position.set(0, 0.035, 0.08);
+    weir3.castShadow = true;
+    waterfallGroup.add(weir3);
+
+    // Water Flow Sheets (angled cascades connecting tiers)
+    const chute1 = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.065), cascadeWaterMat);
+    chute1.position.set(0, 0.10, -0.035);
+    chute1.rotation.x = Math.PI * 0.32;
+    waterfallGroup.add(chute1);
+
+    const chute2 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.060), cascadeWaterMat);
+    chute2.position.set(0, 0.055, 0.042);
+    chute2.rotation.x = Math.PI * 0.30;
+    waterfallGroup.add(chute2);
+
+    // White Water Foam Crests at spillway drop-offs
+    const foam1 = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.16, 8), foamMat);
+    foam1.rotation.z = Math.PI * 0.5;
+    foam1.position.set(0, 0.102, -0.03);
+    waterfallGroup.add(foam1);
+
+    const foam2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.20, 8), foamMat);
+    foam2.rotation.z = Math.PI * 0.5;
+    foam2.position.set(0, 0.056, 0.045);
+    waterfallGroup.add(foam2);
+
+    // Lower Plunge Pool White Water Splash Ring
+    const plungeFoam = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.008, 16), foamMat);
+    plungeFoam.position.set(0, 0.036, 0.12);
+    waterfallGroup.add(plungeFoam);
+
+    // Spray & Mist particles rising from the plunge pool
+    this.waterfallMistParticles = [];
+    const mistMat = new THREE.MeshBasicMaterial({
+      color: 0xe0f2fe,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false,
+    });
+    for (let m = 0; m < 10; m++) {
+      const mistMesh = new THREE.Mesh(new THREE.SphereGeometry(0.014 + (m % 3) * 0.006, 6, 6), mistMat);
+      const mx = (Math.random() - 0.5) * 0.12;
+      const mz = (Math.random() - 0.5) * 0.08;
+      mistMesh.position.set(mx, 0.040, 0.12 + mz);
+      waterfallGroup.add(mistMesh);
+      this.waterfallMistParticles.push({
+        mesh: mistMesh,
+        baseX: mx,
+        baseY: 0.040,
+        baseZ: 0.12 + mz,
+        speed: 0.002 + Math.random() * 0.0025,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    canalGroup.add(waterfallGroup);
+
+    // 8c. Natural Granite Stepping Stones crossing shallow bay
+    const stepStoneMat = new THREE.MeshStandardMaterial({
+      color: 0x64748b,
+      roughness: 0.75,
+    });
+    const stepCoords = [
+      [-0.14, -0.38],
+      [-0.08, -0.42],
+      [-0.01, -0.45],
+      [0.06, -0.46],
+    ];
+    stepCoords.forEach(([sx, sz], i) => {
+      const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.036, 0.016, 7), stepStoneMat);
+      stone.position.set(sx, 0.037, sz);
+      stone.rotation.y = i * 0.8;
+      stone.scale.set(1.1, 1.0, 0.9);
+      stone.castShadow = true;
+      stone.receiveShadow = true;
+      canalGroup.add(stone);
+    });
+
     // 9. Sturdy Rustic Timber Railway Trestle Bridge supporting Lower Track across Canal
     const trestleWoodMat = new THREE.MeshStandardMaterial({
       color: 0x451a03,
@@ -1278,10 +1400,20 @@ export class ThreeStage {
         ivy.position.set(px + (px > 0 ? -0.12 : 0.12), 0.06 + Math.random() * 0.04, mz);
         this.viaductGroup.add(ivy);
       });
+
+      // Recessed Ashlar Relief Arch Niche on Outer Flank
+      const nicheFrame = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.24), plinthMat);
+      nicheFrame.position.set(px + (px > 0 ? 0.11 : -0.11), 0.22, 0);
+      nicheFrame.castShadow = true;
+      this.viaductGroup.add(nicheFrame);
+
+      const nicheInner = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.18, 0.18), capMat);
+      nicheInner.position.set(px + (px > 0 ? 0.125 : -0.125), 0.22, 0);
+      this.viaductGroup.add(nicheInner);
     });
 
     // 2. Viaduct Deck Slab supporting Upper Track
-    const deckGeo = new THREE.BoxGeometry(1.12, 0.045, 0.44);
+    const deckGeo = new THREE.BoxGeometry(1.14, 0.045, 0.44);
     const deck = new THREE.Mesh(deckGeo, stoneMat);
     deck.position.set(0, 0.40, 0);
     deck.castShadow = true;
@@ -1317,12 +1449,27 @@ export class ThreeStage {
     arch.receiveShadow = true;
     this.viaductGroup.add(arch);
 
+    // Transverse Structural Ashlar Vault Ribs inside Tunnel
+    [-0.16, 0.0, 0.16].forEach((rz) => {
+      const ribGeo = new THREE.TorusGeometry(0.225, 0.014, 8, 20, Math.PI);
+      const rib = new THREE.Mesh(ribGeo, capMat);
+      rib.rotation.y = Math.PI * 0.5;
+      rib.position.set(0, 0.17, rz);
+      this.viaductGroup.add(rib);
+    });
+
     // Warm Interior Tunnel Sconce Lantern
     this.tunnelLight = new THREE.PointLight(0xfbbf24, 0.9, 1.4);
     this.tunnelLight.position.set(0, 0.32, 0);
     this.viaductGroup.add(this.tunnelLight);
 
     // 4. Classical Radial Stone Voussoirs & Apex Keystones framing both portals
+    const crestMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      metalness: 0.88,
+      roughness: 0.18,
+    });
+
     [-0.242, 0.242].forEach((pz) => {
       const ringSteps = 9;
       for (let s = 0; s <= ringSteps; s++) {
@@ -1348,36 +1495,86 @@ export class ThreeStage {
         spandrel.castShadow = true;
         this.viaductGroup.add(spandrel);
       });
+
+      // Samtagon Studio Gold Hexagon Medallion Crest above Keystones
+      const crestGroup = new THREE.Group();
+      crestGroup.position.set(0, 0.415, pz + (pz > 0 ? 0.006 : -0.006));
+
+      const hexDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.008, 6), crestMat);
+      hexDisc.rotation.x = Math.PI * 0.5;
+      hexDisc.castShadow = true;
+      crestGroup.add(hexDisc);
+
+      const innerHex = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.012, 6), crestMat);
+      innerHex.rotation.x = Math.PI * 0.5;
+      crestGroup.add(innerHex);
+
+      const crestCore = new THREE.Mesh(
+        new THREE.SphereGeometry(0.008, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xf59e0b, emissiveIntensity: 0.8 })
+      );
+      crestCore.position.z = pz > 0 ? 0.006 : -0.006;
+      crestGroup.add(crestCore);
+
+      this.viaductGroup.add(crestGroup);
     });
 
-    // 5. Parapet Safety Balustrade Walls with Rounded Copings along Upper Deck
-    const parapetGeo = new THREE.BoxGeometry(1.12, 0.085, 0.04);
-    const parapetL = new THREE.Mesh(parapetGeo, capMat);
-    parapetL.position.set(0, 0.46, 0.20);
-    parapetL.castShadow = true;
-    this.viaductGroup.add(parapetL);
+    // 5. Ornate Classical Balustrade Parapet Walls along Upper Deck
+    [-0.20, 0.20].forEach((pz) => {
+      // Lower Plinth Base
+      const plinthMesh = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.024, 0.046), capMat);
+      plinthMesh.position.set(0, 0.432, pz);
+      plinthMesh.castShadow = true;
+      plinthMesh.receiveShadow = true;
+      this.viaductGroup.add(plinthMesh);
 
-    const parapetR = new THREE.Mesh(parapetGeo, capMat);
-    parapetR.position.set(0, 0.46, -0.20);
-    parapetR.castShadow = true;
-    this.viaductGroup.add(parapetR);
+      // Upper Molded Handrail Coping
+      const railMesh = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.020, 0.052), capMat);
+      railMesh.position.set(0, 0.512, pz);
+      railMesh.castShadow = true;
+      this.viaductGroup.add(railMesh);
 
-    // 4 Corner Cap Finials
-    const finialGeo = new THREE.ConeGeometry(0.035, 0.075, 4);
-    [
-      [-0.54, 0.525, 0.20],
-      [0.54, 0.525, 0.20],
-      [-0.54, 0.525, -0.20],
-      [0.54, 0.525, -0.20],
-    ].forEach(([fx, fy, fz]) => {
-      const f = new THREE.Mesh(finialGeo, capMat);
-      f.position.set(fx, fy, fz);
-      f.rotation.y = Math.PI * 0.25;
-      f.castShadow = true;
-      this.viaductGroup.add(f);
+      // Turned Classical Balusters (13 per side)
+      for (let b = 0; b < 13; b++) {
+        const bx = -0.45 + b * 0.075;
+        // Skip pedestals positions
+        if (Math.abs(bx - (-0.18)) < 0.04 || Math.abs(bx - 0.18) < 0.04) continue;
+
+        const baluster = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.012, 0.058, 8), stoneMat);
+        baluster.position.set(bx, 0.472, pz);
+        baluster.castShadow = true;
+        this.viaductGroup.add(baluster);
+
+        const balusterRing = new THREE.Mesh(new THREE.TorusGeometry(0.012, 0.004, 6, 12), capMat);
+        balusterRing.rotation.x = Math.PI * 0.5;
+        balusterRing.position.set(bx, 0.472, pz);
+        this.viaductGroup.add(balusterRing);
+      }
+
+      // 4 Heavy Structural Pedestal Pillars per side
+      [-0.54, -0.18, 0.18, 0.54].forEach((px) => {
+        const ped = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.098, 0.056), capMat);
+        ped.position.set(px, 0.472, pz);
+        ped.castShadow = true;
+        this.viaductGroup.add(ped);
+
+        const pedCap = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.016, 0.066), plinthMat);
+        pedCap.position.set(px, 0.528, pz);
+        pedCap.castShadow = true;
+        this.viaductGroup.add(pedCap);
+
+        // Finial caps on outer corners
+        if (Math.abs(px) > 0.45) {
+          const finial = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.055, 4), capMat);
+          finial.position.set(px, 0.562, pz);
+          finial.rotation.y = Math.PI * 0.25;
+          finial.castShadow = true;
+          this.viaductGroup.add(finial);
+        }
+      });
     });
 
-    // 6. Interactive Victorian Wrought-Iron Bridge Gas Lanterns
+    // 6. Interactive Victorian Wrought-Iron Bridge Gas Lanterns (Deck Pedestals & Wall Mounts)
     this.viaductLanterns = [];
     this.viaductLanternLights = [];
 
@@ -1392,40 +1589,99 @@ export class ThreeStage {
       opacity: 0.9,
     });
 
+    // 6 Pedestal Streetlamps atop the viaduct balustrade
     [
-      { x: -0.38, z: 0.25 },
-      { x: 0.38, z: 0.25 },
-      { x: -0.38, z: -0.25 },
-      { x: 0.38, z: -0.25 },
+      { x: -0.48, z: 0.20 },
+      { x: 0.00,  z: 0.20 },
+      { x: 0.48,  z: 0.20 },
+      { x: -0.48, z: -0.20 },
+      { x: 0.00,  z: -0.20 },
+      { x: 0.48,  z: -0.20 },
     ].forEach(({ x, z }) => {
-      const lanternGroup = new THREE.Group();
-      lanternGroup.position.set(x, 0.29, z);
+      const lampGroup = new THREE.Group();
+      lampGroup.position.set(x, 0.536, z);
 
-      // Wrought-iron wall mounting bracket
-      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.045, 0.045), ironMat);
-      bracket.position.set(x > 0 ? -0.02 : 0.02, 0, 0);
-      lanternGroup.add(bracket);
+      // Fluted iron pedestal post
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.011, 0.075, 6), ironMat);
+      post.position.y = 0.038;
+      post.castShadow = true;
+      lampGroup.add(post);
 
       // Hexagonal lantern housing
-      const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.016, 0.040, 6), brassLanternMat);
-      housing.position.set(0, 0.01, 0);
+      const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.012, 0.038, 6), brassLanternMat);
+      housing.position.y = 0.088;
       housing.castShadow = true;
-      lanternGroup.add(housing);
+      lampGroup.add(housing);
 
       // Glowing glass pane core
-      const core = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.012, 0.028, 6), lanternGlassMat);
-      core.position.set(0, 0.01, 0);
-      lanternGroup.add(core);
+      const core = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.008, 0.026, 6), lanternGlassMat);
+      core.position.y = 0.088;
+      lampGroup.add(core);
 
-      // PointLight casting warm illumination on water and underpass
+      // Warm Amber Point Light
       const pLight = new THREE.PointLight(0xfbbf24, this.isNightMode ? 1.4 : 0, 1.6);
-      pLight.position.set(0, 0.01, 0);
-      lanternGroup.add(pLight);
+      pLight.position.y = 0.088;
+      lampGroup.add(pLight);
       this.viaductLanternLights.push(pLight);
 
-      this.viaductLanterns.push(lanternGroup);
-      this.viaductGroup.add(lanternGroup);
+      this.viaductLanterns.push(lampGroup);
+      this.viaductGroup.add(lampGroup);
     });
+
+    // 7. Northern Bridge Abutment Octagonal Watchtower Turret
+    const turretGroup = new THREE.Group();
+    turretGroup.position.set(0.55, 0.0, 0.28);
+
+    // Stone Turret Base Shaft
+    const turretBase = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.088, 0.56, 8), stoneMat);
+    turretBase.position.y = 0.28;
+    turretBase.castShadow = true;
+    turretBase.receiveShadow = true;
+    turretGroup.add(turretBase);
+
+    // Corbelled Machicolated Balcony Overhang
+    const turretCorbel = new THREE.Mesh(new THREE.CylinderGeometry(0.096, 0.078, 0.035, 8), capMat);
+    turretCorbel.position.y = 0.575;
+    turretCorbel.castShadow = true;
+    turretGroup.add(turretCorbel);
+
+    // Turret Parapet Battlements
+    const turretParapet = new THREE.Mesh(new THREE.CylinderGeometry(0.092, 0.092, 0.048, 8, 1, true), capMat);
+    turretParapet.position.y = 0.615;
+    turretParapet.castShadow = true;
+    turretGroup.add(turretParapet);
+
+    // Conical Slate Spire Roof
+    const slateMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45 });
+    const turretSpire = new THREE.Mesh(new THREE.ConeGeometry(0.095, 0.22, 8), slateMat);
+    turretSpire.position.y = 0.725;
+    turretSpire.castShadow = true;
+    turretGroup.add(turretSpire);
+
+    // Polished Brass Spire Needle & Samtagon Weathercock
+    const turretNeedle = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.006, 0.10, 6), brassLanternMat);
+    turretNeedle.position.y = 0.855;
+    turretGroup.add(turretNeedle);
+
+    // Arched Narrow Observation Slit Windows (warm illuminated)
+    [-0.08, 0.08].forEach((az) => {
+      const slitWin = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.045, 0.018), lanternGlassMat);
+      slitWin.position.set(0.076, 0.44, az * 0.4);
+      turretGroup.add(slitWin);
+    });
+
+    this.viaductGroup.add(turretGroup);
+
+    // 8. Southern Viaduct Abutment Telegraph Signal Box & Cable Conduit
+    const signalCabinetMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.35 });
+    const signalCabinet = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.11, 0.055), signalCabinetMat);
+    signalCabinet.position.set(-0.55, 0.46, -0.26);
+    signalCabinet.castShadow = true;
+    this.viaductGroup.add(signalCabinet);
+
+    const brassPlate = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.024, 0.038), brassLanternMat);
+    brassPlate.position.set(-0.55, 0.48, -0.23);
+    this.viaductGroup.add(brassPlate);
   }
 
   /* =========================================================================
@@ -7905,12 +8161,30 @@ export class ThreeStage {
     }
 
     // 8. Gentle Tranquil Water Specular Shimmer & Moored Boat Bobbing (Fixed elevation, NO vertical clipping!)
+    const wTime = Date.now() * 0.001;
     if (this.waterMesh) {
-      (this.waterMesh.material as THREE.MeshStandardMaterial).opacity = 0.86 + Math.sin(Date.now() * 0.0018) * 0.04;
+      (this.waterMesh.material as THREE.MeshStandardMaterial).opacity = 0.86 + Math.sin(wTime * 1.8) * 0.04;
     }
     if (this.mooredBoat) {
-      this.mooredBoat.rotation.z = Math.sin(Date.now() * 0.0015) * 0.025;
-      this.mooredBoat.position.y = 0.038 + Math.sin(Date.now() * 0.0015) * 0.0012;
+      this.mooredBoat.rotation.z = Math.sin(wTime * 1.5) * 0.028;
+      this.mooredBoat.rotation.x = Math.cos(wTime * 1.2) * 0.018;
+      this.mooredBoat.position.y = 0.038 + Math.sin(wTime * 1.5) * 0.0014;
+    }
+
+    // 8b. Stepped Mountain Waterfall Mist & Splash Drift
+    if (this.waterfallMistParticles.length > 0) {
+      this.waterfallMistParticles.forEach((p) => {
+        p.mesh.position.y += p.speed;
+        p.mesh.position.x = p.baseX + Math.sin(wTime * 2.5 + p.phase) * 0.008;
+        const prog = (p.mesh.position.y - p.baseY) / 0.07;
+        if (prog >= 1.0) {
+          p.mesh.position.y = p.baseY;
+          p.mesh.scale.setScalar(0.7);
+        } else {
+          p.mesh.scale.setScalar(0.7 + prog * 1.4);
+          (p.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, (1.0 - prog) * 0.35);
+        }
+      });
     }
 
     // 9. Windmill Sails & Waterwheel Continuous Kinetic Animation
