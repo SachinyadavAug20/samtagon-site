@@ -782,3 +782,24 @@
   border-color: var(--primary);
   color: var(--primary-foreground);
 }
+
+/* ==========================================================================
+   INTERACTIVE SMOKE / MIST PAGE BACKGROUND
+   Drifting fog wisps + blooming smoke trail that follows the cursor.
+   Painted behind all content, never intercepts input.
+   ========================================================================== */
+#mist-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+#mist-canvas.mist-ready {
+  opacity: 1;
+}

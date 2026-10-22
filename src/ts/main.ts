@@ -9,6 +9,7 @@
 import { ProceduralAudio } from './audio-synth.js';
 import { ThreeStage } from './three-stage.js';
 import { ModalController } from './modal.js';
+import { initSmokeBackground } from './smoke-bg.js';
 import gsap from 'gsap';
 
 declare global {
@@ -57,6 +58,9 @@ if (document.readyState === 'loading') {
 } else {
   initMain();
 }
+
+// Living smoke/mist page background (independent of section scripts)
+initSmokeBackground();
 
 function setupZenInteractions(stage: ThreeStage | null, audio: ProceduralAudio): void {
   // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode or Stored Theme)

@@ -8,6 +8,7 @@
 import { ProceduralAudio } from './audio-synth.js';
 import { ThreeStage } from './three-stage.js';
 import { ModalController } from './modal.js';
+import { initSmokeBackground } from './smoke-bg.js';
 import gsap from 'gsap';
 function initMain() {
     // 1. Procedural Audio Synthesizer (Acoustic feedback on interaction)
@@ -45,6 +46,8 @@ if (document.readyState === 'loading') {
 else {
     initMain();
 }
+// Living smoke/mist page background (independent of section scripts)
+initSmokeBackground();
 function setupZenInteractions(stage, audio) {
     // 1. Cozy Night / Daylight Theme Toggle (Default to System Mode or Stored Theme)
     const savedTheme = localStorage.getItem('samtagon_theme');

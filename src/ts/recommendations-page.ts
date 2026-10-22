@@ -13,6 +13,7 @@ import { ProceduralAudio } from './audio-synth.js';
 import { CatalogEngine, ExtendedGameItem } from './catalog-engine.js';
 import { GameMatch, PlatformLink, VectorEngine } from './vector-engine.js';
 import { OpenRouterEmbedder } from './openrouter-embed.js';
+import { initSmokeBackground } from './smoke-bg.js';
 import gsap from 'gsap';
 
 export type ArchetypeId = 'architect' | 'speedster' | 'explorer' | 'tactician';
@@ -2218,3 +2219,6 @@ class RecommendationsApp {
 window.addEventListener('DOMContentLoaded', () => {
   (window as any).recommendationsApp = new RecommendationsApp();
 });
+
+// Living smoke/mist page background
+initSmokeBackground();
