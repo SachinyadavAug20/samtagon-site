@@ -96,10 +96,11 @@ export function initSmokeBackground(): void {
       sprites = [
         makeSprite([40, 58, 92], [26, 38, 66], [9, 12, 20]),          // deep navy core
         makeSprite([16, 52, 62], [13, 40, 52], [9, 11, 18]),          // teal drift
+        makeSprite([28, 62, 46], [20, 48, 40], [10, 13, 12]),         // pine fog (reference mood)
         makeSprite([72, 51, 24], [46, 35, 20], [12, 9, 6], 0.9),      // warm ember glow
       ];
-      sprayGains = [0.42, 0.44, 0.14];
-      additive = dark;
+      sprayGains = [0.3, 0.38, 0.2, 0.12];
+      additive = true;
     } else {
       sprites = [
         makeSprite([198, 206, 220], [222, 229, 239], [248, 250, 252]),
@@ -131,15 +132,15 @@ export function initSmokeBackground(): void {
   const fog: FogBlob[] = [];
   const seedFog = (): void => {
     while (fog.length) fog.pop();
-    const count = tier === 'minimal' ? 10 : tier === 'balanced' ? 14 : AMBIENT_COUNT;
+    const count = tier === 'minimal' ? 14 : tier === 'balanced' ? 20 : AMBIENT_COUNT;
     for (let i = 0; i < count; i++) {
       fog.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: (tier === 'minimal' ? 0.85 : 1) * (190 + Math.random() * 250),
+        r: (tier === 'minimal' ? 0.9 : 1) * (230 + Math.random() * 330),
         driftX: (Math.random() - 0.5) * (reducedMotion ? 1.2 : 5),
         driftY: 2 + Math.random() * 7,
-        alpha: (tier === 'minimal' ? 0.8 : 1) * (0.11 + Math.random() * 0.11),
+        alpha: (tier === 'minimal' ? 0.8 : 1) * (0.13 + Math.random() * 0.13),
         phase: Math.random() * Math.PI * 2,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.05,
@@ -148,6 +149,35 @@ export function initSmokeBackground(): void {
     }
   };
   seedFog();
+
+  // Floating dust motes — tiny specks that drift and shy from the cursor
+  const MOTE_COUNT = 46;
+  interface Mote {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    size: number;
+    alpha: number;
+    phase: number;
+  }
+  const motes: Mote[] = [];
+  const seedMotes = (): void => {
+    while (motes.length) motes.pop();
+    const count = tier === 'minimal' ? 16 : tier === 'balanced' ? 28 : MOTE_COUNT;
+    for (let i = 0; i < count; i++) {
+      motes.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: 0,
+        vy: 0,
+        size: 1 + Math.random() * 1.7,
+        alpha: 0.22 + Math.random() * 0.38,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  };
+  seedMotes();
 
   const pooled: Puff[] = [];
 
@@ -216,6 +246,7 @@ export function initSmokeBackground(): void {
   window.addEventListener('resize', () => {
     resize();
     seedFog();
+    seedMotes();
   });
 
   let running = true;
@@ -259,6 +290,45 @@ export function initSmokeBackground(): void {
       const s = (blob.r / 132) * (0.95 + Math.sin(t * 0.22 + blob.phase * 1.7) * 0.1);
       ctx.scale(s, s * 0.88);
       ctx.drawImage(blob.sprite, -128, -128);
+      ctx.restore();
+    }
+
+    // Dust motes — drift, shimmer, and scatter from the cursor
+    const moteBright = additive;
+    for (const mote of motes) {
+      const dxc = mote.x - pointer.x;
+      const dyc = mote.y - pointer.y;
+      const dist = Math.hypot(dxc, dyc);
+      if (pointer.x >= 0 && dist < 150 && !reducedMotion) {
+        const push = (1 - dist / 150) * 120 * dt;
+        mote.vx += (dxc / (dist || 1)) * push;
+        mote.vy += (dyc / (dist || 1)) * push;
+      }
+      mote.vx += Math.sin(t * 0.6 + mote.phase) * 1.6 * dt;
+      mote.vy += (-3 - Math.sin(t * 0.4 + mote.phase) * 2) * dt * 0.35;
+      mote.vx *= 0.985;
+      mote.vy *= 0.985;
+      mote.x += mote.vx * dt;
+      mote.y += mote.vy * dt;
+      if (mote.y < -12) mote.y = h + 10;
+      if (mote.y > h + 12) mote.y = -10;
+      if (mote.x < -12) mote.x = w + 10;
+      if (mote.x > w + 12) mote.x = -10;
+
+      const shimmer = 0.6 + Math.abs(Math.sin(t * 1.3 + mote.phase)) * 0.4;
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = mote.alpha * shimmer;
+      if (moteBright) {
+        ctx.fillStyle = 'rgb(182, 202, 226)';
+        ctx.shadowColor = 'rgba(160, 195, 240, 0.85)';
+        ctx.shadowBlur = 5;
+      } else {
+        ctx.fillStyle = 'rgb(96, 110, 124)';
+      }
+      ctx.beginPath();
+      ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
