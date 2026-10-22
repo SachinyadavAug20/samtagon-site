@@ -128,6 +128,26 @@ export class ThreeStage {
   private depotShedGroup: THREE.Group = new THREE.Group();
   private butterflies: Array<{ mesh: THREE.Group; basePos: THREE.Vector3; phase: number; speed: number }> = [];
 
+  // V14 Micro-Detail Engine: playground, critters, whimsy props
+  private microSwings: THREE.Group[] = [];
+  private microSeesaw: THREE.Group | null = null;
+  private microRoundabout: THREE.Group | null = null;
+  private microFrogs: THREE.Group[] = [];
+  private microDragonflies: Array<{ group: THREE.Group; wingL: THREE.Object3D; wingR: THREE.Object3D }> = [];
+  private microChickens: Array<{ group: THREE.Group; head: THREE.Object3D; phase: number }> = [];
+  private microBirds: Array<{ group: THREE.Group; wingL: THREE.Object3D; wingR: THREE.Object3D; radius: number; speed: number; phase: number; height: number }> = [];
+  private microAnts: THREE.Points | null = null;
+  private microAntData: Array<{ angle: number; speed: number; ring: number }> = [];
+  private microWeathervanes: THREE.Group[] = [];
+  private microScarecrow: THREE.Group | null = null;
+  private microLanternMats: THREE.MeshBasicMaterial[] = [];
+  private microBuntingFlags: THREE.Mesh[] = [];
+  private microLaundry: Array<{ cloth: THREE.Mesh; phase: number }> = [];
+  private microKite: THREE.Group | null = null;
+  private microDogs: Array<{ group: THREE.Group; tail: THREE.Object3D }> = [];
+  private microWindsocks: THREE.Group[] = [];
+  private microPigeons: Array<{ group: THREE.Group; phase: number }> = [];
+
   // V13 Rich Diorama Micro-Worlds & Animated Landmarks
   private lighthouseBeacon: THREE.Group | null = null;
   private lighthouseSpotLight: THREE.SpotLight | null = null;
@@ -292,6 +312,7 @@ export class ThreeStage {
     this.buildCastleRuinsAndTerracedVineyard();
     this.buildMountainMineAndLoggingCamp();
     this.buildFootpathsAndWildflowerNetwork();
+    this.buildMicroDetailEngine();
 
     // 7. Weather Engine Setup
     this.setupWeatherSystem();
@@ -6957,6 +6978,955 @@ export class ThreeStage {
   }
 
   /* =========================================================================
+     11.5 MICRO-DETAIL ENGINE — Squint-and-Smile Layer
+     Playground, market stalls, frog pond, allotments, chicken coop,
+     picnic vignette, timber yard, sky life & deterministic whimsy scatter.
+     ========================================================================= */
+  private buildMicroDetailEngine(): void {
+    const G = this.sceneryGroup;
+    const M = (color: number, rough: number = 0.85): THREE.MeshStandardMaterial =>
+      new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0 });
+
+    const woodLight = M(0xb9884a);
+    const woodDark = M(0x6b3f1d);
+    const leafMat = M(0x22c55e);
+    const white = M(0xf1f5f9);
+    const red = M(0xdc2626);
+    const orange = M(0xf97316);
+    const yellow = M(0xeab308);
+    const blue = M(0x3b82f6);
+    const pink = M(0xec4899);
+    const violet = M(0x8b5cf6);
+    const stoneGrey = M(0x9aa3ad);
+    const soil = M(0x4a3421, 0.95);
+    const barkBrown = M(0x71482e);
+
+    const box = (w: number, h: number, d: number, m: THREE.Material, x: number, y: number, z: number, g: THREE.Group): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      g.add(mesh);
+      return mesh;
+    };
+    const cyl = (rt: number, rb: number, h: number, m: THREE.Material, x: number, y: number, z: number, g: THREE.Group): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 8), m);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      g.add(mesh);
+      return mesh;
+    };
+    const sph = (r: number, m: THREE.Material, x: number, y: number, z: number, g: THREE.Group): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), m);
+      mesh.position.set(x, y, z);
+      g.add(mesh);
+      return mesh;
+    };
+    const cone = (r: number, h: number, m: THREE.Material, x: number, y: number, z: number, g: THREE.Group): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, 8), m);
+      mesh.position.set(x, y, z);
+      g.add(mesh);
+      return mesh;
+    };
+    const cluster = (x: number, z: number, g: THREE.Group): THREE.Group => {
+      const c = new THREE.Group();
+      c.position.set(x, 0.04, z);
+      g.add(c);
+      return c;
+    };
+    const pendulumLine = (from: THREE.Vector3, to: THREE.Vector3, sag: number, g: THREE.Group): THREE.Line => {
+      const mid = from.clone().lerp(to, 0.5);
+      mid.y -= sag;
+      const curve = new THREE.QuadraticBezierCurve3(from, mid, to);
+      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(14));
+      return new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xe7e5e4 }));
+    };
+
+    /* =====================================================================
+       A. GIGGLER'S GREEN — playground meadow
+       ===================================================================== */
+    {
+      const pg = cluster(0.62, 1.95, G);
+
+      // Sandpit with bucket, spade and little toy dung-heap joke free zone
+      const pit = new THREE.Mesh(new THREE.CircleGeometry(0.17, 14), M(0xfde68a, 0.95));
+      pit.rotation.x = -Math.PI * 0.5;
+      pit.position.set(0.1, 0.004, 0.06);
+      pg.add(pit);
+      cyl(0.026, 0.032, 0.05, red, 0.12, 0.028, 0.09, pg);
+      box(0.004, 0.004, 0.07, yellow, 0.06, 0.008, 0.05, pg).rotation.z = 0.3;
+
+      // Swing frame + two rope swings (animated)
+      const frame = new THREE.Group();
+      pg.add(frame);
+      box(0.32, 0.016, 0.018, woodDark, 0, 0.245, 0, frame);
+      [-0.155, 0.155].forEach((sx) => box(0.018, 0.25, 0.018, woodDark, sx, 0.12, 0, frame));
+      [-0.02, 0.02].forEach((sz) => {
+        [-0.145, 0.145].forEach((sx) => box(0.014, 0.2, 0.014, woodLight, sx * 0.85, 0.1, sz, frame).rotation.z = sx > 0 ? -0.4 : 0.4);
+      });
+      [-0.075, 0.075].forEach((sx, i) => {
+        const swing = new THREE.Group();
+        swing.position.set(sx, 0.24, 0);
+        [-0.026, 0.026].forEach((rz) => cyl(0.0035, 0.0035, 0.13, M(0x8a5a2b), 0, -0.065, rz, swing));
+        box(0.05, 0.008, 0.035, woodLight, 0, -0.135, 0, swing);
+        frame.add(swing);
+        this.microSwings.push(swing);
+        void i;
+      });
+
+      // Seesaw (animated)
+      const seesawPivot = new THREE.Group();
+      seesawPivot.position.set(-0.2, 0.045, -0.38);
+      pg.add(seesawPivot);
+      cyl(0.02, 0.025, 0.05, woodDark, 0, -0.025, 0, seesawPivot);
+      const plank = box(0.26, 0.012, 0.05, woodLight, 0, 0.01, 0, seesawPivot);
+      plank.castShadow = true;
+      [-0.1, 0.1].forEach((hx) => cyl(0.004, 0.004, 0.05, M(0x93c5fd), hx, 0.03, 0.028, seesawPivot).rotation.x = 0.9);
+      this.microSeesaw = seesawPivot;
+
+      // Roundabout / merry-go-round (animated)
+      const round = new THREE.Group();
+      round.position.set(-0.32, 0.02, 0.3);
+      pg.add(round);
+      cyl(0.006, 0.006, 0.05, stoneGrey, 0, 0.02, 0, round);
+      const disc = cyl(0.075, 0.075, 0.01, M(0xf59e0b), 0, 0.06, 0, round);
+      disc.castShadow = true;
+      for (let i = 0; i < 4; i++) {
+        const bar = box(0.012, 0.09, 0.012, M(0x64748b, 0.4), Math.cos((i * Math.PI) / 2) * 0.06, 0.1, Math.sin((i * Math.PI) / 2) * 0.06, round);
+        bar.rotation.y = -(i * Math.PI) / 2;
+      }
+      this.microRoundabout = round;
+
+      // Toddler slide
+      const slide = new THREE.Group();
+      slide.position.set(0.24, 0, -0.14);
+      slide.rotation.y = -0.5;
+      pg.add(slide);
+      box(0.03, 0.13, 0.03, M(0xef4444, 0.4), 0, 0.065, -0.05, slide);
+      box(0.03, 0.1, 0.03, M(0xef4444, 0.4), 0, 0.05, -0.11, slide);
+      box(0.05, 0.011, 0.17, M(0x60a5fa, 0.35), 0, 0.04, -0.005, slide).rotation.x = -0.42;
+
+      // Hopscotch chalk squares
+      for (let i = 0; i < 5; i++) {
+        const sq = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 0.035), M(0xfffbf5, 0.9));
+        sq.rotation.x = -Math.PI * 0.5;
+        sq.position.set(-0.06, 0.003, -0.18 + i * 0.045);
+        pg.add(sq);
+      }
+
+      // Gnome trio with pointy hats
+      [[-0.38, -0.48, 0xd43838], [-0.42, -0.38, 0x2563eb], [-0.33, -0.44, 0x16a34a]].forEach(([gx, gz, hat]) => {
+        const gnome = new THREE.Group();
+        gnome.position.set(gx, 0, gz);
+        pg.add(gnome);
+        cyl(0.011, 0.014, 0.035, M(0x60a5fa), 0, 0.02, 0, gnome);
+        sph(0.008, M(0xfca5a5), 0, 0.042, 0, gnome);
+        sph(0.006, white, 0, 0.036, 0.006, gnome);
+        cone(0.009, 0.028, M(hat as number), 0, 0.062, 0, gnome);
+      });
+
+      // Storybook bench with two pigeons (bobbing)
+      const bench = new THREE.Group();
+      bench.position.set(-0.06, 0, -0.6);
+      bench.rotation.y = 0.35;
+      pg.add(bench);
+      box(0.13, 0.012, 0.045, woodLight, 0, 0.055, 0, bench);
+      box(0.13, 0.03, 0.008, woodLight, 0, 0.075, -0.02, bench);
+      [-0.05, 0.05].forEach((lx) => box(0.012, 0.05, 0.04, woodDark, lx, 0.025, 0, bench));
+      [[-0.03, 0x8e9dab], [0.02, 0x64748b]].forEach(([px, pc]) => {
+        const pigeon = new THREE.Group();
+        pigeon.position.set(px as number, 0.072, 0.012);
+        bench.add(pigeon);
+        sph(0.014, M(pc as number), 0, 0, 0, pigeon);
+        sph(0.008, M(pc as number), 0.012, 0.008, 0, pigeon);
+        box(0.003, 0.004, 0.006, orange, 0.019, 0.006, 0, pigeon);
+        this.microPigeons.push({ group: pigeon, phase: (px as number) * 40 });
+      });
+
+      // Kite on a string (animated sway)
+      const kiteStake = new THREE.Group();
+      kiteStake.position.set(0.46, 0, 0.2);
+      pg.add(kiteStake);
+      cyl(0.004, 0.004, 0.07, woodDark, 0, 0.035, 0, kiteStake);
+      const kite = new THREE.Group();
+      kite.position.set(0.02, 0.52, -0.16);
+      kite.rotation.z = 0.3;
+      kiteStake.add(kite);
+      const kiteMatL = new THREE.MeshBasicMaterial({ color: 0x0ea5e9, side: THREE.DoubleSide });
+      const kiteMatR = new THREE.MeshBasicMaterial({ color: 0xf0abfc, side: THREE.DoubleSide });
+      const wingA = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.045), kiteMatL);
+      wingA.rotation.y = 0;
+      wingA.castShadow = false;
+      kite.add(wingA);
+      const wingB = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.045), kiteMatR);
+      wingB.rotation.y = Math.PI * 0.5;
+      kite.add(wingB);
+      for (let i = 0; i < 3; i++) box(0.02, 0.003, 0.003, pink, 0, -0.04 - i * 0.02, 0, kite);
+      const kiteString = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0.05, 0), new THREE.Vector3(0.02, 0.52, -0.16)]),
+        new THREE.LineBasicMaterial({ color: 0xf5f5f4 })
+      );
+      kiteStake.add(kiteString);
+      this.microKite = kite;
+
+      // Festival lantern string across the playground (twinkling bulbs)
+      const lampPoleA = cyl(0.006, 0.007, 0.3, woodDark, -0.42, 0.15, 0.14, pg);
+      lampPoleA.castShadow = true;
+      const lampPoleB = cyl(0.006, 0.007, 0.3, woodDark, 0.42, 0.15, 0.14, pg);
+      lampPoleB.castShadow = true;
+      pg.add(pendulumLine(new THREE.Vector3(-0.4, 0.29, 0.14), new THREE.Vector3(0.4, 0.29, 0.14), 0.035, pg));
+      const bulbColors = [red, pink, yellow, blue, violet, leafMat];
+      for (let i = 0; i < 6; i++) {
+        const t = 0.2 + i * 0.12;
+        const bulbMat = new THREE.MeshBasicMaterial({ color: bulbColors[i % bulbColors.length].color.clone(), transparent: true, opacity: 0.8 });
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 4), bulbMat);
+        const bx = -0.4 + t * 0.8;
+        const by = 0.29 - Math.sin(t * Math.PI) * 0.035 - 0.012;
+        bulb.position.set(bx, by, 0.14);
+        pg.add(bulb);
+        this.microLanternMats.push(bulbMat);
+      }
+
+      // Stone arc flower strip
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * Math.PI * 2;
+        box(0.03, 0.03, 0.02, stoneGrey, Math.cos(a) * 0.45 + 0.02, 0.014, -0.3 + Math.sin(a) * 0.18, pg);
+      }
+      [[0.3, -0.4, pink], [0.36, -0.36, yellow], [0.24, -0.42, red]].forEach(([fx, fz, fc]) => {
+        cyl(0.002, 0.002, 0.03, leafMat, fx as number, 0.015, fz as number, pg);
+        sph(0.007, M(fc as number), fx as number, 0.033, fz as number, pg);
+      });
+    }
+
+    /* =====================================================================
+       B. PEDDLER'S ROW — market stalls, produce & laundry
+       ===================================================================== */
+    {
+      const mk = cluster(-0.95, 1.05, G);
+
+      const stallAwnings = [red, orange, yellow].map((c) => c.color.clone());
+      [-0.34, 0.0, 0.34].forEach((sx, si) => {
+        const stall = new THREE.Group();
+        stall.position.set(sx, 0, 0);
+        stall.rotation.y = sx === 0 ? 0 : sx < 0 ? 0.5 : -0.5;
+        mk.add(stall);
+        // counter
+        box(0.15, 0.05, 0.09, woodLight, 0, 0.03, 0, stall);
+        // corner posts
+        [[-0.07, -0.04], [0.07, -0.04], [-0.07, 0.04], [0.07, 0.04]].forEach(([px, pz]) =>
+          cyl(0.005, 0.005, 0.12, woodDark, px, 0.08, pz, stall)
+        );
+        // striped awning roof
+        for (let st = 0; st < 5; st++) {
+          const stripe = box(0.033, 0.003, 0.115, new THREE.MeshStandardMaterial({ color: st % 2 === 0 ? stallAwnings[si] : white.color.clone(), roughness: 0.7 }), -0.06 + st * 0.03, 0.148, 0.008, stall);
+          stripe.rotation.x = 0.22;
+          stripe.castShadow = false;
+        }
+        box(0.16, 0.05, 0.008, woodDark, 0, 0.132, -0.055, stall);
+        // produce piles per stall
+        if (si === 0) {
+          for (let p = 0; p < 6; p++) sph(0.011, orange, -0.045 + (p % 3) * 0.024, 0.068 + (p > 2 ? 0.016 : 0), 0.01 + Math.floor(p / 3) * 0.022, stall);
+        } else if (si === 1) {
+          for (let p = 0; p < 6; p++) sph(0.01, red, -0.04 + (p % 3) * 0.023, 0.067 + (p > 2 ? 0.015 : 0), 0.008 + Math.floor(p / 3) * 0.02, stall);
+          box(0.05, 0.016, 0.03, woodDark, 0.045, 0.085, -0.02, stall); // pumpkin crate
+          sph(0.017, orange, 0.045, 0.102, -0.02, stall);
+        } else {
+          for (let p = 0; p < 5; p++) sph(0.012, violet, -0.03 + (p % 3) * 0.025, 0.078 + (p > 2 ? 0.018 : 0), -0.06, stall);
+          for (let p = 0; p < 4; p++) sph(0.009, M(0x84cc16), 0.03 + (p % 2) * 0.02, 0.068 + Math.floor(p / 2) * 0.014, 0.02, stall);
+        }
+        // hanging chalk price sign
+        box(0.035, 0.02, 0.003, M(0x1c1917, 0.9), 0, 0.115, 0.045, stall);
+      });
+
+      // Chalkboard A-board
+      const aboard = new THREE.Group();
+      aboard.position.set(-0.1, 0, -0.3);
+      mk.add(aboard);
+      box(0.07, 0.09, 0.004, M(0x171717, 0.9), -0.012, 0.05, 0, aboard).rotation.z = 0.22;
+      box(0.07, 0.09, 0.004, M(0x171717, 0.9), 0.012, 0.05, 0, aboard).rotation.z = -0.22;
+
+      // Fruit crates + leaning bicycle
+      const bikes = new THREE.Group();
+      bikes.position.set(0.55, 0, -0.18);
+      mk.add(bikes);
+      box(0.07, 0.05, 0.05, woodLight, -0.05, 0.05, 0, bikes);
+      const bike = new THREE.Group();
+      bike.position.set(0.04, 0, 0);
+      bike.rotation.z = 0.32;
+      bike.rotation.y = 0.6;
+      bikes.add(bike);
+      [-0.07, 0.07].forEach((wx) => {
+        const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.006, 6, 12), M(0x2f2f30));
+        wheel.position.set(wx, 0.035, 0);
+        wheel.rotation.y = 1.571;
+        bike.add(wheel);
+      });
+      box(0.14, 0.005, 0.005, M(0x166534, 0.35), 0, 0.05, 0, bike).rotation.z = 0.45;
+      box(0.09, 0.005, 0.005, M(0x166534, 0.35), -0.05, 0.075, 0, bike).rotation.z = -0.8;
+      cyl(0.004, 0.004, 0.04, M(0x2f2f30), 0.08, 0.085, 0, bike);
+      box(0.025, 0.015, 0.02, M(0xa16207, 0.5), -0.085, 0.075, 0, bike);
+
+      // Laundry line with four swaying garments
+      const laund = new THREE.Group();
+      laund.position.set(0, 0, -0.52);
+      mk.add(laund);
+      cyl(0.005, 0.006, 0.16, woodDark, -0.16, 0.08, 0, laund);
+      cyl(0.005, 0.006, 0.16, woodDark, 0.16, 0.08, 0, laund);
+      laund.add(pendulumLine(new THREE.Vector3(-0.16, 0.15, 0), new THREE.Vector3(0.16, 0.15, 0), 0.012, laund));
+      [[-0.115, red], [-0.035, blue], [0.045, pink], [0.115, yellow]].forEach(([lx, cm], i) => {
+        const garment = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.038, 0.05),
+          new THREE.MeshStandardMaterial({ color: (cm as THREE.MeshStandardMaterial).color.clone(), roughness: 0.9, side: THREE.DoubleSide })
+        );
+        garment.position.set(lx as number, 0.114, 0);
+        laund.add(garment);
+        this.microLaundry.push({ cloth: garment, phase: i * 1.4 });
+      });
+
+      // Bunting across the row + festive bulbs between stall posts
+      cyl(0.005, 0.006, 0.14, woodDark, -0.44, 0.07, 0.18, mk);
+      cyl(0.005, 0.006, 0.14, woodDark, 0.44, 0.07, 0.18, mk);
+      mk.add(pendulumLine(new THREE.Vector3(-0.44, 0.135, 0.18), new THREE.Vector3(0.44, 0.135, 0.18), 0.05, mk));
+      const flagColors = [red, yellow, blue, pink, orange, violet, leafMat];
+      for (let i = 0; i < 7; i++) {
+        const ft = 0.18 + i * 0.107;
+        const flagMat = new THREE.MeshBasicMaterial({
+          color: (flagColors[i % flagColors.length] as THREE.MeshStandardMaterial).color.clone(),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.92,
+        });
+        const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.024, 0.03), flagMat);
+        const fx = -0.44 + ft * 0.88;
+        flag.position.set(fx, 0.135 - Math.sin(ft * Math.PI) * 0.05 - 0.018, 0.18);
+        mk.add(flag);
+        this.microBuntingFlags.push(flag);
+      }
+    }
+
+    /* =====================================================================
+       C. FROG HOLLOW — miniature pond ecosystem
+       ===================================================================== */
+    {
+      const fd = cluster(1.85, 1.45, G);
+
+      const pond = new THREE.Mesh(new THREE.CircleGeometry(0.16, 14), M(0x0e7490, 0.35));
+      pond.rotation.x = -Math.PI * 0.5;
+      pond.position.y = 0.004;
+      fd.add(pond);
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2 + 0.2;
+        sph(0.011, stoneGrey, Math.cos(a) * 0.175, 0.008, Math.sin(a) * 0.17, fd);
+      }
+      // dock plank
+      box(0.05, 0.005, 0.02, woodLight, -0.19, 0.008, -0.02, fd);
+      // lily pads + berries
+      [[0.05, 0.02, 0.04], [-0.06, 0.035, -0.05], [0.02, 0.06, -0.03]].forEach(([lx, ly, lz]) => {
+        cyl(0.028, 0.028, 0.003, leafMat, lx, 0.007 + ly * 0.08, lz, fd);
+        sph(0.006, pink, (lx as number) + 0.012, 0.012, (lz as number) - 0.01, fd);
+      });
+      // hopping frogs
+      [[0.05, 0.03], [-0.05, 0.04], [0, -0.055]].forEach(([fx, fz], i) => {
+        const frog = new THREE.Group();
+        frog.position.set(fx, 0.026, fz);
+        fd.add(frog);
+        const body = sph(0.016, M(0x4ade80, 0.6), 0, 0, 0, frog);
+        body.scale.set(1.25, 0.75, 1.35);
+        sph(0.005, white, 0.009, 0.011, 0.006, frog);
+        sph(0.005, white, -0.009, 0.011, 0.006, frog);
+        sph(0.0025, M(0x111827), 0.009, 0.012, 0.008, frog);
+        sph(0.0025, M(0x111827), -0.009, 0.012, 0.008, frog);
+        this.microFrogs.push(frog);
+        void i;
+      });
+      // turtle on a basking rock
+      const turt = new THREE.Group();
+      turt.position.set(0.14, 0.018, 0.1);
+      fd.add(turt);
+      sph(0.02, stoneGrey, 0, 0, 0, turt);
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.5), M(0x166534, 0.6));
+      shell.position.y = 0.012;
+      turt.add(shell);
+      sph(0.007, M(0x84cc16, 0.6), 0.014, 0.004, 0, turt);
+      // reeds
+      [[-0.09, 0.12], [-0.16, 0.02], [-0.12, -0.1]].forEach(([rx, rz]) => {
+        cyl(0.002, 0.003, 0.075, M(0x65a30d), rx, 0.04, rz, fd);
+        cyl(0.006, 0.006, 0.02, barkBrown, rx, 0.08, rz, fd);
+      });
+      // hovering dragonflies
+      for (let i = 0; i < 4; i++) {
+        const dfly = new THREE.Group();
+        fd.add(dfly);
+        const body = cyl(0.0025, 0.0025, 0.032, M(0x0891b2), 0, 0, 0, dfly);
+        body.rotation.x = Math.PI * 0.5;
+        const wingMat = new THREE.MeshBasicMaterial({ color: 0xdbeafe, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+        const wingL = new THREE.Group();
+        wingL.position.y = 0.008;
+        [0.5, -0.9].forEach((wa) => {
+          const w = new THREE.Mesh(new THREE.PlaneGeometry(0.026, 0.008), wingMat);
+          w.rotation.x = wa;
+          wingL.add(w);
+        });
+        const wingR = new THREE.Group();
+        wingR.position.y = 0.008;
+        [0.5, -0.9].forEach((wa) => {
+          const w = new THREE.Mesh(new THREE.PlaneGeometry(0.026, 0.008), wingMat);
+          w.rotation.x = wa;
+          wingR.add(w);
+        });
+        dfly.add(wingL);
+        dfly.add(wingR);
+        dfly.position.set(0, 0.16, 0);
+        this.microDragonflies.push({ group: dfly, wingL, wingR });
+      }
+    }
+
+    /* =====================================================================
+       D. MEMORY LANE ALLOTMENTS — vegetable gardens
+       ===================================================================== */
+    {
+      const gd = cluster(3.35, 1.35, G);
+
+      const beds: Array<(bed: THREE.Group) => void> = [
+        (bed) => { for (let i = 0; i < 6; i++) cone(0.007, 0.03, leafMat, -0.055 + (i % 3) * 0.024, 0.055, i < 3 ? -0.015 : 0.02, bed); },
+        (bed) => { [[-0.05, -0.01], [0, 0.02], [0.05, -0.02]].forEach(([cx, cz]) => sph(0.013, M(0x86efac), cx, 0.045, cz, bed)); },
+        (bed) => {
+          const pump = sph(0.024, orange, 0.01, 0.05, -0.005, bed);
+          pump.scale.y = 0.72;
+          cyl(0.004, 0.004, 0.015, M(0x3f6212), 0.01, 0.072, -0.005, bed);
+          sph(0.02, orange, -0.05, 0.046, 0.02, bed).scale.y = 0.72;
+        },
+        (bed) => {
+          cyl(0.003, 0.003, 0.09, woodDark, -0.03, 0.08, 0, bed);
+          cyl(0.003, 0.003, 0.09, woodDark, 0.03, 0.08, 0, bed);
+          box(0.075, 0.004, 0.004, woodDark, 0, 0.115, 0, bed);
+          for (let v = 0; v < 4; v++) {
+            const vine = cyl(0.0015, 0.0015, 0.11, M(0x15803d), -0.024 + v * 0.016, 0.075, 0.012, bed);
+            vine.rotation.z = 0.06;
+            sph(0.004, leafMat, -0.024 + v * 0.016, 0.11, 0.012, bed);
+          }
+        },
+      ];
+      beds.forEach((fill, bi) => {
+        const bed = new THREE.Group();
+        bed.position.set(-0.27 + bi * 0.18, 0, bi % 2 === 0 ? -0.02 : 0.14);
+        gd.add(bed);
+        box(0.15, 0.035, 0.08, soil, 0, 0.018, 0, bed);
+        [[0, -0.04], [0, 0.04]].forEach(([bx2, bz2]) => box(0.16, 0.04, 0.008, woodDark, bx2, 0.02, bz2, bed));
+        [-0.055, 0.055].forEach((ex) => box(0.008, 0.04, 0.088, woodDark, ex, 0.02, 0, bed));
+        fill(bed);
+      });
+
+      // Scarecrow (rocking)
+      const scare = new THREE.Group();
+      scare.position.set(0.32, 0, -0.2);
+      gd.add(scare);
+      cyl(0.006, 0.008, 0.17, woodDark, 0, 0.085, 0, scare);
+      box(0.13, 0.008, 0.008, woodDark, 0, 0.115, 0, scare);
+      box(0.05, 0.045, 0.025, M(0x3b82f6, 0.9), 0, 0.09, 0, scare);
+      sph(0.016, M(0xfcd34d), 0, 0.14, 0, scare);
+      cone(0.014, 0.024, M(0x92400e), 0, 0.166, 0, scare);
+      sph(0.004, M(0xfed7aa), -0.005, 0.145, 0.015, scare);
+      sph(0.004, M(0xfed7aa), 0.005, 0.145, 0.015, scare);
+      this.microScarecrow = scare;
+
+      // Wheelbarrow
+      const wb = new THREE.Group();
+      wb.position.set(-0.02, 0, 0.3);
+      wb.rotation.y = 0.7;
+      gd.add(wb);
+      box(0.07, 0.025, 0.045, M(0x65a30d, 0.5), 0, 0.048, 0, wb).rotation.x = 0.2;
+      cyl(0.016, 0.016, 0.008, M(0x2f2f30), 0, 0.018, 0.04, wb).rotation.z = Math.PI * 0.5;
+      box(0.012, 0.004, 0.04, woodDark, -0.03, 0.045, -0.03, wb).rotation.x = 0.35;
+      box(0.012, 0.004, 0.04, woodDark, 0.03, 0.045, -0.03, wb).rotation.x = 0.35;
+
+      // Watering can + wellies + garden fork
+      cyl(0.018, 0.02, 0.028, M(0x22d3ee, 0.45), 0.12, 0.02, 0.32, gd);
+      cyl(0.003, 0.003, 0.03, M(0x22d3ee, 0.45), 0.135, 0.03, 0.36, gd).rotation.z = 0.8;
+      box(0.014, 0.03, 0.02, blue, -0.09, 0.015, 0.3, gd);
+      box(0.014, 0.03, 0.02, blue, -0.065, 0.015, 0.315, gd);
+      cyl(0.0025, 0.0025, 0.075, woodDark, 0.16, 0.038, 0.3, gd).rotation.z = 0.15;
+      box(0.03, 0.005, 0.002, M(0x57534e, 0.4), 0.176, 0.008, 0.3, gd);
+    }
+
+    /* =====================================================================
+       E. SUNNY HOLLOW — chicken coop, picnic & dog
+       ===================================================================== */
+    {
+      const sh = cluster(2.95, 1.1, G);
+
+      // Coop cabin
+      box(0.15, 0.11, 0.11, white, 0, 0.055, 0, sh);
+      const coopRoof = cone(0.115, 0.06, red, 0, 0.14, 0, sh);
+      coopRoof.rotation.y = Math.PI * 0.25;
+      coopRoof.scale.set(1.15, 1, 1.3);
+      sph(0.018, M(0x111827), 0, 0.045, 0.056, sh);
+      sph(0.0075, M(0xfacc15), -0.05, 0.088, 0.058, sh);
+      // ramp + nest box
+      box(0.04, 0.004, 0.07, woodLight, 0, 0.03, 0.115, sh).rotation.x = 0.45;
+      box(0.05, 0.045, 0.04, woodDark, 0.1, 0.045, 0.01, sh);
+      // hen yard fence arc
+      for (let i = 0; i < 7; i++) {
+        const a = 0.5 + (i / 6) * 2.1;
+        cyl(0.003, 0.003, 0.055, woodDark, Math.cos(a) * 0.19, 0.028, Math.sin(a) * 0.19 - 0.04, sh);
+      }
+      [0.038, 0.052].forEach((ry) => {
+        const rail = box(0.3, 0.004, 0.003, woodLight, 0.02, ry, 0.08, sh);
+        rail.rotation.y = -0.9;
+      });
+
+      // Pecking hens (heads animate) + proud rooster
+      const henColors = [0xf5f5f4, 0xd6d3d1, 0x78716c, 0xfca5a5];
+      [[0.13, 0.1], [0.17, 0.03], [0.06, 0.14], [-0.08, 0.16]].forEach(([hx, hz], i) => {
+        const hen = new THREE.Group();
+        hen.position.set(hx, 0.012, hz);
+        sh.add(hen);
+        const hb = sph(0.017, M(henColors[i], 0.7), 0, 0, 0, hen);
+        hb.scale.set(1.25, 1.05, 1);
+        cone(0.014, 0.03, M(henColors[i], 0.7), -0.012, 0.014, -0.004, hen).rotation.x = 2.2;
+        const head = new THREE.Group();
+        head.position.set(-0.02, 0.024, 0.01);
+        sph(0.008, M(henColors[i], 0.7), 0, 0, 0, head);
+        cone(0.003, 0.007, orange, -0.006, -0.002, 0, head).rotation.z = Math.PI * 0.55;
+        hen.add(head);
+        this.microChickens.push({ group: hen, head, phase: i * 1.9 });
+      });
+      const rooster = new THREE.Group();
+      rooster.position.set(-0.14, 0.012, 0.1);
+      sh.add(rooster);
+      const rb = sph(0.019, M(0x7f1d1d, 0.7), 0, 0, 0, rooster);
+      rb.scale.set(1.25, 1.05, 1);
+      cone(0.013, 0.034, M(0x14532d), -0.012, 0.014, -0.004, rooster).rotation.x = 2.1;
+      const rHead = new THREE.Group();
+      rHead.position.set(-0.022, 0.026, 0.012);
+      sph(0.0085, M(0x7f1d1d, 0.7), 0, 0, 0, rHead);
+      cone(0.0035, 0.008, orange, -0.006, -0.003, 0, rHead).rotation.z = Math.PI * 0.55;
+      cone(0.004, 0.01, red, 0, 0.008, 0, rHead);
+      sph(0.006, red, 0.002, 0.009, -0.008, rHead);
+      rooster.add(rHead);
+      this.microChickens.push({ group: rooster, head: rHead, phase: 0.7 });
+
+      // Hay bales + tulip patch
+      [[-0.24, -0.16], [-0.3, -0.05]].forEach(([bx], i) => {
+        const bale = cyl(0.024, 0.024, 0.05, M(0xd9a404, 0.9), bx as number, 0.024, -0.16 + i * 0.11, sh);
+        bale.rotation.z = Math.PI * 0.5;
+      });
+      [[0.2, 0.14, 0xec4899], [0.24, 0.17, 0xeab308], [0.28, 0.15, 0xef4444]].forEach(([tx, tz, tc]) => {
+        cyl(0.002, 0.002, 0.03, leafMat, tx as number, 0.015, tz as number, sh);
+        sph(0.006, M(tc as number), tx as number, 0.033, tz as number, sh);
+      });
+
+      // Picnic vignette
+      const pcn = new THREE.Group();
+      pcn.position.set(0.35, 0.002, -0.28);
+      sh.add(pcn);
+      const blanket = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.13), M(0xfef2f2, 0.95));
+      blanket.rotation.x = -Math.PI * 0.5;
+      pcn.add(blanket);
+      [[-0.032, 0.032], [0.032, -0.032]].forEach(([dx, dy]) => {
+        const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.012, 0.13), red);
+        stripe.rotation.x = -Math.PI * 0.5;
+        stripe.position.set(dx, 0.001, dy);
+        stripe.rotation.z = 0.785;
+        pcn.add(stripe);
+      });
+      box(0.035, 0.025, 0.022, barkBrown, 0.02, 0.014, 0.015, pcn);
+      box(0.035, 0.003, 0.002, M(0x5c3a1e), 0.02, 0.032, 0.015, pcn);
+      box(0.022, 0.004, 0.016, M(0x0284c7), -0.02, 0.004, -0.02, pcn);
+      box(0.022, 0.004, 0.016, white, -0.02, 0.008, -0.02, pcn);
+      sph(0.008, red, 0.04, 0.005, -0.02, pcn);
+      cyl(0.008, 0.008, 0.03, M(0x15803d, 0.35), 0.05, 0.016, 0.03, pcn);
+
+      // Ant parade (marching Points)
+      const antGeo = new THREE.BufferGeometry();
+      const antPos = new Float32Array(12 * 3);
+      antGeo.setAttribute('position', new THREE.BufferAttribute(antPos, 3));
+      const ants = new THREE.Points(
+        antGeo,
+        new THREE.PointsMaterial({ color: 0x1c1917, size: 0.008, sizeAttenuation: true })
+      );
+      ants.frustumCulled = false;
+      pcn.add(ants);
+      this.microAnts = ants;
+      this.microAntData = [];
+      for (let i = 0; i < 12; i++) {
+        this.microAntData.push({ angle: (i / 12) * Math.PI * 2, speed: 0.55 + (i % 3) * 0.08, ring: 0.075 + (i % 4) * 0.018 });
+      }
+
+      // Dog house + waggly dog + bone + bowl
+      const dogVig = new THREE.Group();
+      dogVig.position.set(0.58, 0, -0.4);
+      sh.add(dogVig);
+      box(0.06, 0.05, 0.05, M(0x9a3412), 0, 0.026, 0, dogVig);
+      cone(0.045, 0.03, M(0xea580c), 0, 0.065, 0, dogVig);
+      sph(0.012, M(0x171717), 0, 0.022, 0.027, dogVig).scale.z = 0.5;
+      const dog = new THREE.Group();
+      dog.position.set(0.06, 0.012, 0.055);
+      dog.rotation.y = -0.8;
+      dogVig.add(dog);
+      const db = sph(0.016, M(0xd97706, 0.7), 0, 0, 0, dog);
+      db.scale.set(1.35, 0.95, 1);
+      sph(0.011, M(0xd97706, 0.7), -0.02, 0.012, 0, dog);
+      sph(0.004, M(0x171717), -0.03, 0.013, 0.005, dog);
+      sph(0.004, M(0x171717), -0.03, 0.013, -0.005, dog);
+      box(0.004, 0.01, 0.003, M(0x92400e), -0.018, 0.02, 0.005, dog);
+      box(0.004, 0.01, 0.003, M(0x92400e), -0.018, 0.02, -0.005, dog);
+      const tail = cyl(0.002, 0.004, 0.022, M(0xd97706), 0.024, 0.012, 0, dog);
+      tail.rotation.z = -0.8;
+      this.microDogs.push({ group: dog, tail });
+      box(0.03, 0.002, 0.008, white, -0.01, 0.002, 0.12, dogVig).rotation.y = 0.4;
+      cyl(0.008, 0.01, 0.008, M(0x0ea5e9), 0.03, 0.004, 0.115, dogVig);
+      cyl(0.006, 0.006, 0.002, M(0x92400e), 0.03, 0.007, 0.115, dogVig);
+    }
+
+    /* =====================================================================
+       F. ORCAYARD TIMBERS — woodpile, mushrooms & tiny wildlife
+       ===================================================================== */
+    {
+      const ty = cluster(-3.35, -0.35, G);
+
+      // Log pyramid
+      const rows = [3, 2, 1];
+      let logY = 0.016;
+      rows.forEach((count, ri) => {
+        for (let li = 0; li < count; li++) {
+          const log = cyl(0.016, 0.016, 0.15, barkBrown, 0, logY, -0.034 * li + (3 - count) * 0.017, ty);
+          log.rotation.z = Math.PI * 0.5;
+          [-0.076, 0.076].forEach((ex) => cyl(0.011, 0.011, 0.004, M(0xc9a86a), ex, logY, -0.034 * li + (3 - count) * 0.017, ty).rotation.z = Math.PI * 0.5);
+        }
+        logY += 0.028;
+        void ri;
+      });
+
+      // Stump with axe + growth rings
+      cyl(0.028, 0.034, 0.05, barkBrown, -0.06, 0.025, 0.12, ty);
+      cyl(0.024, 0.024, 0.004, M(0xd6b98c, 0.9), -0.06, 0.051, 0.12, ty);
+      cyl(0.01, 0.01, 0.004, M(0x8a5a2b), -0.06, 0.053, 0.12, ty);
+      const axe = new THREE.Group();
+      axe.position.set(-0.06, 0.06, 0.12);
+      axe.rotation.z = -0.5;
+      ty.add(axe);
+      cyl(0.003, 0.003, 0.05, woodDark, 0, 0, 0, axe);
+      box(0.02, 0.008, 0.012, stoneGrey, 0.01, 0.023, 0, axe);
+
+      // Squirrel curled on stump watching ants
+      const squirel = new THREE.Group();
+      squirel.position.set(-0.085, 0.098, 0.14);
+      ty.add(squirel);
+      sph(0.017, M(0xb45309, 0.7), 0, 0, 0, squirel);
+      sph(0.011, M(0xb45309, 0.7), -0.015, 0.008, 0, squirel);
+      sph(0.003, M(0x171717), -0.024, 0.012, 0.003, squirel);
+      sph(0.003, M(0x171717), -0.024, 0.012, -0.003, squirel);
+      [[0.02, 0.03], [0.03, 0.055], [0.032, 0.082]].forEach(([tx, ty2]) => {
+        sph(0.008, M(0x92400e), tx, ty2, 0, squirel);
+      });
+
+      // Hedgehog pottering near mossy rocks
+      const hog = new THREE.Group();
+      hog.position.set(0.1, 0.012, 0.16);
+      hog.rotation.y = -1.1;
+      ty.add(hog);
+      sph(0.012, M(0x8a5a2b, 0.9), 0, 0, 0, hog).scale.set(1.3, 0.9, 1);
+      sph(0.005, M(0x292524), 0.016, 0.002, 0, hog);
+      for (let s = 0; s < 5; s++) {
+        const spike = cone(0.0022, 0.008, M(0x292524), -0.004 + Math.floor(s / 3) * -0.007, 0.008, -0.004 + (s % 3) * 0.004, hog);
+        spike.rotation.z = -0.5;
+      }
+
+      // Mushroom colony + mossy stones + cairn
+      const mushSpots: Array<[number, number, number]> = [
+        [0.05, 0.1, 0x8b1d1d],
+        [0.07, 0.13, 0xd97706],
+        [0.02, 0.14, 0x8b1d1d],
+        [0.09, 0.09, 0x78543c],
+        [-0.02, 0.09, 0xd97706],
+        [0.12, 0.06, 0x8b1d1d],
+      ];
+      mushSpots.forEach(([mx, mz, cap]) => {
+        cyl(0.003, 0.003, 0.012, white, mx, 0.008, mz, ty);
+        const capMesh = sph(0.008, M(cap, 0.7), mx, 0.015, mz, ty);
+        capMesh.scale.y = 0.6;
+        sph(0.0022, white, mx, 0.018, mz, ty);
+      });
+      [[0.16, 0.12], [0.2, 0.02], [-0.14, -0.1]].forEach(([sx2, sz2]) => {
+        const rock = sph(0.02, stoneGrey, sx2 as number, 0.01, sz2 as number, ty);
+        rock.scale.set(1.2, 0.65, 1);
+        const moss = sph(0.016, M(0x3f6212, 0.9), sx2 as number, 0.02, sz2 as number, ty);
+        moss.scale.set(1, 0.35, 1);
+      });
+      [[-0.18, -0.15, 0.026], [-0.18, -0.12, 0.02], [-0.18, -0.09, 0.014]].forEach(([cx2, cz2, r]) => {
+        const st = sph(r as number, stoneGrey, cx2 as number, (r as number) * 0.6, cz2 as number, ty);
+        st.scale.y = 0.8;
+      });
+
+      // Weathervane whirlygig
+      const vane = new THREE.Group();
+      vane.position.set(0.08, 0, -0.22);
+      ty.add(vane);
+      cyl(0.004, 0.005, 0.2, woodDark, 0, 0.1, 0, vane);
+      const arrow = new THREE.Group();
+      arrow.position.y = 0.205;
+      vane.add(arrow);
+      box(0.05, 0.004, 0.004, M(0xf5f5f4, 0.3), 0, 0, 0, arrow);
+      cone(0.006, 0.014, M(0xf5f5f4, 0.3), 0.026, 0, 0, arrow).rotation.z = -Math.PI * 0.5;
+      cyl(0.005, 0.005, 0.014, M(0x78716c), 0.012, 0, 0, arrow).rotation.z = Math.PI * 0.5;
+      this.microWeathervanes.push(arrow);
+    }
+
+    /* =====================================================================
+       G. SKY LIFE & MEADOW FURNITURE (wind vanes, windsocks, circling birds)
+       ===================================================================== */
+    // Second weathervane near the markets
+    {
+      const vaneTwo = new THREE.Group();
+      vaneTwo.position.set(-0.62, 0.04, 0.68);
+      G.add(vaneTwo);
+      cyl(0.003, 0.004, 0.16, woodDark, 0, 0.08, 0, vaneTwo);
+      const arrowTwo = new THREE.Group();
+      arrowTwo.position.y = 0.165;
+      vaneTwo.add(arrowTwo);
+      box(0.045, 0.003, 0.003, M(0xf5f5f4, 0.3), 0, 0, 0, arrowTwo);
+      cone(0.005, 0.012, M(0xf5f5f4, 0.3), 0.024, 0, 0, arrowTwo).rotation.z = -Math.PI * 0.5;
+      this.microWeathervanes.push(arrowTwo);
+    }
+
+    // Windsocks fluttering at the station fork & coop lane
+    [[0.42, 0.9], [3.62, 0.88]].forEach(([wx, wz], idx) => {
+      const ws = cluster(wx, wz, G);
+      cyl(0.0035, 0.0045, 0.14, woodDark, 0, 0.07, 0, ws);
+      const sockPivot = new THREE.Group();
+      sockPivot.position.y = 0.125;
+      ws.add(sockPivot);
+      const sock = cone(0.011, 0.055, orange, 0.028, 0, 0, sockPivot);
+      sock.rotation.z = -Math.PI * 0.1;
+      sock.material = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.8, side: THREE.DoubleSide, transparent: true, opacity: 0.97 });
+      cyl(0.012, 0.012, 0.003, stoneGrey, 0, 0, 0, sockPivot).rotation.z = Math.PI * 0.17;
+      this.microWindsocks.push(sockPivot);
+      void idx;
+    });
+
+    // Five circling songbirds above the island
+    for (let i = 0; i < 5; i++) {
+      const bird = new THREE.Group();
+      bird.position.set(0, 0, 0);
+      const bodyMesh = sph(0.03, M(0x334155, 0.8), 0, 0, 0, bird);
+      bodyMesh.scale.set(1.6, 0.55, 0.8);
+      sph(0.016, M(0x334155), 0.045, 0.012, 0, bird);
+      cone(0.005, 0.012, orange, 0.06, 0.012, 0, bird).rotation.z = -Math.PI * 0.5;
+      const wingL = new THREE.Group();
+      wingL.position.set(0.01, 0.012, 0.014);
+      const wl = box(0.06, 0.002, 0.024, M(0x475569), -0.03, 0, 0.014, wingL);
+      wl.castShadow = false;
+      const wingR = new THREE.Group();
+      wingR.position.set(0.01, 0.012, -0.014);
+      const wr = box(0.06, 0.002, 0.024, M(0x475569), -0.03, 0, -0.014, wingR);
+      wr.castShadow = false;
+      bird.add(wingL);
+      bird.add(wingR);
+      G.add(bird);
+      this.microBirds.push({
+        group: bird,
+        wingL,
+        wingR,
+        radius: 2.4 + (i % 3) * 0.55,
+        speed: 0.22 + i * 0.045,
+        phase: (i * Math.PI * 2) / 2,
+        height: 1.35 + i * 0.09,
+      });
+    }
+
+    /* =====================================================================
+       H. DOWNTOWN WHIMSY SCATTER — mushrooms, pebbles, tufts, ladybugs
+       ===================================================================== */
+    {
+      let seed = 14071994;
+      const rng = (): number => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      };
+
+      const keepOut: Array<{ x: number; z: number; r: number }> = [
+        { x: 0, z: -0.04, r: 1.15 },      // central canal pond
+        { x: 0.62, z: 1.95, r: 0.55 },    // playground
+        { x: -0.95, z: 1.05, r: 0.6 },    // market row
+        { x: 1.85, z: 1.45, r: 0.4 },     // frog hollow
+        { x: 3.35, z: 1.35, r: 0.55 },    // allotments
+        { x: 2.95, z: 1.1, r: 0.65 },     // sunny hollow
+        { x: -3.35, z: -0.35, r: 0.45 },  // timber yard
+        { x: 3.2, z: 3.3, r: 0.7 },       // forest lake
+        { x: 2.05, z: 0.0, r: 0.5 },      // east plaza
+        { x: -2.05, z: 0.15, r: 0.45 },   // west barn
+        { x: -2.55, z: 1.05, r: 0.45 },   // campsite glow
+        { x: 2.9, z: 2.45, r: 0.5 },      // duck pond
+        { x: 4.8, z: 2.6, r: 0.45 },      // sunflower farm
+        { x: 4.65, z: 0.3, r: 0.4 },      // apiary
+        { x: 3.3, z: -3.2, r: 0.5 },      // logging camp
+        { x: 3.5, z: -0.6, r: 0.4 },      // water tower
+        { x: -3.5, z: 1.4, r: 0.4 },      // service depot
+      ];
+      const isOpen = (x: number, z: number): boolean => {
+        for (const k of keepOut) {
+          if (Math.hypot(x - k.x, z - k.z) < k.r) return false;
+        }
+        return this.getApproxDistanceToTrack(x, z) > 0.5;
+      };
+
+      const scatterBase = (x: number, z: number, g: THREE.Group): THREE.Group => {
+        const c = new THREE.Group();
+        c.position.set(x, 0.04, z);
+        g.add(c);
+        return c;
+      };
+
+      for (let i = 0; i < 34; i++) {
+        const x = (rng() - 0.5) * 8.6;
+        const z = (rng() - 0.5) * 4.4;
+        if (!isOpen(x, z)) continue;
+        const spot = scatterBase(x, z, G);
+        const roll = rng();
+        if (roll < 0.3) {
+          // mushroom pair
+          const cap = rng() > 0.5 ? 0xdc2626 : 0xd97706;
+          cyl(0.003, 0.003, 0.013, white, 0, 0.008, 0, spot);
+          sph(0.009, M(cap, 0.7), 0, 0.016, 0, spot).scale.y = 0.6;
+          cyl(0.002, 0.002, 0.009, white, 0.012, 0.006, 0.006, spot);
+          sph(0.006, M(cap, 0.7), 0.012, 0.012, 0.006, spot).scale.y = 0.6;
+        } else if (roll < 0.55) {
+          // pebble + grass tuft
+          const peb = sph(0.012, stoneGrey, 0, 0.004, 0, spot);
+          peb.scale.y = 0.5;
+          cone(0.006, 0.022, leafMat, 0.02, 0.01, 0.01, spot);
+          cone(0.005, 0.018, leafMat, -0.014, 0.009, 0.014, spot);
+        } else if (roll < 0.8) {
+          // tiny flower pair
+          cyl(0.0015, 0.0015, 0.024, leafMat, 0, 0.012, 0, spot);
+          sph(0.005, M([pink, yellow, white][Math.floor(rng() * 3)].color.getHex(), 0.8), 0, 0.026, 0, spot);
+          cyl(0.0015, 0.0015, 0.02, leafMat, 0.014, 0.01, -0.008, spot);
+          sph(0.004, M(red.color.getHex(), 0.8), 0.014, 0.022, -0.008, spot);
+        } else {
+          // lucky ladybug on a clover
+          cyl(0.002, 0.002, 0.018, leafMat, 0, 0.009, 0, spot);
+          sph(0.004, leafMat, 0, 0.02, 0, spot);
+          const bug = sph(0.005, M(0xe11d48, 0.3), 0.002, 0.026, 0.002, spot);
+          bug.scale.y = 0.6;
+          sph(0.002, M(0x171717), 0.006, 0.029, 0.004, spot);
+        }
+      }
+    }
+  }
+
+  /* =========================================================================
+     11.6 MICRO-DETAIL PER-FRAME UPDATE
+     ========================================================================= */
+  private updateMicroDetails(): void {
+    const t = Date.now() * 0.001;
+
+    // Swings pumping on different phases
+    this.microSwings.forEach((sw, i) => {
+      sw.rotation.z = Math.sin(t * 1.5 + i * 1.9) * 0.48;
+    });
+
+    if (this.microSeesaw) this.microSeesaw.rotation.z = Math.sin(t * 0.85) * 0.13;
+    if (this.microRoundabout) this.microRoundabout.rotation.y += 0.014;
+    if (this.microKite) {
+      this.microKite.rotation.z = 0.3 + Math.sin(t * 1.25) * 0.22;
+      this.microKite.rotation.y = Math.sin(t * 0.8) * 0.18;
+      this.microKite.position.y = 0.52 + Math.sin(t * 0.9) * 0.03;
+    }
+
+    // Frog bounces with squash-stretch landing
+    this.microFrogs.forEach((f, i) => {
+      const hop = Math.max(0, Math.sin(t * 2.1 + i * 2.3));
+      f.position.y = 0.026 + hop * hop * 0.05;
+      f.scale.y = 1 - hop * 0.22;
+      f.rotation.y = Math.sin(t * 0.4 + i) * 0.8;
+    });
+
+    // Dragonfly hover circuits + wing flicker
+    this.microDragonflies.forEach((d, i) => {
+      const a = t * (1.05 + i * 0.22) + i * 1.7;
+      d.group.position.x = Math.cos(a) * (0.17 + i * 0.012);
+      d.group.position.z = Math.sin(a) * (0.14 + i * 0.01);
+      d.group.position.y = 0.16 + Math.sin(t * 2.6 + i) * 0.03;
+      d.group.rotation.y = -a - Math.PI * 0.5;
+      const flap = Math.sin(t * 46 + i) * 0.5;
+      d.wingL.children.forEach((w) => (w.rotation.z = flap));
+      d.wingR.children.forEach((w) => (w.rotation.z = -flap));
+    });
+
+    // Hens pecking / rooster tooting around yard
+    this.microChickens.forEach((c, i) => {
+      const peck = Math.max(0, Math.sin(t * 3.1 + c.phase));
+      c.head.rotation.x = peck * 0.55 - 0.1;
+      c.head.position.y = 0.024 - peck * 0.008;
+      c.group.position.y = 0.012 + Math.abs(Math.sin(t * 6 + i * 2.5)) * 0.004;
+    });
+
+    // Pigeon bobs on the bench
+    this.microPigeons.forEach((pgn) => {
+      pgn.group.position.y = 0.072 + Math.max(0, Math.sin(t * 4.5 + pgn.phase)) * 0.006;
+    });
+
+    // Songbirds circling the island
+    this.microBirds.forEach((b) => {
+      const a = t * b.speed + b.phase;
+      b.group.position.x = Math.cos(a) * b.radius;
+      b.group.position.z = Math.sin(a) * b.radius * 0.72;
+      b.group.position.y = b.height + Math.sin(t * 0.7 + b.phase) * 0.08;
+      b.group.rotation.y = -a - Math.PI * 0.5;
+      const flap = Math.sin(t * 15 + b.phase) * 0.55;
+      b.wingL.rotation.z = flap;
+      b.wingR.rotation.z = -flap;
+    });
+
+    // Ant parade pacing in rings
+    if (this.microAnts) {
+      const posAttr = this.microAnts.geometry.attributes.position as THREE.BufferAttribute;
+      const arr = posAttr.array as Float32Array;
+      for (let i = 0; i < this.microAntData.length; i++) {
+        const ant = this.microAntData[i];
+        const a = t * ant.speed + ant.angle;
+        arr[i * 3 + 0] = Math.cos(a) * ant.ring;
+        arr[i * 3 + 1] = 0.004 + Math.sin(t * 9 + i) * 0.0006;
+        arr[i * 3 + 2] = Math.sin(a) * ant.ring;
+      }
+      posAttr.needsUpdate = true;
+    }
+
+    // Weathervanes idly seeking the breeze
+    this.microWeathervanes.forEach((v, i) => {
+      v.rotation.y = Math.sin(t * 0.35 + i * 1.1) * 1.4;
+    });
+
+    // Windsocks breathing with gusts
+    this.microWindsocks.forEach((ws, i) => {
+      ws.rotation.y = 0.5 + Math.sin(t * 1.6 + i * 2.2) * 0.5;
+      ws.rotation.z = Math.sin(t * 3.4 + i) * 0.14;
+    });
+
+    // Scarecrow sways his harvest watch
+    if (this.microScarecrow) this.microScarecrow.rotation.z = Math.sin(t * 0.7) * 0.05;
+
+    // Festival bulbs twinkle
+    this.microLanternMats.forEach((m, i) => {
+      m.opacity = 0.62 + Math.abs(Math.sin(t * 2.6 + i * 1.1)) * 0.38;
+    });
+
+    // Bunting & laundry flutter
+    this.microBuntingFlags.forEach((flag, i) => {
+      flag.rotation.x = Math.sin(t * 2.1 + i * 1.3) * 0.16;
+    });
+    this.microLaundry.forEach((l) => {
+      l.cloth.rotation.y = Math.sin(t * 2 + l.phase) * 0.35;
+    });
+
+    // Dog tail wags (always happy)
+    this.microDogs.forEach((dg, i) => {
+      dg.tail.rotation.y = Math.sin(t * 7.5 + i) * 0.75;
+      dg.group.rotation.x = Math.sin(t * 0.9 + i) * 0.03;
+    });
+  }
+
+  /* =========================================================================
      12. DEDICATED WEATHER & RAIN ENGINE
      ========================================================================= */
   private setupWeatherSystem(): void {
@@ -8664,6 +9634,9 @@ export class ThreeStage {
         b.mesh.position.y = b.baseY + Math.sin(beeTime * 4 + b.phase) * 0.02;
       });
     }
+
+    // 9f-bis. V14 Micro-Detail Engine heartbeat
+    this.updateMicroDetails();
 
     // 9g. Kinetic Landmark Micro-Animations (Lighthouse Beacon, Grand Windmill Sails, Marina Sailboat, Lake Rowboat, Mallard Ducks, Campfire Flicker)
     if (this.lighthouseBeacon) {
